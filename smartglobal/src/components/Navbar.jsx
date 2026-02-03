@@ -23,7 +23,6 @@ export default function Navbar() {
   const navRef = useRef(null);
 
   const navLinks = [
-    { name: "Home", href: "/" },
     { name: "Products", href: "/products", hasDropdown: true },
     { name: "Recipes", href: "/recipes" },
     { name: "Blogs", href: "/blogs" },
@@ -308,7 +307,7 @@ export default function Navbar() {
       </header>
 
       {/* Spacer for fixed navbar */}
-      <div className="h-32"></div>
+      <div className="h-10" />
 
       <style>{`
         @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&display=swap");

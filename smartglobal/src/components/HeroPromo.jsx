@@ -11,23 +11,12 @@ import { assets } from "../assets/assets";
 
 export default function HeroPromo() {
   return (
-    <section
-      aria-label="Hero promo"
-      className="relative bg-white py-6 lg:py-12"
-    >
+    <section aria-label="Hero promo" className="relative bg-white ">
       <div className="mx-auto max-w-[1600px]">
-        <div className="rounded-3xl bg-white p-6 md:p-8 lg:p-10 border-2 border-[#FFD41D] shadow-2xl overflow-hidden">
+        <div className="rounded-3xl bg-white p-2md:p-8 lg:p-10 border-2 border-[#FFD41D] shadow-2xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             {/* Left: Large Hero Promo */}
             <div className="relative lg:col-span-7 bg-[#BF1A1A] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[460px] p-8">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border-2 border-[#FFD41D] mb-4">
-                <div className="w-2 h-2 bg-[#BF1A1A] rounded-full"></div>
-                <span className="text-xs font-bold text-black">
-                  100% Premium Quality
-                </span>
-              </div>
-
               {/* Content */}
               <div className="relative z-10 max-w-[320px]">
                 <h2

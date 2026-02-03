@@ -23,8 +23,8 @@ export default function Navbar() {
   const navRef = useRef(null);
 
   const navLinks = [
-    // { name: "Home", href: "/" },
-    { name: "Products", href: "/products" },
+    { name: "Home", href: "/" },
+    { name: "Products", href: "/products", hasDropdown: true },
     { name: "Recipes", href: "/recipes" },
     { name: "Blogs", href: "/blogs" },
     { name: "About Us", href: "/about" },
@@ -59,7 +59,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 mb-4${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           scrolled
             ? "bg-white/70 backdrop-blur-2xl shadow-lg border-b border-gray-200/30"
             : "bg-gradient-to-b from-white/90 via-white/80 to-transparent backdrop-blur-sm"
@@ -78,6 +78,18 @@ export default function Navbar() {
                   alt="Smart Global"
                   className="h-12 w-auto relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
                 />
+              </div>
+
+              <div className="hidden lg:block">
+                <div
+                  className="text-xl font-black text-gray-900 tracking-tighter transition-all duration-300 group-hover:text-[#BF1A1A] group-hover:tracking-tight"
+                  style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                >
+                  SMART GLOBAL
+                </div>
+                <div className="text-[10px] text-gray-500 font-bold tracking-[0.2em] -mt-1 uppercase">
+                  Premium Foods
+                </div>
               </div>
             </a>
 

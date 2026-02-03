@@ -131,18 +131,6 @@ function ToppingsSlide() {
                 />
               </div>
 
-              {/* Price badge */}
-              <div className="absolute left-[40%] top-[55%] z-20 animate-float">
-                <div className="w-[100px] h-[100px] rounded-full flex items-center justify-center shadow-2xl bg-[#FFD41D] border-4 border-white">
-                  <div className="text-center">
-                    <div className="text-xs font-medium text-[#7B4019]">
-                      From
-                    </div>
-                    <div className="text-2xl font-bold text-black">$5.99</div>
-                  </div>
-                </div>
-              </div>
-
               {/* Small product bottom right */}
               <div className="absolute right-8 bottom-12 w-[120px] sm:w-[140px] lg:w-[160px] h-[150px] sm:h-[180px] lg:h-[200px] transform rotate-[20deg]">
                 <img
@@ -582,18 +570,6 @@ function SpicesSlide() {
                   alt="Kent Product"
                   className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-white"
                 />
-              </div>
-
-              {/* Price badge */}
-              <div className="absolute left-[38%] top-[52%] z-20 animate-float">
-                <div className="w-[110px] h-[110px] rounded-full flex items-center justify-center shadow-2xl bg-[#4CAF50] border-4 border-white">
-                  <div className="text-center">
-                    <div className="text-xs font-medium text-white">From</div>
-                    <div className="text-2xl font-bold text-[#FFD41D]">
-                      $3.99
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Accent product */}

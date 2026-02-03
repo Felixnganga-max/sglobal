@@ -14,6 +14,7 @@ import spuds2 from "./spuds-2.png";
 import spuds3 from "./spuds-3.jpg";
 import spuds4 from "./spuds-4.png";
 import spuds5 from "./spuds-5.png";
+import logo from "./logo.png";
 
 export const assets = {
   crepes,
@@ -32,4 +33,5 @@ export const assets = {
   spuds3,
   spuds4,
   spuds5,
+  logo,
 };

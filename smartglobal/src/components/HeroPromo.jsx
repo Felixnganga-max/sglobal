@@ -11,11 +11,13 @@ import { assets } from "../assets/assets";
 
 export default function HeroPromo() {
   return (
-    <section aria-label="Hero promo" className="relative bg-white py-6 lg:py-12">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12 xl:px-16">
+    <section
+      aria-label="Hero promo"
+      className="relative bg-white py-6 lg:py-12"
+    >
+      <div className="mx-auto max-w-[1600px]">
         <div className="rounded-3xl bg-white p-6 md:p-8 lg:p-10 border-2 border-[#FFD41D] shadow-2xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-            
             {/* Left: Large Hero Promo */}
             <div className="relative lg:col-span-7 bg-[#BF1A1A] rounded-2xl overflow-hidden min-h-[420px] md:min-h-[460px] p-8">
               {/* Badge */}
@@ -34,12 +36,16 @@ export default function HeroPromo() {
                 >
                   Premium Food Products
                 </h2>
-                <p className="text-xl text-[#FFD41D] mb-6 font-semibold">For Every Occasion</p>
+                <p className="text-xl text-[#FFD41D] mb-6 font-semibold">
+                  For Every Occasion
+                </p>
 
                 {/* Price */}
                 <div className="mb-6">
                   <span className="text-sm text-white/80">Starting from</span>
-                  <div className="text-5xl font-black text-[#FFD41D]">$5.99</div>
+                  <div className="text-5xl font-black text-[#FFD41D]">
+                    $5.99
+                  </div>
                 </div>
 
                 {/* Button */}
@@ -76,7 +82,6 @@ export default function HeroPromo() {
 
             {/* Right: Small Promo Cards Stack */}
             <div className="lg:col-span-5 space-y-4">
-              
               {/* Card 1: Kent Toppings */}
               <div className="rounded-2xl bg-[#FFF8E1] p-5 flex items-center gap-4 border-2 border-[#FFD41D] hover:shadow-lg transition-shadow">
                 <div className="flex-shrink-0 w-24 h-24 bg-white rounded-xl p-2 flex items-center justify-center shadow-md">
@@ -95,8 +100,18 @@ export default function HeroPromo() {
                   </div>
                   <button className="inline-flex items-center gap-2 text-sm font-bold text-[#BF1A1A] hover:text-[#7B4019] transition-colors">
                     Shop Now
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -120,8 +135,18 @@ export default function HeroPromo() {
                   </div>
                   <button className="inline-flex items-center gap-2 text-sm font-bold text-[#BF1A1A] hover:text-[#7B4019] transition-colors">
                     Shop Now
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -147,13 +172,22 @@ export default function HeroPromo() {
                   </div>
                   <button className="inline-flex items-center gap-2 text-sm font-bold text-[#BF1A1A] hover:text-[#7B4019] transition-colors">
                     Shop Now
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
                     </svg>
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         </div>

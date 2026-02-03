@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  ArrowRight,
-  Coffee,
-  ShoppingBag,
-  Star,
-  Milk,
-  Croissant,
-} from "lucide-react";
+import { assets } from "../assets/assets";
 
 /**
- * Auto-Rotating Hero Carousel
- * Three distinct creative designs that cycle automatically
- * No manual controls - smooth auto-transition
+ * Premium Product Hero Carousel - 4 Categories
+ * Kent Toppings | SPUDS Chips | Kizembe Water | Kent Spices
+ * Enhanced width, authority, and mobile-perfect design
  */
 
 export default function Hero() {
@@ -19,565 +12,713 @@ export default function Hero() {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const slides = [
-    {
-      id: 1,
-      theme: "coffee",
-      bg: "from-amber-50 via-orange-50/30 to-amber-50",
-      accentColor: "amber",
-    },
-    {
-      id: 2,
-      theme: "milk",
-      bg: "from-orange-100 via-red-50 to-orange-100",
-      accentColor: "orange",
-    },
-    {
-      id: 3,
-      theme: "bakery",
-      bg: "from-rose-50 via-pink-50 to-rose-50",
-      accentColor: "rose",
-    },
+    { id: 1, name: "toppings" },
+    { id: 2, name: "spuds" },
+    { id: 3, name: "water" },
+    { id: 4, name: "spices" },
   ];
 
-  // Auto-rotate every 5 seconds
+  // Auto-rotate every 6 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentSlide((prev) => (prev + 1) % slides.length);
         setIsTransitioning(false);
-      }, 300);
-    }, 5000);
+      }, 400);
+    }, 6000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
+
+  // Manual navigation
+  const goToSlide = (index) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide(index);
+      setIsTransitioning(false);
+    }, 400);
+  };
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-br ${slides[currentSlide].bg} transition-all duration-1000`}
-    >
+    <div className="w-full bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Carousel Container */}
-      <div className="relative overflow-hidden">
+      <div className="relative w-full overflow-hidden">
         <div
-          className={`transition-opacity duration-300 ${isTransitioning ? "opacity-0" : "opacity-100"}`}
+          className={`transition-all duration-400 ${
+            isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
+          }`}
         >
-          {/* Slide 1: Coffee Shop Design */}
-          {currentSlide === 0 && <CoffeeSlide />}
+          {currentSlide === 0 && <ToppingsSlide />}
+          {currentSlide === 1 && <SpudsSlide />}
+          {currentSlide === 2 && <WaterSlide />}
+          {currentSlide === 3 && <SpicesSlide />}
+        </div>
 
-          {/* Slide 2: Milk Products Design */}
-          {currentSlide === 1 && <MilkSlide />}
-
-          {/* Slide 3: Bakery Design */}
-          {currentSlide === 2 && <BakerySlide />}
+        {/* Navigation Dots */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 z-30">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.id}
+              onClick={() => goToSlide(index)}
+              className={`transition-all duration-300 rounded-full ${
+                currentSlide === index
+                  ? "w-12 h-3 bg-[#BF1A1A]"
+                  : "w-3 h-3 bg-gray-400 hover:bg-gray-600"
+              }`}
+              aria-label={`Go to ${slide.name} slide`}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Carousel Indicators */}
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2">
-        {slides.map((_, index) => (
-          <div
-            key={index}
-            className={`h-2 rounded-full transition-all duration-500 ${
-              currentSlide === index
-                ? "w-8 bg-gradient-to-r from-amber-600 to-orange-600"
-                : "w-2 bg-amber-300"
-            }`}
-          />
-        ))}
-      </div>
+      <style>{`
+        @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap");
 
-      <style jsx>{`
-        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Pacifico&display=swap");
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-20px) rotate(5deg);
+          }
+        }
+        @keyframes pulse-glow {
+          0%,
+          100% {
+            box-shadow: 0 0 20px rgba(191, 26, 26, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(191, 26, 26, 0.8);
+          }
+        }
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
+        }
+        .animate-pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
       `}</style>
     </div>
   );
 }
 
-// Coffee Shop Slide Component
-function CoffeeSlide() {
+// 1. Kent Toppings Slide - Premium Ice Cream & Dessert Toppings
+function ToppingsSlide() {
   return (
-    <section className="relative py-12 lg:py-16 overflow-hidden">
-      <div className="relative mx-auto max-w-[1280px] px-6">
-        <div className="relative rounded-[32px] bg-white/90 backdrop-blur-sm p-8 lg:p-12 border border-amber-100/50 shadow-[0_20px_80px_rgba(120,53,15,0.08)] overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left: Coffee Cups */}
-            <div className="relative lg:col-span-6 h-[500px] lg:h-[600px]">
-              {/* Large coffee cup - left */}
-              <div className="absolute left-0 top-12 w-[280px] h-[380px] transform -rotate-12 hover:rotate-6 transition-all duration-700">
-                <div className="relative w-full h-full">
-                  {/* Cup body - gradient silver/white */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-white to-gray-100 rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
-                    {/* Black lid */}
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-[85%] h-16 bg-gradient-to-b from-gray-900 to-gray-800 rounded-t-[30px] shadow-lg" />
-
-                    {/* Coffee label badge */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32">
-                      <div className="w-full h-full rounded-full border-4 border-amber-500 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center shadow-lg">
-                        <div className="text-center">
-                          <div className="text-xl font-bold text-amber-400">
-                            COFFEE
-                          </div>
-                          <div className="flex items-center justify-center gap-1 mt-1">
-                            <div className="w-3 h-4 bg-amber-600 rounded-full" />
-                            <div className="w-3 h-4 bg-amber-600 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                      {/* Decorative dots */}
-                      <div className="absolute inset-0 rounded-full border-2 border-dashed border-amber-400/50" />
-                    </div>
-
-                    {/* Coffee beans floating */}
-                    <div className="absolute top-20 -right-4 w-8 h-10 bg-amber-800 rounded-full rotate-45" />
-                    <div className="absolute bottom-24 -left-3 w-7 h-9 bg-amber-900 rounded-full -rotate-12" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tan/brown coffee cup - center */}
-              <div className="absolute left-[35%] top-0 w-[260px] h-[360px] transform rotate-6 hover:-rotate-3 transition-all duration-700 z-10">
-                <div className="relative w-full h-full">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-amber-500 to-amber-700 rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-                    {/* Dark lid */}
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-[85%] h-16 bg-gradient-to-b from-amber-900 to-amber-800 rounded-t-[30px]" />
-
-                    {/* Coffee label */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28">
-                      <div className="w-full h-full rounded-full border-4 border-amber-900 bg-gradient-to-br from-amber-800 to-amber-900 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-lg font-bold text-amber-200">
-                            COFFEE
-                          </div>
-                          <div className="flex items-center justify-center gap-1 mt-1">
-                            <div className="w-2.5 h-3.5 bg-amber-300 rounded-full" />
-                            <div className="w-2.5 h-3.5 bg-amber-300 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="absolute inset-0 rounded-full border-2 border-dashed border-amber-400" />
-                    </div>
-
-                    {/* Coffee beans */}
-                    <div className="absolute top-16 right-2 w-7 h-9 bg-amber-900 rounded-full rotate-12" />
-                    <div className="absolute bottom-32 left-1 w-6 h-8 bg-amber-950 rounded-full -rotate-45" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Price badge */}
-              <div className="absolute left-[42%] top-[58%] z-20 animate-float">
-                <div
-                  className="w-[100px] h-[100px] rounded-full flex items-center justify-center shadow-[0_12px_40px_rgba(245,158,11,0.35)]"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
-                    border: "3px solid rgba(255,255,255,0.9)",
-                  }}
-                >
-                  <div className="text-center">
-                    <div className="text-xs font-medium text-amber-900/80">
-                      Start At
-                    </div>
-                    <div className="text-2xl font-bold text-amber-950">
-                      $7.99
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Small cup bottom right */}
-              <div className="absolute right-8 bottom-16 w-[140px] h-[180px] transform rotate-[20deg]">
-                <div className="relative w-full h-full">
-                  <div className="absolute inset-0 bg-gradient-to-br from-rose-900 via-red-900 to-rose-950 rounded-[30px] shadow-[0_15px_40px_rgba(0,0,0,0.2)]">
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-[85%] h-12 bg-gradient-to-b from-rose-950 to-rose-900 rounded-t-[20px]" />
-
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20">
-                      <div className="w-full h-full rounded-full border-3 border-amber-500 bg-rose-950 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-sm font-bold text-amber-400">
-                            COFFEE
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Coffee splash */}
-              <div className="absolute right-0 bottom-0 w-[400px] h-[200px]">
-                <svg viewBox="0 0 400 200" className="w-full h-full">
-                  <path
-                    d="M0 150 Q 50 120, 100 140 T 200 135 T 300 145 T 400 130 L 400 200 L 0 200 Z"
-                    fill="url(#coffeeSplash)"
-                    className="drop-shadow-2xl"
-                  />
-                  <defs>
-                    <linearGradient
-                      id="coffeeSplash"
-                      x1="0%"
-                      y1="0%"
-                      x2="0%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stopColor="#78350f" />
-                      <stop offset="100%" stopColor="#451a03" />
-                    </linearGradient>
-                  </defs>
-                  {/* Splash droplets */}
-                  <circle
-                    cx="120"
-                    cy="100"
-                    r="8"
-                    fill="#92400e"
-                    opacity="0.6"
-                  />
-                  <circle cx="180" cy="90" r="6" fill="#92400e" opacity="0.5" />
-                  <circle
-                    cx="250"
-                    cy="95"
-                    r="10"
-                    fill="#78350f"
-                    opacity="0.7"
-                  />
-                  <circle
-                    cx="320"
-                    cy="105"
-                    r="7"
-                    fill="#92400e"
-                    opacity="0.5"
-                  />
-                </svg>
-              </div>
-
-              {/* Floating coffee beans */}
-              <div className="absolute left-12 top-32 w-6 h-8 bg-amber-900 rounded-full rotate-45 opacity-40" />
-              <div className="absolute left-[55%] top-20 w-5 h-7 bg-amber-800 rounded-full -rotate-12 opacity-40" />
-            </div>
-
-            {/* Right: Content */}
-            <div className="lg:col-span-6 space-y-6">
-              <h1
-                className="font-serif text-5xl lg:text-7xl leading-tight text-amber-950"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                Enjoy Your
-                <br />
-                <span className="text-amber-800">Morning Coffee</span>
-              </h1>
-
-              <p className="text-base text-amber-800/80 max-w-lg leading-relaxed">
-                Boost your productivity and build your mood with a glass of
-                coffee in the morning, 100% natural from garden.
-              </p>
-
-              <button className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-amber-700 to-amber-900 text-white font-medium shadow-lg hover:scale-105 transition-transform">
-                Order Now
-                <ArrowRight size={20} />
-              </button>
-
-              {/* Stats */}
-              <div className="flex items-center gap-12 pt-8">
-                <div>
-                  <div className="text-4xl font-bold text-amber-950">1K+</div>
-                  <div className="text-sm text-amber-700">Reviews</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-amber-950">3k+</div>
-                  <div className="text-sm text-amber-700">Best Sell</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold text-amber-950">150+</div>
-                  <div className="text-sm text-amber-700">Menu</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Milk Products Slide Component
-function MilkSlide() {
-  return (
-    <section className="relative py-12 lg:py-20 overflow-hidden">
-      <div className="relative mx-auto max-w-[1280px] px-6">
-        <div
-          className="relative rounded-[32px] bg-white backdrop-blur-sm p-8 lg:p-14 shadow-[0_20px_80px_rgba(251,113,133,0.15)] overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #fecaca 0%, #fed7aa 100%)",
-          }}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left: Milk Cartons with Splash */}
-            <div className="relative lg:col-span-6 h-[500px] lg:h-[600px]">
-              {/* Milk splash background */}
-              <div className="absolute left-0 bottom-0 w-[500px] h-[300px]">
-                <svg viewBox="0 0 500 300" className="w-full h-full opacity-90">
-                  <path
-                    d="M0 200 Q 100 150, 200 180 T 400 170 L 400 300 L 0 300 Z"
-                    fill="white"
-                    className="drop-shadow-xl"
-                  />
-                  {/* Splash details */}
-                  <path
-                    d="M80 180 Q 100 140, 120 180"
-                    stroke="white"
-                    strokeWidth="40"
-                    fill="none"
-                    opacity="0.7"
-                  />
-                  <circle cx="150" cy="150" r="25" fill="white" opacity="0.8" />
-                  <circle cx="250" cy="160" r="20" fill="white" opacity="0.7" />
-                </svg>
-              </div>
-
-              {/* Blue milk carton - left */}
-              <div className="absolute left-8 top-16 w-[180px] h-[280px] transform -rotate-12 hover:rotate-0 transition-all duration-700 z-10">
-                <div className="relative w-full h-full">
-                  {/* Carton shape */}
-                  <div
-                    className="absolute inset-0 bg-gradient-to-br from-sky-400 to-sky-600 rounded-lg shadow-[0_20px_60px_rgba(14,165,233,0.3)]"
-                    style={{
-                      clipPath:
-                        "polygon(10% 0%, 90% 0%, 100% 8%, 100% 100%, 0% 100%, 0% 8%)",
-                    }}
-                  >
-                    {/* Cap */}
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-sm shadow-md" />
-
-                    {/* Label */}
-                    <div className="absolute top-[45%] left-1/2 -translate-x-1/2 w-[85%] text-center">
-                      <div
-                        className="text-3xl font-bold text-white mb-2"
-                        style={{ fontFamily: "'Pacifico', cursive" }}
-                      >
-                        MilkCow
-                      </div>
-                      <div className="text-xs text-white/90">
-                        100% Fresh Milk
-                      </div>
-
-                      {/* Cow illustration placeholder */}
-                      <div className="mt-4 flex justify-center">
-                        <div className="w-20 h-16 bg-white/30 rounded-lg flex items-center justify-center">
-                          <Milk size={32} className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mint/green milk carton - right */}
-              <div className="absolute right-16 top-8 w-[200px] h-[300px] transform rotate-12 hover:rotate-6 transition-all duration-700 z-10">
-                <div className="relative w-full h-full">
-                  <div
-                    className="absolute inset-0 bg-gradient-to-br from-emerald-300 to-emerald-500 rounded-lg shadow-[0_20px_60px_rgba(16,185,129,0.3)]"
-                    style={{
-                      clipPath:
-                        "polygon(10% 0%, 90% 0%, 100% 8%, 100% 100%, 0% 100%, 0% 8%)",
-                    }}
-                  >
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-sm shadow-md" />
-
-                    <div className="absolute top-[45%] left-1/2 -translate-x-1/2 w-[85%] text-center">
-                      <div
-                        className="text-3xl font-bold text-white mb-2"
-                        style={{ fontFamily: "'Pacifico', cursive" }}
-                      >
-                        MilkCow
-                      </div>
-                      <div className="text-xs text-white/90">Farm to Table</div>
-
-                      <div className="mt-4 flex justify-center">
-                        <div className="w-20 h-16 bg-white/30 rounded-lg flex items-center justify-center">
-                          <Milk size={32} className="text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cows at bottom */}
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
-                <div className="w-24 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                  <div className="text-4xl">🐄</div>
-                </div>
-                <div className="w-20 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center opacity-80">
-                  <div className="text-3xl">🐄</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Content */}
-            <div className="lg:col-span-6 space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-white">
-                <Star size={16} className="text-orange-500 fill-orange-500" />
-                <span className="text-sm font-medium text-orange-900">
-                  100% Pure & Fresh
-                </span>
-              </div>
-
-              <h1 className="text-5xl lg:text-8xl font-bold text-white leading-tight">
-                Fresh milk
-                <br />
-                for all!
-              </h1>
-
-              <p
-                className="text-2xl text-white/90 italic"
-                style={{ fontFamily: "'Pacifico', cursive" }}
-              >
-                from molly with mooo!
-              </p>
-
-              <button className="inline-flex items-center gap-3 px-10 py-5 rounded-full bg-white text-orange-600 font-bold text-lg shadow-xl hover:scale-105 transition-transform">
-                Buy now
-              </button>
-
-              {/* Product info */}
-              <div className="grid grid-cols-3 gap-6 pt-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">100%</div>
-                  <div className="text-sm text-white/80">Natural</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">Fresh</div>
-                  <div className="text-sm text-white/80">Daily</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white">A++</div>
-                  <div className="text-sm text-white/80">Quality</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Bakery/Pastry Slide Component
-function BakerySlide() {
-  return (
-    <section className="relative py-12 lg:py-20 overflow-hidden">
-      <div className="relative mx-auto max-w-[1280px] px-6">
-        <div className="relative rounded-[32px] bg-gradient-to-br from-rose-50 to-pink-50 backdrop-blur-sm p-8 lg:p-14 border border-rose-100/50 shadow-[0_20px_80px_rgba(225,29,72,0.1)] overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Left: Bakery Items */}
-            <div className="relative lg:col-span-6 h-[500px] lg:h-[600px]">
-              {/* Croissant - main */}
-              <div className="absolute left-8 top-12 w-[320px] h-[280px] transform -rotate-12 hover:rotate-0 transition-all duration-700">
+    <section className="relative min-h-[90vh] lg:min-h-screen flex items-center py-12 lg:py-20 overflow-hidden bg-[#EBE1D1]">
+      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
+        <div className="relative rounded-3xl bg-white p-8 lg:p-12 border-2 border-[#FFD41D] shadow-2xl overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            {/* Left: Product Images */}
+            <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] order-1 lg:order-1">
+              {/* Large topping - left */}
+              <div className="absolute left-0 top-8 w-[220px] sm:w-[280px] lg:w-[320px] h-[280px] sm:h-[360px] lg:h-[420px] transform -rotate-12 hover:rotate-0 transition-all duration-700">
                 <img
-                  src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80"
-                  alt="Fresh croissants"
-                  className="w-full h-full object-cover rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)]"
+                  src={assets.topping}
+                  alt="Kent Topping"
+                  className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-white"
                 />
               </div>
 
-              {/* Coffee cup with pastry */}
-              <div className="absolute right-12 top-16 w-[280px] h-[320px] transform rotate-12 hover:rotate-6 transition-all duration-700 z-10">
+              {/* Center topping */}
+              <div className="absolute left-[35%] top-0 w-[200px] sm:w-[260px] lg:w-[300px] h-[260px] sm:h-[340px] lg:h-[400px] transform rotate-8 hover:rotate-3 transition-all duration-700 z-10">
                 <img
-                  src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80"
-                  alt="Coffee and pastries"
-                  className="w-full h-full object-cover rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                  src={assets.top2}
+                  alt="Kent Product"
+                  className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-[#FFD41D]"
                 />
               </div>
 
               {/* Price badge */}
               <div className="absolute left-[40%] top-[55%] z-20 animate-float">
-                <div
-                  className="w-[110px] h-[110px] rounded-full flex items-center justify-center shadow-[0_12px_40px_rgba(236,72,153,0.35)]"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%)",
-                    border: "4px solid rgba(255,255,255,0.9)",
-                  }}
-                >
+                <div className="w-[100px] h-[100px] rounded-full flex items-center justify-center shadow-2xl bg-[#FFD41D] border-4 border-white">
                   <div className="text-center">
-                    <div className="text-xs font-medium text-rose-900/80">
+                    <div className="text-xs font-medium text-[#7B4019]">
                       From
                     </div>
-                    <div className="text-2xl font-bold text-rose-950">
-                      $4.50
+                    <div className="text-2xl font-bold text-black">$5.99</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Small product bottom right */}
+              <div className="absolute right-8 bottom-12 w-[120px] sm:w-[140px] lg:w-[160px] h-[150px] sm:h-[180px] lg:h-[200px] transform rotate-[20deg]">
+                <img
+                  src={assets.kent}
+                  alt="Kent Soup"
+                  className="w-full h-full object-cover rounded-2xl shadow-xl border-4 border-[#BF1A1A]"
+                />
+              </div>
+
+              {/* Additional accent */}
+              <div className="absolute right-0 bottom-0 w-[280px] sm:w-[340px] lg:w-[380px] h-[150px] sm:w-[180px] lg:h-[200px]">
+                <img
+                  src={assets.top}
+                  alt="Product accent"
+                  className="w-full h-full object-cover opacity-60"
+                />
+              </div>
+
+              {/* Small floating products */}
+              <div className="absolute left-12 top-28">
+                <img
+                  src={assets.top3}
+                  alt="Product"
+                  className="w-10 h-10 rounded-full object-cover rotate-45 opacity-70"
+                />
+              </div>
+            </div>
+
+            {/* Right: Content */}
+            <div className="space-y-6 lg:space-y-8 order-2 lg:order-2 text-center lg:text-left">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white shadow-lg border-2 border-[#FFD41D]">
+                <div className="w-2 h-2 bg-[#BF1A1A] rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-gray-800 tracking-wide">
+                  PREMIUM DESSERT TOPPINGS
+                </span>
+              </div>
+
+              {/* Heading */}
+              <h1
+                className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.1] text-gray-900"
+                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+              >
+                <span className="block">ELEVATE YOUR</span>
+                <span className="block text-[#BF1A1A]">SWEET MOMENTS</span>
+              </h1>
+
+              {/* Description */}
+              <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                Transform ordinary desserts into extraordinary experiences with
+                Kent Boringer's premium toppings. From rich raspberry to
+                luscious caramel, every drop adds magic.
+              </p>
+
+              {/* CTA Button */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                <button className="group px-10 py-5 rounded-full bg-[#BF1A1A] text-white font-bold text-lg shadow-2xl hover:bg-[#8B1414] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_50px_rgba(191,26,26,0.4)]">
+                  <span className="flex items-center gap-3 justify-center">
+                    Shop Toppings
+                    <svg
+                      className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </span>
+                </button>
+                <button className="px-10 py-5 rounded-full bg-white text-gray-900 font-bold text-lg shadow-xl hover:shadow-2xl border-2 border-gray-200 hover:border-[#FFD41D] transition-all duration-300">
+                  View Flavors
+                </button>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6 pt-8 max-w-lg mx-auto lg:mx-0">
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#BF1A1A]">
+                    15+
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Flavors
+                  </div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#BF1A1A]">
+                    100%
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Natural
+                  </div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#BF1A1A]">
+                    5★
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Rated
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 2. SPUDS Chips Slide - Premium Craft-Cooked Potato Chips
+function SpudsSlide() {
+  return (
+    <section className="relative min-h-[90vh] lg:min-h-screen flex items-center py-12 lg:py-20 overflow-hidden bg-[#8B1414]">
+      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
+        <div className="relative rounded-3xl p-8 lg:p-12 shadow-2xl overflow-hidden bg-[#BF1A1A]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            {/* Left: Product Showcase */}
+            <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] order-1">
+              {/* Background accent */}
+              <div className="absolute left-0 bottom-0 w-full h-[280px]">
+                <img
+                  src={assets.spuds1}
+                  alt="Product splash"
+                  className="w-full h-full object-cover opacity-30 rounded-2xl"
+                />
+              </div>
+
+              {/* Main Product - SPUDS */}
+              <div className="absolute left-8 top-12 w-[240px] sm:w-[300px] lg:w-[360px] h-[280px] sm:h-[350px] lg:h-[420px] transform -rotate-12 hover:rotate-0 transition-all duration-700 z-10">
+                <img
+                  src={assets.spuds}
+                  alt="SPUDS Chips"
+                  className="w-full h-full object-contain drop-shadow-[0_25px_60px_rgba(0,0,0,0.6)]"
+                />
+              </div>
+
+              {/* Secondary product */}
+              <div className="absolute right-12 top-4 w-[220px] sm:w-[280px] lg:w-[320px] h-[260px] sm:h-[320px] lg:h-[380px] transform rotate-12 hover:rotate-6 transition-all duration-700 z-10">
+                <img
+                  src={assets.spuds2}
+                  alt="SPUDS Product"
+                  className="w-full h-full object-cover rounded-xl shadow-2xl border-4 border-[#FFD41D]"
+                />
+              </div>
+
+              {/* Bottom accent products */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
+                <img
+                  src={assets.spuds3}
+                  alt="Product"
+                  className="w-24 h-24 rounded-2xl object-cover shadow-xl border-4 border-white"
+                />
+                <img
+                  src={assets.spuds4}
+                  alt="Product"
+                  className="w-20 h-20 rounded-2xl object-cover shadow-xl border-4 border-white opacity-90"
+                />
+              </div>
+
+              {/* Small floating product */}
+              <div className="absolute left-4 top-32">
+                <img
+                  src={assets.spuds5}
+                  alt="Product"
+                  className="w-16 h-16 rounded-full object-cover opacity-50"
+                />
+              </div>
+            </div>
+
+            {/* Right: Content */}
+            <div className="space-y-6 lg:space-y-8 order-2 text-center lg:text-left">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-100 shadow-lg border-2 border-amber-300">
+                <div className="w-2 h-2 bg-red-800 rounded-full animate-pulse"></div>
+                <span className="text-sm font-bold text-red-900 tracking-wide uppercase">
+                  Craft Cooked Perfection
+                </span>
+              </div>
+
+              {/* Heading */}
+              <h1
+                className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.1] text-white"
+                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+              >
+                <span className="block">CRUNCH INTO</span>
+                <span className="block text-[#FFD41D]">BOLD FLAVOR</span>
+              </h1>
+
+              {/* Description */}
+              <p className="text-base sm:text-lg lg:text-xl text-amber-100 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                Experience the ultimate crunch with SPUDS craft-cooked potato
+                chips. Hand-selected potatoes, expertly seasoned, perfectly
+                crispy. Snacking elevated.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                <button className="group px-10 py-5 rounded-full bg-[#FFD41D] text-red-900 font-black text-lg shadow-2xl hover:bg-amber-300 transition-all duration-300 hover:scale-105">
+                  <span className="flex items-center gap-3 justify-center">
+                    Order Now
+                    <svg
+                      className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </span>
+                </button>
+                <button className="px-10 py-5 rounded-full bg-transparent text-white font-bold text-lg border-3 border-white hover:bg-white hover:text-red-900 transition-all duration-300">
+                  All Flavors
+                </button>
+              </div>
+
+              {/* Features */}
+              <div className="grid grid-cols-3 gap-6 pt-8 max-w-lg mx-auto lg:mx-0">
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#FFD41D]">
+                    100%
+                  </div>
+                  <div className="text-sm text-amber-200 font-semibold mt-1">
+                    Real Potato
+                  </div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#FFD41D]">
+                    Zero
+                  </div>
+                  <div className="text-sm text-amber-200 font-semibold mt-1">
+                    Trans Fat
+                  </div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#FFD41D]">
+                    Halal
+                  </div>
+                  <div className="text-sm text-amber-200 font-semibold mt-1">
+                    Certified
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 3. Kizembe Water Slide - Pure Natural Spring Water
+function WaterSlide() {
+  return (
+    <section className="relative min-h-[90vh] lg:min-h-screen flex items-center py-12 lg:py-20 overflow-hidden bg-[#EBE1D1]">
+      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
+        <div className="relative rounded-3xl bg-white p-8 lg:p-12 border-2 border-[#00A8E8] shadow-2xl overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            {/* Left: Product Images */}
+            <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] order-1 lg:order-1">
+              {/* Background splash */}
+              <div className="absolute left-0 bottom-0 w-full h-[280px]">
+                <img
+                  src={assets.crepes}
+                  alt="Water splash"
+                  className="w-full h-full object-cover opacity-20 rounded-2xl"
+                />
+              </div>
+
+              {/* Main water bottle - left */}
+              <div className="absolute left-8 top-12 w-[200px] sm:w-[250px] lg:w-[300px] h-[280px] sm:h-[350px] lg:h-[420px] transform -rotate-12 hover:rotate-0 transition-all duration-700 z-10">
+                <img
+                  src={assets.spuds1}
+                  alt="Kizembe Water"
+                  className="w-full h-full object-contain drop-shadow-2xl"
+                />
+              </div>
+
+              {/* Secondary bottle - right */}
+              <div className="absolute right-12 top-4 w-[220px] sm:w-[270px] lg:w-[320px] h-[300px] sm:h-[370px] lg:h-[440px] transform rotate-12 hover:rotate-6 transition-all duration-700 z-10">
+                <img
+                  src={assets.noodle}
+                  alt="Kizembe Water Bottle"
+                  className="w-full h-full object-contain drop-shadow-2xl"
+                />
+              </div>
+
+              {/* Bottom accent products */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
+                <img
+                  src={assets.hazelnut}
+                  alt="Product"
+                  className="w-24 h-24 rounded-2xl object-cover shadow-xl border-4 border-white"
+                />
+                <img
+                  src={assets.top1}
+                  alt="Product"
+                  className="w-20 h-20 rounded-2xl object-cover shadow-xl border-4 border-white opacity-90"
+                />
+              </div>
+
+              {/* Small floating element */}
+              <div className="absolute left-4 top-32">
+                <img
+                  src={assets.top3}
+                  alt="Accent"
+                  className="w-16 h-16 rounded-full object-cover opacity-50"
+                />
+              </div>
+            </div>
+
+            {/* Right: Content */}
+            <div className="space-y-6 lg:space-y-8 order-2 lg:order-2 text-center lg:text-left">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white shadow-lg border-2 border-[#00A8E8]">
+                <div className="w-2 h-2 bg-[#0077B6] rounded-full animate-pulse"></div>
+                <span className="text-sm font-bold text-[#0077B6] tracking-wide uppercase">
+                  100% Natural Spring Water
+                </span>
+              </div>
+
+              {/* Heading */}
+              <h1
+                className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.05] text-black"
+                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+              >
+                <span className="block">DRINK BOLD.</span>
+                <span className="block text-[#0077B6]">LIVE FRESH.</span>
+              </h1>
+
+              {/* Tagline */}
+              <p
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#00A8E8] italic"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              >
+                Kizembe Water
+              </p>
+
+              {/* Description */}
+              <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                Sourced from pristine natural springs, Kizembe delivers pure
+                refreshment in every sip. Naturally filtered, perfectly
+                balanced, 100% guaranteed fresh.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                <button className="group px-10 py-5 rounded-full bg-[#0077B6] text-white font-black text-lg shadow-2xl hover:bg-[#005A8C] transition-all duration-300 hover:scale-105">
+                  <span className="flex items-center gap-3 justify-center">
+                    Find Near You
+                    <svg
+                      className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </span>
+                </button>
+                <button className="px-10 py-5 rounded-full bg-white text-gray-900 font-bold text-lg shadow-xl hover:shadow-2xl border-2 border-gray-200 hover:border-[#00A8E8] transition-all duration-300">
+                  Learn More
+                </button>
+              </div>
+
+              {/* Trust Indicators */}
+              <div className="grid grid-cols-3 gap-6 pt-8 max-w-lg mx-auto lg:mx-0">
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#0077B6]">
+                    100%
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Guaranteed
+                  </div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#0077B6]">
+                    Pure
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Natural
+                  </div>
+                </div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#0077B6]">
+                    Fresh
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Daily
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 4. Kent Spices Slide - Premium Soup & Seasoning Mixes
+function SpicesSlide() {
+  return (
+    <section className="relative min-h-[90vh] lg:min-h-screen flex items-center py-12 lg:py-20 overflow-hidden bg-[#EBE1D1]">
+      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
+        <div className="relative rounded-3xl bg-white p-8 lg:p-12 border-2 border-[#4CAF50] shadow-2xl overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            {/* Left: Product Showcase */}
+            <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] order-1">
+              {/* Main Product - Vegetable Soup */}
+              <div className="absolute left-8 top-8 w-[260px] sm:w-[320px] lg:w-[380px] h-[340px] sm:h-[420px] lg:h-[500px] transform -rotate-12 hover:rotate-0 transition-all duration-700">
+                <img
+                  src={assets.kent}
+                  alt="Kent Vegetable Soup"
+                  className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-[#FFD41D]"
+                />
+              </div>
+
+              {/* Secondary product */}
+              <div className="absolute right-12 top-12 w-[240px] sm:w-[300px] lg:w-[340px] h-[300px] sm:h-[370px] lg:h-[430px] transform rotate-12 hover:rotate-6 transition-all duration-700 z-10">
+                <img
+                  src={assets.topping}
+                  alt="Kent Product"
+                  className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-white"
+                />
+              </div>
+
+              {/* Price badge */}
+              <div className="absolute left-[38%] top-[52%] z-20 animate-float">
+                <div className="w-[110px] h-[110px] rounded-full flex items-center justify-center shadow-2xl bg-[#4CAF50] border-4 border-white">
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-white">From</div>
+                    <div className="text-2xl font-bold text-[#FFD41D]">
+                      $3.99
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Donut accent */}
-              <div className="absolute right-8 bottom-20 w-[140px] h-[140px] transform rotate-[25deg]">
+              {/* Accent product */}
+              <div className="absolute right-8 bottom-16 w-[120px] sm:w-[140px] lg:w-[160px] h-[120px] sm:h-[140px] lg:h-[160px] transform rotate-[25deg]">
                 <img
-                  src="https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&q=80"
-                  alt="Donuts"
-                  className="w-full h-full object-cover rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.12)]"
+                  src={assets.top2}
+                  alt="Product"
+                  className="w-full h-full object-cover rounded-2xl shadow-xl border-4 border-[#4CAF50]"
                 />
               </div>
 
-              {/* Decorative elements */}
-              <div
-                className="absolute left-16 bottom-24 text-6xl animate-bounce"
-                style={{ animationDuration: "3s" }}
-              >
-                🥐
+              {/* Additional products */}
+              <div className="absolute left-12 bottom-20 w-24 h-24">
+                <img
+                  src={assets.top3}
+                  alt="Product"
+                  className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white"
+                />
               </div>
-              <div
-                className="absolute right-32 bottom-32 text-5xl opacity-70"
-                style={{ animation: "float 4s ease-in-out infinite" }}
-              >
-                ☕
+
+              {/* Small accent */}
+              <div className="absolute right-32 bottom-28 w-20 h-20 opacity-70">
+                <img
+                  src={assets.top1}
+                  alt="Product"
+                  className="w-full h-full object-cover rounded-full shadow-lg"
+                />
+              </div>
+
+              {/* Floating element */}
+              <div className="absolute left-16 top-32">
+                <img
+                  src={assets.spuds}
+                  alt="Accent"
+                  className="w-12 h-12 rounded-full object-cover opacity-50"
+                />
               </div>
             </div>
 
             {/* Right: Content */}
-            <div className="lg:col-span-6 space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-rose-100 to-pink-100 border border-rose-200/50">
-                <Croissant size={16} className="text-rose-600" />
-                <span className="text-sm font-medium text-rose-900">
-                  Freshly Baked Daily
+            <div className="space-y-6 lg:space-y-8 order-2 text-center lg:text-left">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E8F5E9] shadow-lg border-2 border-[#4CAF50]">
+                <div className="w-2 h-2 bg-[#2E7D32] rounded-full animate-pulse"></div>
+                <span className="text-sm font-bold text-[#2E7D32] tracking-wide uppercase">
+                  100% Natural Ingredients
                 </span>
               </div>
 
+              {/* Heading */}
               <h1
-                className="font-serif text-5xl lg:text-7xl leading-tight text-rose-950"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.1] text-black"
+                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
               >
-                Sweet Treats
-                <br />
-                <span className="bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
-                  For Your Day
-                </span>
+                <span className="block">TASTE THE</span>
+                <span className="block text-[#4CAF50]">GOODNESS</span>
               </h1>
 
-              <p className="text-base text-rose-900/70 leading-relaxed max-w-lg">
-                Indulge in our artisan pastries and baked goods, crafted with
-                love every morning. From flaky croissants to rich coffee, start
-                your day deliciously.
+              {/* Description */}
+              <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                Kent Boringer brings you premium soups and seasonings crafted
+                from 100% natural vegetables. Rich flavor, wholesome nutrition,
+                ready in minutes.
               </p>
 
-              <button className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 text-white font-medium shadow-lg hover:scale-105 transition-transform">
-                Order Now
-                <ArrowRight size={20} />
-              </button>
+              {/* Halal Badge */}
+              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-[#E8F5E9] border-2 border-[#4CAF50]">
+                <div className="w-10 h-10 bg-[#4CAF50] rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">✓</span>
+                </div>
+                <span className="text-[#2E7D32] font-bold text-lg">
+                  Halal Certified
+                </span>
+              </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-12 pt-8">
-                <div>
-                  <div className="text-4xl font-bold text-rose-950">50+</div>
-                  <div className="text-sm text-rose-700">Varieties</div>
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                <button className="group px-10 py-5 rounded-full bg-[#4CAF50] text-white font-black text-lg shadow-2xl hover:bg-[#2E7D32] transition-all duration-300 hover:scale-105">
+                  <span className="flex items-center gap-3 justify-center">
+                    Shop Now
+                    <svg
+                      className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </span>
+                </button>
+                <button className="px-10 py-5 rounded-full bg-white text-gray-900 font-bold text-lg shadow-xl hover:shadow-2xl border-2 border-gray-200 hover:border-[#4CAF50] transition-all duration-300">
+                  View Recipes
+                </button>
+              </div>
+
+              {/* Product Features */}
+              <div className="grid grid-cols-3 gap-6 pt-8 max-w-lg mx-auto lg:mx-0">
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#4CAF50]">
+                    4
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Servings
+                  </div>
                 </div>
-                <div>
-                  <div className="text-4xl font-bold text-rose-950">2K+</div>
-                  <div className="text-sm text-rose-700">Daily Orders</div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#4CAF50]">
+                    100%
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Vegetables
+                  </div>
                 </div>
-                <div>
-                  <div className="text-4xl font-bold text-rose-950">5★</div>
-                  <div className="text-sm text-rose-700">Rating</div>
+                <div className="text-center lg:text-left">
+                  <div className="text-3xl lg:text-4xl font-black text-[#4CAF50]">
+                    5min
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold mt-1">
+                    Ready
+                  </div>
                 </div>
               </div>
             </div>

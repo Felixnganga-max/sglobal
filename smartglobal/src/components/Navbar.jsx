@@ -5,15 +5,16 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
-    { name: "Home", href: "#" },
-    { name: "Products", href: "#" },
-    { name: "Brands", href: "#" },
+    { name: "Home", href: "/" },
+    { name: "Products", href: "products" },
+    { name: "Recipe", href: "/recipes" },
+    { name: "Blogs", href: "#" },
     { name: "About Us", href: "#" },
     { name: "Contact", href: "#" },
   ];
 
   return (
-    <header className="bg-[#fcf6e9]">
+    <header className="bg-[#EBE1D1]">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}

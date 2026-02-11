@@ -1,26 +1,68 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  User,
+  Menu,
+  X,
+  ChevronDown,
+  History,
+  UserCircle,
+  LogOut,
+} from "lucide-react";
 import { assets } from "../assets/assets";
+import { useNavigate } from "react-router-dom";
 
 /**
  * SMART GLOBAL - Premium Navigation Bar
  * Features:
- * - Magnetic hover tracking with animated background
- * - Glass morphism effects
- * - Staggered entrance animations
- * - Cart badge with pulse animation
- * - Search overlay with blur backdrop
- * - Floating mega menu on hover
- * - Smooth scroll detection with blur/shadow
+ * - Dynamic authentication state
+ * - History & Profile icons for logged-in users
+ * - User dropdown menu
+ * - Role-based navigation (admin/user)
  */
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, width: 0 });
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const navRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Get authentication state from localStorage
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = () => {
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+    } else {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setIsAuthenticated(false);
+    setUser(null);
+    setUserDropdownOpen(false);
+    navigate("/");
+  };
 
   const navLinks = [
     { name: "Products", href: "/products", hasDropdown: true },
@@ -38,6 +80,23 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
+    };
+
+    if (userDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userDropdownOpen]);
 
   // Magnetic hover tracking
   const handleMouseEnter = (e, index) => {
@@ -69,7 +128,6 @@ export default function Navbar() {
             {/* Logo - Left */}
             <a href="/" className="group flex items-center gap-3 relative z-10">
               <div className="relative">
-                {/* Glow effect on hover */}
                 <div className="absolute inset-0 bg-[#BF1A1A] blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 rounded-full scale-150"></div>
 
                 <img
@@ -98,7 +156,7 @@ export default function Navbar() {
               className="hidden lg:flex items-center relative"
               onMouseLeave={handleMouseLeave}
             >
-              {/* Magnetic hover background - Ultra Modern */}
+              {/* Magnetic hover background */}
               {hoveredIndex !== null && (
                 <div
                   className="absolute top-1/2 -translate-y-1/2 h-10 rounded-full transition-all duration-300 ease-out"
@@ -142,7 +200,6 @@ export default function Navbar() {
                       )}
                     </span>
 
-                    {/* Dot indicator for active/hover */}
                     {hoveredIndex === index && (
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
                     )}
@@ -151,7 +208,7 @@ export default function Navbar() {
               </div>
             </nav>
 
-            {/* Right Actions - Ultra Modern Icons */}
+            {/* Right Actions - Dynamic based on auth status */}
             <div className="hidden lg:flex items-center gap-2">
               {/* Search Button */}
               <button
@@ -168,7 +225,7 @@ export default function Navbar() {
                 <div className="absolute inset-0 bg-gradient-to-br from-[#BF1A1A]/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
 
-              {/* Cart Button - No Badge */}
+              {/* Cart Button */}
               <button
                 aria-label="Shopping Cart"
                 className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
@@ -182,33 +239,157 @@ export default function Navbar() {
                 <div className="absolute inset-0 bg-gradient-to-br from-[#BF1A1A]/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
 
-              {/* User Account */}
-              <button
-                aria-label="User Account"
-                className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{
-                  animation: "slideDown 0.6s ease-out forwards",
-                  animationDelay: "500ms",
-                  opacity: 0,
-                }}
-              >
-                <User className="h-5 w-5 text-gray-600 group-hover:text-[#BF1A1A] transition-colors duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#BF1A1A]/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </button>
+              {/* Conditional Rendering: Logged In vs Logged Out */}
+              {isAuthenticated ? (
+                <>
+                  {/* History Icon */}
+                  <button
+                    onClick={() => navigate("/orders")}
+                    aria-label="Order History"
+                    className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
+                    style={{
+                      animation: "slideDown 0.6s ease-out forwards",
+                      animationDelay: "500ms",
+                      opacity: 0,
+                    }}
+                  >
+                    <History className="h-5 w-5 text-gray-600 group-hover:text-[#BF1A1A] transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#BF1A1A]/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </button>
 
-              {/* Modern CTA Button */}
-              <a
-                href="/contact"
-                className="ml-2 px-5 py-2.5 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white font-bold text-xs rounded-full hover:shadow-lg hover:shadow-[#BF1A1A]/30 transition-all duration-300 hover:scale-105 active:scale-95 uppercase tracking-wider"
-                style={{
-                  animation: "slideDown 0.6s ease-out forwards",
-                  animationDelay: "550ms",
-                  opacity: 0,
-                  fontFamily: "'Montserrat', sans-serif",
-                }}
-              >
-                Get Started
-              </a>
+                  {/* Profile Dropdown */}
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                      aria-label="User Profile"
+                      className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
+                      style={{
+                        animation: "slideDown 0.6s ease-out forwards",
+                        animationDelay: "550ms",
+                        opacity: 0,
+                      }}
+                    >
+                      <UserCircle className="h-5 w-5 text-gray-600 group-hover:text-[#BF1A1A] transition-colors duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#BF1A1A]/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
+                    </button>
+
+                    {/* User Dropdown Menu */}
+                    {userDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-slideDown">
+                        <div className="bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] p-4 text-white">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                              <UserCircle className="w-7 h-7" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-bold text-sm">{user?.name}</p>
+                              <p className="text-xs text-white/80">
+                                {user?.email}
+                              </p>
+                            </div>
+                          </div>
+                          {user?.role === "admin" && (
+                            <div className="mt-2 inline-block px-2 py-1 bg-yellow-400 text-gray-900 rounded-full text-xs font-bold">
+                              ADMIN
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="py-2">
+                          <a
+                            href="/profile"
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                            onClick={() => setUserDropdownOpen(false)}
+                          >
+                            <UserCircle className="w-5 h-5 text-gray-600" />
+                            <span className="text-sm font-semibold text-gray-700">
+                              My Profile
+                            </span>
+                          </a>
+
+                          <a
+                            href="/orders"
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                            onClick={() => setUserDropdownOpen(false)}
+                          >
+                            <History className="w-5 h-5 text-gray-600" />
+                            <span className="text-sm font-semibold text-gray-700">
+                              Order History
+                            </span>
+                          </a>
+
+                          {user?.role === "admin" && (
+                            <a
+                              href="/dashboard"
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100"
+                              onClick={() => setUserDropdownOpen(false)}
+                            >
+                              <svg
+                                className="w-5 h-5 text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                />
+                              </svg>
+                              <span className="text-sm font-semibold text-gray-700">
+                                Dashboard
+                              </span>
+                            </a>
+                          )}
+
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors border-t border-gray-100 text-left"
+                          >
+                            <LogOut className="w-5 h-5 text-red-600" />
+                            <span className="text-sm font-semibold text-red-600">
+                              Logout
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* User Login Icon */}
+                  <a
+                    href="/auth"
+                    aria-label="User Account"
+                    className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
+                    style={{
+                      animation: "slideDown 0.6s ease-out forwards",
+                      animationDelay: "500ms",
+                      opacity: 0,
+                    }}
+                  >
+                    <User className="h-5 w-5 text-gray-600 group-hover:text-[#BF1A1A] transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#BF1A1A]/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </a>
+
+                  {/* CTA Button */}
+                  <a
+                    href="/contact"
+                    className="ml-2 px-5 py-2.5 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white font-bold text-xs rounded-full hover:shadow-lg hover:shadow-[#BF1A1A]/30 transition-all duration-300 hover:scale-105 active:scale-95 uppercase tracking-wider"
+                    style={{
+                      animation: "slideDown 0.6s ease-out forwards",
+                      animationDelay: "550ms",
+                      opacity: 0,
+                      fontFamily: "'Montserrat', sans-serif",
+                    }}
+                  >
+                    Get Started
+                  </a>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -225,13 +406,11 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Inline Search Bar - Slides down from navbar */}
+          {/* Inline Search Bar */}
           {searchOpen && (
             <div
               className="overflow-hidden transition-all duration-500 ease-out pb-6"
-              style={{
-                animation: "expandDown 0.4s ease-out forwards",
-              }}
+              style={{ animation: "expandDown 0.4s ease-out forwards" }}
             >
               <div className="relative max-w-2xl">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -243,8 +422,6 @@ export default function Navbar() {
                   className="w-full pl-14 pr-6 py-4 text-sm font-semibold rounded-2xl bg-white border border-gray-200 focus:border-[#BF1A1A] focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]/20 transition-all duration-300 shadow-lg"
                   style={{ fontFamily: "'Montserrat', sans-serif" }}
                 />
-
-                {/* Quick search tags */}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {["Soups", "Pancake Mixes", "Syrups", "Baby Pouches"].map(
                     (term) => (
@@ -286,7 +463,6 @@ export default function Navbar() {
                 ))}
               </div>
 
-              {/* Mobile Actions */}
               <div className="flex items-center justify-around pt-6 mt-6 border-t border-gray-200">
                 <button
                   onClick={() => setSearchOpen(true)}
@@ -297,52 +473,87 @@ export default function Navbar() {
                 <button className="relative p-4 rounded-xl hover:bg-gray-100 transition-all">
                   <ShoppingCart className="h-6 w-6 text-gray-700" />
                 </button>
-                <button className="p-4 rounded-xl hover:bg-gray-100 transition-all">
-                  <User className="h-6 w-6 text-gray-700" />
-                </button>
+
+                {isAuthenticated ? (
+                  <>
+                    <button
+                      onClick={() => navigate("/orders")}
+                      className="p-4 rounded-xl hover:bg-gray-100 transition-all"
+                    >
+                      <History className="h-6 w-6 text-gray-700" />
+                    </button>
+                    <button
+                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                      className="p-4 rounded-xl hover:bg-gray-100 transition-all relative"
+                    >
+                      <UserCircle className="h-6 w-6 text-gray-700" />
+                      <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
+                    </button>
+                  </>
+                ) : (
+                  <a
+                    href="/auth"
+                    className="p-4 rounded-xl hover:bg-gray-100 transition-all"
+                  >
+                    <User className="h-6 w-6 text-gray-700" />
+                  </a>
+                )}
               </div>
+
+              {isAuthenticated && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
+                    <div className="w-10 h-10 bg-[#BF1A1A] rounded-full flex items-center justify-center">
+                      <UserCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-gray-900">
+                        {user?.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  {user?.role === "admin" && (
+                    <a
+                      href="/dashboard"
+                      className="mt-3 block px-4 py-3 bg-yellow-50 rounded-xl text-center font-bold text-sm text-gray-900 hover:bg-yellow-100 transition-colors"
+                    >
+                      Go to Dashboard
+                    </a>
+                  )}
+
+                  <button
+                    onClick={handleLogout}
+                    className="mt-3 w-full px-4 py-3 bg-red-50 rounded-xl text-center font-bold text-sm text-red-600 hover:bg-red-100 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </nav>
           </div>
         )}
       </header>
 
-      {/* Spacer for fixed navbar */}
       <div className="h-20" />
 
       <style>{`
         @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&display=swap");
 
         @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideRight {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
         }
 
         @keyframes expandDown {
-          from {
-            max-height: 0;
-            opacity: 0;
-          }
-          to {
-            max-height: 200px;
-            opacity: 1;
-          }
+          from { max-height: 0; opacity: 0; }
+          to { max-height: 200px; opacity: 1; }
         }
       `}</style>
     </>

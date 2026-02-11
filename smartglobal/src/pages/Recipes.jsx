@@ -48,7 +48,7 @@ export default function Recipes() {
         <section className="relative rounded-3xl overflow-hidden bg-white shadow-2xl border-2 border-[#FFD41D]">
           <div className="h-64 md:h-96 lg:h-[480px] relative">
             <img
-              src={getImageFromAssets(featuredRecipe.image)}
+              src={assets.recipe}
               alt={featuredRecipe.title}
               className="w-full h-full object-cover"
             />

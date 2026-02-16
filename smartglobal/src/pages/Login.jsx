@@ -5,14 +5,14 @@ import {
   Mail,
   Lock,
   User,
-  Phone,
   Eye,
   EyeOff,
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
 
-const API_URL = "http://localhost:5000/api/smartglobal"; // ✅ Updated to match your routes
+// FIX: Change port to 3000 to match your backend
+const API_URL = "http://localhost:3000/smartglobal/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ export default function Login() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -90,20 +89,14 @@ export default function Login() {
     // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     // Sign up specific validations
     if (!isLogin) {
       if (!formData.name) {
         newErrors.name = "Full name is required";
-      }
-
-      if (!formData.phone) {
-        newErrors.phone = "Phone number is required";
-      } else if (!/^[0-9]{10,}$/.test(formData.phone.replace(/[\s-]/g, ""))) {
-        newErrors.phone = "Invalid phone number";
       }
 
       if (!formData.confirmPassword) {
@@ -136,11 +129,10 @@ export default function Login() {
           password: formData.password,
         });
       } else {
-        // REGISTER
+        // REGISTER - Remove phone field
         response = await axios.post(`${API_URL}/register`, {
           name: formData.name,
           email: formData.email,
-          phone: formData.phone,
           password: formData.password,
         });
       }
@@ -157,13 +149,6 @@ export default function Login() {
       } else {
         navigate("/");
       }
-
-      // Show success message
-      alert(
-        isLogin
-          ? "Login successful! Welcome back!"
-          : "Account created successfully! Welcome!",
-      );
     } catch (error) {
       console.error("Auth error:", error);
 
@@ -187,7 +172,6 @@ export default function Login() {
     setFormData({
       name: "",
       email: "",
-      phone: "",
       password: "",
       confirmPassword: "",
     });
@@ -324,38 +308,6 @@ export default function Login() {
                     </p>
                   )}
                 </div>
-
-                {/* Phone - Sign Up Only */}
-                {!isLogin && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Phone className="text-gray-400" size={20} />
-                      </div>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="0712345678"
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
-                          errors.phone
-                            ? "border-red-500"
-                            : "border-gray-200 focus:border-[#BF1A1A]"
-                        } rounded-xl focus:outline-none transition-all duration-300 font-medium`}
-                      />
-                    </div>
-                    {errors.phone && (
-                      <p className="text-red-500 text-sm flex items-center gap-1">
-                        <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                        {errors.phone}
-                      </p>
-                    )}
-                  </div>
-                )}
 
                 {/* Password */}
                 <div className="space-y-2">

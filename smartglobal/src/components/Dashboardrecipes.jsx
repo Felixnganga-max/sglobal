@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -18,17 +18,12 @@ import {
   TrendingUp,
   Utensils,
   Lightbulb,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { assets } from "../assets/assets";
-import { recipesData } from "../lib/recipesData";
+import { recipeApi, prepareRecipeData } from "../api/recipeApi";
 
-/**
- * DashboardRecipes Component
- * Complete recipe management interface for Kent Boringer Dashboard
- * Features: Recipe CRUD, Rich Editor for Ingredients/Directions, Image Upload, Backend-Ready
- */
-
-// Map image names to actual assets
 const getImageFromAssets = (imageName) => {
   const imageMap = {
     top2: assets.top2,
@@ -41,21 +36,56 @@ const getImageFromAssets = (imageName) => {
   return imageMap[imageName] || assets.top2;
 };
 
-// ============================================================================
-// RECIPE FORM MODAL COMPONENT
-// ============================================================================
-function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
+const getRecipeImage = (recipe) => {
+  if (recipe.image?.url) return recipe.image.url;
+  if (recipe.image && typeof recipe.image === "string")
+    return getImageFromAssets(recipe.image);
+  return assets.top2;
+};
+
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="h-8 w-8 animate-spin text-[#BF1A1A]" />
+    </div>
+  );
+}
+
+function ErrorMessage({ message, onRetry }) {
+  return (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+      <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <h3 className="text-sm font-bold text-red-900 mb-1">Error</h3>
+        <p className="text-sm text-red-700">{message}</p>
+      </div>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-colors"
+        >
+          Retry
+        </button>
+      )}
+    </div>
+  );
+}
+
+function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
   const [currentTab, setCurrentTab] = useState("basic");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
   const [formData, setFormData] = useState(
     editRecipe || {
       title: "",
       slug: "",
+      productId: "",
       category: "",
       image: null,
       imagePreview: null,
       prepTime: "",
       cookTime: "",
-      totalTime: "",
       servings: 4,
       difficulty: "Easy",
       rating: 0,
@@ -72,7 +102,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
   const [tips, setTips] = useState(editRecipe?.tips || []);
   const [tags, setTags] = useState(editRecipe?.tags || []);
   const [currentTag, setCurrentTag] = useState("");
-
   const [nutrition, setNutrition] = useState(
     editRecipe?.nutrition || {
       calories: "",
@@ -92,9 +121,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
     "Appetizers",
     "Beverages",
   ];
-
   const difficulties = ["Easy", "Medium", "Hard"];
-
   const imageOptions = [
     { name: "top2", label: "Pancake Mix" },
     { name: "kent", label: "Kent Soup" },
@@ -104,54 +131,58 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
     { name: "ice", label: "Ice Cream" },
   ];
 
-  // Generate slug from title
-  const generateSlug = (title) => {
-    return title
+  useEffect(() => {
+    if (editRecipe) {
+      setFormData({
+        ...editRecipe,
+        productId:
+          editRecipe.product?._id || editRecipe.product || editRecipe.productId,
+        imagePreview: getRecipeImage(editRecipe),
+      });
+      setIngredients(editRecipe.ingredients || [""]);
+      setDirections(editRecipe.directions || [""]);
+      setTips(editRecipe.tips || []);
+      setTags(editRecipe.tags || []);
+      setNutrition(
+        editRecipe.nutrition || {
+          calories: "",
+          protein: "",
+          carbs: "",
+          fat: "",
+          fiber: "",
+        },
+      );
+    }
+  }, [editRecipe]);
+
+  const generateSlug = (title) =>
+    title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
-  };
-
-  // Handle image selection
-  const handleImageSelect = (imageName) => {
+  const handleImageSelect = (imageName) =>
     setFormData({
       ...formData,
       image: imageName,
       imagePreview: getImageFromAssets(imageName),
     });
-  };
-
-  // Handle image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({
-          ...formData,
-          image: file,
-          imagePreview: reader.result,
-        });
-      };
+      reader.onloadend = () =>
+        setFormData({ ...formData, image: file, imagePreview: reader.result });
       reader.readAsDataURL(file);
     }
   };
 
-  // Ingredients management
-  const addIngredient = () => {
-    setIngredients([...ingredients, ""]);
-  };
-
-  const updateIngredient = (index, value) => {
+  const addIngredient = () => setIngredients([...ingredients, ""]);
+  const updateIngredient = (index, value) =>
     setIngredients(ingredients.map((ing, i) => (i === index ? value : ing)));
-  };
-
   const removeIngredient = (index) => {
-    if (ingredients.length > 1) {
+    if (ingredients.length > 1)
       setIngredients(ingredients.filter((_, i) => i !== index));
-    }
   };
-
   const moveIngredient = (index, direction) => {
     const newIngredients = [...ingredients];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
@@ -164,21 +195,13 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
     }
   };
 
-  // Directions management
-  const addDirection = () => {
-    setDirections([...directions, ""]);
-  };
-
-  const updateDirection = (index, value) => {
+  const addDirection = () => setDirections([...directions, ""]);
+  const updateDirection = (index, value) =>
     setDirections(directions.map((dir, i) => (i === index ? value : dir)));
-  };
-
   const removeDirection = (index) => {
-    if (directions.length > 1) {
+    if (directions.length > 1)
       setDirections(directions.filter((_, i) => i !== index));
-    }
   };
-
   const moveDirection = (index, direction) => {
     const newDirections = [...directions];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
@@ -191,66 +214,95 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
     }
   };
 
-  // Tips management
-  const addTip = () => {
-    setTips([...tips, ""]);
-  };
-
-  const updateTip = (index, value) => {
+  const addTip = () => setTips([...tips, ""]);
+  const updateTip = (index, value) =>
     setTips(tips.map((tip, i) => (i === index ? value : tip)));
-  };
+  const removeTip = (index) => setTips(tips.filter((_, i) => i !== index));
 
-  const removeTip = (index) => {
-    setTips(tips.filter((_, i) => i !== index));
-  };
-
-  // Tags management
   const addTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim())) {
       setTags([...tags, currentTag.trim()]);
       setCurrentTag("");
     }
   };
-
-  const removeTag = (tagToRemove) => {
+  const removeTag = (tagToRemove) =>
     setTags(tags.filter((tag) => tag !== tagToRemove));
+  const calculateTotalTime = () =>
+    `${(parseInt(formData.prepTime) || 0) + (parseInt(formData.cookTime) || 0)} min`;
+
+  const validateForm = () => {
+    if (!formData.title.trim()) {
+      setError("Please enter a recipe title");
+      setCurrentTab("basic");
+      return false;
+    }
+    if (!formData.productId) {
+      setError("Please select a product");
+      setCurrentTab("basic");
+      return false;
+    }
+    if (!formData.category) {
+      setError("Please select a category");
+      setCurrentTab("basic");
+      return false;
+    }
+    if (!formData.description.trim()) {
+      setError("Please enter a description");
+      setCurrentTab("basic");
+      return false;
+    }
+    if (!formData.prepTime || !formData.cookTime) {
+      setError("Please enter prep time and cook time");
+      setCurrentTab("basic");
+      return false;
+    }
+    if (!formData.servings) {
+      setError("Please enter number of servings");
+      setCurrentTab("basic");
+      return false;
+    }
+    if (!formData.image && !formData.imagePreview) {
+      setError("Please select or upload an image");
+      setCurrentTab("basic");
+      return false;
+    }
+    if (ingredients.filter((ing) => ing.trim()).length === 0) {
+      setError("Please add at least one ingredient");
+      setCurrentTab("ingredients");
+      return false;
+    }
+    if (directions.filter((dir) => dir.trim()).length === 0) {
+      setError("Please add at least one cooking direction");
+      setCurrentTab("directions");
+      return false;
+    }
+    return true;
   };
 
-  // Auto-calculate total time
-  const calculateTotalTime = () => {
-    const prep = parseInt(formData.prepTime) || 0;
-    const cook = parseInt(formData.cookTime) || 0;
-    return `${prep + cook} min`;
-  };
-
-  // Form submission
-  const handleSubmit = () => {
-    const recipeData = {
-      ...formData,
-      slug: formData.slug || generateSlug(formData.title),
-      totalTime: calculateTotalTime(),
-      ingredients: ingredients.filter((ing) => ing.trim() !== ""),
-      directions: directions.filter((dir) => dir.trim() !== ""),
-      tips: tips.filter((tip) => tip.trim() !== ""),
-      tags,
-      nutrition,
-      author: {
-        name: "Smart Global Team",
-        avatar: "SG",
-        bio: "Professional chefs and food developers",
-      },
-      date: "Just now",
-      views: 0,
-      lastUpdated: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    };
-
-    // TODO: Send to backend API
-    onSave(recipeData);
-    onClose();
+  const handleSubmit = async () => {
+    setError(null);
+    if (!validateForm()) return;
+    setIsSubmitting(true);
+    try {
+      const recipeData = prepareRecipeData(
+        formData,
+        ingredients,
+        directions,
+        tips,
+        tags,
+        nutrition,
+      );
+      const imageFile = formData.image instanceof File ? formData.image : null;
+      const result = editRecipe
+        ? await recipeApi.updateRecipe(editRecipe._id, recipeData, imageFile)
+        : await recipeApi.createRecipe(recipeData, imageFile);
+      onSave(result.data);
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to save recipe. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -258,7 +310,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col my-8">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2
@@ -274,61 +325,46 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={isSubmitting}
           >
             <X className="h-6 w-6 text-gray-600" />
           </button>
         </div>
 
-        {/* Tabs */}
+        {error && (
+          <div className="px-6 pt-4">
+            <ErrorMessage message={error} onRetry={() => setError(null)} />
+          </div>
+        )}
+
         <div className="flex border-b border-gray-200 px-6 overflow-x-auto">
-          <button
-            onClick={() => setCurrentTab("basic")}
-            className={`px-6 py-3 font-bold text-sm whitespace-nowrap transition-all ${
-              currentTab === "basic"
-                ? "border-b-2 border-[#BF1A1A] text-[#BF1A1A]"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Basic Info
-          </button>
-          <button
-            onClick={() => setCurrentTab("ingredients")}
-            className={`px-6 py-3 font-bold text-sm whitespace-nowrap transition-all ${
-              currentTab === "ingredients"
-                ? "border-b-2 border-[#BF1A1A] text-[#BF1A1A]"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Ingredients
-          </button>
-          <button
-            onClick={() => setCurrentTab("directions")}
-            className={`px-6 py-3 font-bold text-sm whitespace-nowrap transition-all ${
-              currentTab === "directions"
-                ? "border-b-2 border-[#BF1A1A] text-[#BF1A1A]"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Directions
-          </button>
-          <button
-            onClick={() => setCurrentTab("nutrition")}
-            className={`px-6 py-3 font-bold text-sm whitespace-nowrap transition-all ${
-              currentTab === "nutrition"
-                ? "border-b-2 border-[#BF1A1A] text-[#BF1A1A]"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Nutrition & Tips
-          </button>
+          {["basic", "ingredients", "directions", "nutrition"].map(
+            (tab, idx) => (
+              <button
+                key={tab}
+                onClick={() => setCurrentTab(tab)}
+                className={`px-6 py-3 font-bold text-sm whitespace-nowrap transition-all ${
+                  currentTab === tab
+                    ? "border-b-2 border-[#BF1A1A] text-[#BF1A1A]"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {
+                  [
+                    "Basic Info",
+                    "Ingredients",
+                    "Directions",
+                    "Nutrition & Tips",
+                  ][idx]
+                }
+              </button>
+            ),
+          )}
         </div>
 
-        {/* Form Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* BASIC INFO TAB */}
           {currentTab === "basic" && (
             <div className="space-y-6">
-              {/* Recipe Title */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
                   Recipe Title *
@@ -336,15 +372,15 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => {
+                  onChange={(e) =>
                     setFormData({
                       ...formData,
                       title: e.target.value,
                       slug: generateSlug(e.target.value),
-                    });
-                  }}
+                    })
+                  }
                   placeholder="e.g., Fluffy Kent Boringer Pancakes with Fresh Berries"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                 />
                 {formData.title && (
                   <p className="text-xs text-gray-500 mt-1">
@@ -353,7 +389,26 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                 )}
               </div>
 
-              {/* Category & Difficulty */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Product *
+                </label>
+                <select
+                  value={formData.productId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, productId: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                >
+                  <option value="">Select product</option>
+                  {products.map((product) => (
+                    <option key={product._id} value={product._id}>
+                      {product.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -364,7 +419,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   >
                     <option value="">Select category</option>
                     {categories.map((cat) => (
@@ -374,7 +429,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     Difficulty Level *
@@ -384,7 +438,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                     onChange={(e) =>
                       setFormData({ ...formData, difficulty: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   >
                     {difficulties.map((diff) => (
                       <option key={diff} value={diff}>
@@ -395,7 +449,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                 </div>
               </div>
 
-              {/* Time & Servings */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -408,10 +461,9 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                       setFormData({ ...formData, prepTime: e.target.value })
                     }
                     placeholder="15"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     Cook Time (minutes) *
@@ -423,10 +475,9 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                       setFormData({ ...formData, cookTime: e.target.value })
                     }
                     placeholder="20"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     Servings *
@@ -438,12 +489,11 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                       setFormData({ ...formData, servings: e.target.value })
                     }
                     placeholder="4"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
               </div>
 
-              {/* Total Time Display */}
               {formData.prepTime && formData.cookTime && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                   <p className="text-green-700 font-bold">
@@ -452,7 +502,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                 </div>
               )}
 
-              {/* Rating & Reviews */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -470,10 +519,9 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                         rating: Math.min(5, Math.max(0, e.target.value)),
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     Number of Reviews
@@ -485,12 +533,11 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                       setFormData({ ...formData, reviews: e.target.value })
                     }
                     placeholder="0"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
               </div>
 
-              {/* Featured Recipe */}
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -509,7 +556,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                 </label>
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
                   Recipe Description *
@@ -521,17 +567,14 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                   }
                   rows="4"
                   placeholder="Write an engaging description of your recipe..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] resize-none"
                 />
               </div>
 
-              {/* Image Selection */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
                   Recipe Image *
                 </label>
-
-                {/* Product Image Selection */}
                 <div className="mb-4">
                   <p className="text-xs text-gray-600 mb-3">
                     Select from product images:
@@ -560,10 +603,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                     ))}
                   </div>
                 </div>
-
                 <div className="text-center text-sm text-gray-500 mb-3">OR</div>
-
-                {/* Custom Upload */}
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-[#BF1A1A] transition-colors">
                   {formData.imagePreview ? (
                     <div className="relative">
@@ -608,7 +648,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
             </div>
           )}
 
-          {/* INGREDIENTS TAB */}
           {currentTab === "ingredients" && (
             <div className="space-y-6">
               <div className="bg-[#FFF9E6] rounded-xl p-4 border border-[#FFD41D]">
@@ -617,7 +656,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                   with measurements!
                 </p>
               </div>
-
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">
                   Ingredients List
@@ -630,7 +668,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                   Add Ingredient
                 </button>
               </div>
-
               <div className="space-y-3">
                 {ingredients.map((ingredient, index) => (
                   <div
@@ -678,18 +715,9 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                   </div>
                 ))}
               </div>
-
-              {ingredients.length === 0 && (
-                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                  <p className="text-gray-500 font-semibold">
-                    No ingredients added yet. Click "Add Ingredient" to start!
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
-          {/* DIRECTIONS TAB */}
           {currentTab === "directions" && (
             <div className="space-y-6">
               <div className="bg-[#FFF9E6] rounded-xl p-4 border border-[#FFD41D]">
@@ -698,7 +726,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                   a complete action.
                 </p>
               </div>
-
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">
                   Cooking Directions
@@ -711,7 +738,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                   Add Step
                 </button>
               </div>
-
               <div className="space-y-4">
                 {directions.map((direction, index) => (
                   <div
@@ -757,21 +783,11 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                   </div>
                 ))}
               </div>
-
-              {directions.length === 0 && (
-                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                  <p className="text-gray-500 font-semibold">
-                    No directions added yet. Click "Add Step" to start!
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
-          {/* NUTRITION & TIPS TAB */}
           {currentTab === "nutrition" && (
             <div className="space-y-8">
-              {/* Nutrition Facts */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
@@ -781,86 +797,26 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                     Nutrition Facts (per serving)
                   </h3>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Calories
-                    </label>
-                    <input
-                      type="number"
-                      value={nutrition.calories}
-                      onChange={(e) =>
-                        setNutrition({ ...nutrition, calories: e.target.value })
-                      }
-                      placeholder="320"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Protein
-                    </label>
-                    <input
-                      type="text"
-                      value={nutrition.protein}
-                      onChange={(e) =>
-                        setNutrition({ ...nutrition, protein: e.target.value })
-                      }
-                      placeholder="8g"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Carbohydrates
-                    </label>
-                    <input
-                      type="text"
-                      value={nutrition.carbs}
-                      onChange={(e) =>
-                        setNutrition({ ...nutrition, carbs: e.target.value })
-                      }
-                      placeholder="45g"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Fat
-                    </label>
-                    <input
-                      type="text"
-                      value={nutrition.fat}
-                      onChange={(e) =>
-                        setNutrition({ ...nutrition, fat: e.target.value })
-                      }
-                      placeholder="12g"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                      Fiber
-                    </label>
-                    <input
-                      type="text"
-                      value={nutrition.fiber}
-                      onChange={(e) =>
-                        setNutrition({ ...nutrition, fiber: e.target.value })
-                      }
-                      placeholder="2g"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
-                    />
-                  </div>
+                  {Object.entries(nutrition).map(([key, value]) => (
+                    <div key={key}>
+                      <label className="block text-sm font-bold text-gray-700 mb-2 capitalize">
+                        {key}
+                      </label>
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) =>
+                          setNutrition({ ...nutrition, [key]: e.target.value })
+                        }
+                        placeholder={key === "calories" ? "320" : "8g"}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Pro Tips */}
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -879,7 +835,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                     Add Tip
                   </button>
                 </div>
-
                 <div className="space-y-3">
                   {tips.map((tip, index) => (
                     <div
@@ -902,7 +857,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                       </button>
                     </div>
                   ))}
-
                   {tips.length === 0 && (
                     <p className="text-center text-gray-500 py-8 bg-gray-50 rounded-xl">
                       No tips added yet
@@ -911,12 +865,8 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                 </div>
               </div>
 
-              {/* Tags */}
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <h3 className="text-xl font-black text-gray-900">Tags</h3>
-                </div>
-
+                <h3 className="text-xl font-black text-gray-900 mb-4">Tags</h3>
                 <div className="flex gap-2 mb-3">
                   <input
                     type="text"
@@ -938,7 +888,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                     Add
                   </button>
                 </div>
-
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag, index) => (
                     <span
@@ -954,7 +903,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
                       </button>
                     </span>
                   ))}
-
                   {tags.length === 0 && (
                     <p className="text-sm text-gray-500">No tags added yet</p>
                   )}
@@ -964,44 +912,44 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave }) {
           )}
         </div>
 
-        {/* Footer Actions */}
         <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}
-            className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <ArrowLeft className="h-4 w-4" />
             Cancel
           </button>
-
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition-colors">
-              <Eye className="h-4 w-4" />
-              Preview
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
-            >
-              <Save className="h-4 w-4" />
-              {editRecipe ? "Update Recipe" : "Save Recipe"}
-            </button>
-          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                {editRecipe ? "Update Recipe" : "Save Recipe"}
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// ============================================================================
-// RECIPE CARD COMPONENT (Dashboard View)
-// ============================================================================
-function RecipeCard({ recipe, onEdit, onDelete }) {
+function RecipeCard({ recipe, onEdit, onDelete, onToggleFeatured }) {
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 group">
       <div className="relative mb-4">
         <img
-          src={getImageFromAssets(recipe.image)}
+          src={getRecipeImage(recipe)}
           alt={recipe.title}
           className="w-full h-48 object-cover rounded-lg"
         />
@@ -1032,7 +980,6 @@ function RecipeCard({ recipe, onEdit, onDelete }) {
           </div>
         )}
       </div>
-
       <div className="space-y-2">
         <h3 className="font-bold text-gray-900 line-clamp-2 leading-tight">
           {recipe.title}
@@ -1040,7 +987,9 @@ function RecipeCard({ recipe, onEdit, onDelete }) {
         <div className="flex items-center gap-3 text-xs text-gray-600">
           <div className="flex items-center gap-1">
             <Clock size={14} className="text-[#BF1A1A]" />
-            <span>{recipe.totalTime}</span>
+            <span>
+              {recipe.totalTime || `${recipe.prepTime + recipe.cookTime} min`}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <User size={14} className="text-[#BF1A1A]" />
@@ -1058,7 +1007,6 @@ function RecipeCard({ recipe, onEdit, onDelete }) {
           <span>{recipe.reviews} reviews</span>
         </div>
       </div>
-
       <div className="mt-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(recipe)}
@@ -1067,11 +1015,17 @@ function RecipeCard({ recipe, onEdit, onDelete }) {
           <Edit2 className="h-4 w-4" />
           <span className="text-sm font-bold">Edit</span>
         </button>
-        <button className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-          <Eye className="h-4 w-4" />
+        <button
+          onClick={() => onToggleFeatured(recipe._id)}
+          className="px-3 py-2 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+          title="Toggle Featured"
+        >
+          <Star
+            className={`h-4 w-4 ${recipe.featured ? "fill-yellow-700" : ""}`}
+          />
         </button>
         <button
-          onClick={() => onDelete(recipe.id)}
+          onClick={() => onDelete(recipe._id)}
           className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
         >
           <Trash2 className="h-4 w-4" />
@@ -1081,15 +1035,20 @@ function RecipeCard({ recipe, onEdit, onDelete }) {
   );
 }
 
-// ============================================================================
-// MAIN DASHBOARD RECIPES COMPONENT
-// ============================================================================
 export default function DashboardRecipes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
-  const [recipes, setRecipes] = useState(recipesData);
+  const [recipes, setRecipes] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalRecipes: 0,
+    featuredRecipes: 0,
+    totalViews: 0,
+  });
 
   const categories = [
     "All Recipes",
@@ -1098,46 +1057,130 @@ export default function DashboardRecipes() {
     "Desserts",
     "Snacks",
     "Main Course",
+    "Appetizers",
+    "Beverages",
   ];
+
+  useEffect(() => {
+    fetchRecipes();
+    fetchProducts();
+  }, []);
+
+  const fetchRecipes = async () => {
+    try {
+      console.log("🍳 DashboardRecipes: Starting to fetch recipes...");
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("token");
+      console.log(
+        "🔑 Token in DashboardRecipes:",
+        token ? "EXISTS" : "MISSING",
+      );
+
+      const response = await recipeApi.getAllRecipes();
+      console.log("✅ Recipes received:", response);
+
+      setRecipes(response.data);
+      const featured = response.data.filter((r) => r.featured).length;
+      const views = response.data.reduce((sum, r) => sum + (r.views || 0), 0);
+      setStats({
+        totalRecipes: response.total || response.data.length,
+        featuredRecipes: featured,
+        totalViews: views,
+      });
+    } catch (err) {
+      console.error("❌ Error in fetchRecipes:", err);
+      setError(err.message || "Failed to load recipes");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      console.log("📦 Fetching products...");
+      const token = localStorage.getItem("token");
+      console.log("🔑 Token for products:", token ? "EXISTS" : "MISSING");
+
+      const response = await fetch(
+        "http://localhost:3000/smartglobal/products",
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        },
+      );
+      console.log("📥 Products response status:", response.status);
+
+      const data = await response.json();
+      console.log("📦 Products data:", data);
+
+      if (data.success) setProducts(data.data || data.products || []);
+    } catch (err) {
+      console.error("❌ Error fetching products:", err);
+    }
+  };
 
   const handleAddRecipe = () => {
     setEditingRecipe(null);
     setIsFormOpen(true);
   };
-
   const handleEditRecipe = (recipe) => {
     setEditingRecipe(recipe);
     setIsFormOpen(true);
   };
 
-  const handleDeleteRecipe = (id) => {
-    if (window.confirm("Are you sure you want to delete this recipe?")) {
-      setRecipes(recipes.filter((r) => r.id !== id));
-      // TODO: Send delete request to backend
+  const handleDeleteRecipe = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this recipe?")) return;
+    try {
+      await recipeApi.deleteRecipe(id);
+      setRecipes(recipes.filter((r) => r._id !== id));
+      setStats((prev) => ({ ...prev, totalRecipes: prev.totalRecipes - 1 }));
+    } catch (err) {
+      alert("Failed to delete recipe: " + err.message);
     }
   };
 
-  const handleSaveRecipe = (recipeData) => {
-    if (editingRecipe) {
-      // Update existing recipe
+  const handleToggleFeatured = async (id) => {
+    try {
+      await recipeApi.toggleFeatured(id);
       setRecipes(
         recipes.map((r) =>
-          r.id === editingRecipe.id ? { ...recipeData, id: r.id } : r,
+          r._id === id ? { ...r, featured: !r.featured } : r,
         ),
       );
-      // TODO: Send update request to backend
-    } else {
-      // Add new recipe
-      const newRecipe = {
-        ...recipeData,
-        id: Date.now(),
-      };
-      setRecipes([newRecipe, ...recipes]);
-      // TODO: Send create request to backend
+      const recipe = recipes.find((r) => r._id === id);
+      if (recipe) {
+        setStats((prev) => ({
+          ...prev,
+          featuredRecipes: recipe.featured
+            ? prev.featuredRecipes - 1
+            : prev.featuredRecipes + 1,
+        }));
+      }
+    } catch (err) {
+      alert("Failed to update featured status: " + err.message);
     }
   };
 
-  // Filter recipes
+  const handleSaveRecipe = (savedRecipe) => {
+    if (editingRecipe) {
+      setRecipes(
+        recipes.map((r) => (r._id === savedRecipe._id ? savedRecipe : r)),
+      );
+    } else {
+      setRecipes([savedRecipe, ...recipes]);
+      setStats((prev) => ({
+        ...prev,
+        totalRecipes: prev.totalRecipes + 1,
+        featuredRecipes: savedRecipe.featured
+          ? prev.featuredRecipes + 1
+          : prev.featuredRecipes,
+      }));
+    }
+  };
+
   const filteredRecipes = recipes.filter((recipe) => {
     const matchesSearch = recipe.title
       .toLowerCase()
@@ -1150,13 +1193,8 @@ export default function DashboardRecipes() {
     return matchesSearch && matchesCategory;
   });
 
-  const totalRecipes = recipes.length;
-  const featuredRecipes = recipes.filter((r) => r.featured).length;
-  const totalViews = recipes.reduce((sum, r) => sum + r.views, 0);
-
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1
@@ -1178,10 +1216,10 @@ export default function DashboardRecipes() {
         </button>
       </div>
 
-      {/* Filters */}
+      {error && <ErrorMessage message={error} onRetry={fetchRecipes} />}
+
       <div className="bg-white rounded-2xl p-6 border border-gray-200">
         <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -1192,8 +1230,6 @@ export default function DashboardRecipes() {
               className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
             />
           </div>
-
-          {/* Category Filter */}
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((category) => (
               <button
@@ -1214,76 +1250,69 @@ export default function DashboardRecipes() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-[#BF1A1A] flex items-center justify-center">
-              <ChefHat className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-semibold">
-                Total Recipes
-              </p>
-              <p
-                className="text-2xl font-black text-gray-900"
-                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+        {[
+          {
+            icon: ChefHat,
+            label: "Total Recipes",
+            value: stats.totalRecipes,
+            bg: "bg-[#BF1A1A]",
+          },
+          {
+            icon: Star,
+            label: "Featured",
+            value: stats.featuredRecipes,
+            bg: "bg-[#FFD41D]",
+            iconColor: "text-[#7B4019] fill-[#7B4019]",
+          },
+          {
+            icon: TrendingUp,
+            label: "Total Views",
+            value: stats.totalViews.toLocaleString(),
+            bg: "bg-green-600",
+          },
+        ].map(({ icon: Icon, label, value, bg, iconColor }) => (
+          <div
+            key={label}
+            className="bg-white rounded-xl p-4 border border-gray-200"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-12 h-12 rounded-lg ${bg} flex items-center justify-center`}
               >
-                {totalRecipes}
-              </p>
+                <Icon className={`h-6 w-6 ${iconColor || "text-white"}`} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-semibold">{label}</p>
+                <p
+                  className="text-2xl font-black text-gray-900"
+                  style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                >
+                  {value}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-[#FFD41D] flex items-center justify-center">
-              <Star className="h-6 w-6 text-[#7B4019] fill-[#7B4019]" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-semibold">Featured</p>
-              <p
-                className="text-2xl font-black text-gray-900"
-                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-              >
-                {featuredRecipes}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-green-600 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-semibold">Total Views</p>
-              <p
-                className="text-2xl font-black text-gray-900"
-                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-              >
-                {totalViews.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recipes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRecipes.map((recipe) => (
-          <RecipeCard
-            key={recipe.id}
-            recipe={recipe}
-            onEdit={handleEditRecipe}
-            onDelete={handleDeleteRecipe}
-          />
         ))}
       </div>
 
-      {/* Empty State */}
-      {filteredRecipes.length === 0 && (
+      {loading && <LoadingSpinner />}
+
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRecipes.map((recipe) => (
+            <RecipeCard
+              key={recipe._id}
+              recipe={recipe}
+              onEdit={handleEditRecipe}
+              onDelete={handleDeleteRecipe}
+              onToggleFeatured={handleToggleFeatured}
+            />
+          ))}
+        </div>
+      )}
+
+      {!loading && filteredRecipes.length === 0 && (
         <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-300">
           <ChefHat className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -1294,7 +1323,7 @@ export default function DashboardRecipes() {
               ? "Try adjusting your search or filters"
               : "Get started by adding your first recipe"}
           </p>
-          {!searchQuery && (
+          {!searchQuery && !error && (
             <button
               onClick={handleAddRecipe}
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#BF1A1A] text-white rounded-xl font-bold hover:bg-[#8B1414] transition-colors"
@@ -1306,7 +1335,6 @@ export default function DashboardRecipes() {
         </div>
       )}
 
-      {/* Recipe Form Modal */}
       <RecipeFormModal
         isOpen={isFormOpen}
         onClose={() => {
@@ -1315,6 +1343,7 @@ export default function DashboardRecipes() {
         }}
         editRecipe={editingRecipe}
         onSave={handleSaveRecipe}
+        products={products}
       />
     </div>
   );

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 // FIX: Change port to 3000 to match your backend
-const API_URL = "http://localhost:3000/smartglobal/auth";
+const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/auth";
 
 export default function Login() {
   const navigate = useNavigate();

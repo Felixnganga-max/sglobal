@@ -3,8 +3,9 @@
  * No mock data - 100% API-driven
  */
 
-const API_BASE_URL = "http://localhost:3000/smartglobal/recipes";
-const PRODUCTS_API_URL = "http://localhost:3000/smartglobal/products";
+const API_BASE_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/recipes";
+const PRODUCTS_API_URL =
+  "https://smartglobal-3jfl.vercel.app/smartglobal/products";
 
 const getAuthToken = () => {
   const token = localStorage.getItem("token");

@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/smartglobal",
+  baseURL: "https://smartglobal-3jfl.vercel.app/smartglobal",
   headers: {
     "Content-Type": "application/json",
   },

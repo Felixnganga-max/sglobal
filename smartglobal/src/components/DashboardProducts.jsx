@@ -41,16 +41,16 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
       imageData: null, // Base64 image data
       imagePreview: null,
       shortDescription: "",
-    }
+    },
   );
 
   const [descriptionBlocks, setDescriptionBlocks] = useState(
-    editProduct?.descriptionBlocks || []
+    editProduct?.descriptionBlocks || [],
   );
 
   const [features, setFeatures] = useState(editProduct?.features || []);
   const [specifications, setSpecifications] = useState(
-    editProduct?.specifications || []
+    editProduct?.specifications || [],
   );
 
   // Update form when editProduct changes
@@ -77,12 +77,17 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
   }, [editProduct]);
 
   const categories = [
-    "Soups",
-    "Pancake Mixes",
-    "Stock Cubes",
-    "Syrups & Sauces",
-    "Craft Cooked Crisps",
-    "Baby Pouches",
+    "Craft cooked potato chips",
+    "Just fruits",
+    "Hum Hum",
+    "Cakemix",
+    "Brownie & Pancake",
+    "Whipped creams",
+    "Boringer topping sauces",
+    "Kent stocks",
+    "Kent sauces",
+    "Kent spreads",
+    "Kizembe spring water",
   ];
 
   const badges = ["NEW", "SALE", "HOT", "LIMITED"];
@@ -122,8 +127,8 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
   const updateDescriptionBlock = (id, content) => {
     setDescriptionBlocks(
       descriptionBlocks.map((block) =>
-        block.id === id ? { ...block, content } : block
-      )
+        block.id === id ? { ...block, content } : block,
+      ),
     );
   };
 
@@ -149,8 +154,8 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
       descriptionBlocks.map((block) =>
         block.id === blockId
           ? { ...block, content: [...block.content, ""] }
-          : block
-      )
+          : block,
+      ),
     );
   };
 
@@ -161,11 +166,11 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
           ? {
               ...block,
               content: block.content.map((item, i) =>
-                i === itemIndex ? value : item
+                i === itemIndex ? value : item,
               ),
             }
-          : block
-      )
+          : block,
+      ),
     );
   };
 
@@ -177,8 +182,8 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
               ...block,
               content: block.content.filter((_, i) => i !== itemIndex),
             }
-          : block
-      )
+          : block,
+      ),
     );
   };
 
@@ -203,8 +208,8 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
   const updateSpecification = (index, field, value) => {
     setSpecifications(
       specifications.map((spec, i) =>
-        i === index ? { ...spec, [field]: value } : spec
-      )
+        i === index ? { ...spec, [field]: value } : spec,
+      ),
     );
   };
 
@@ -218,7 +223,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
       const discount = Math.round(
         ((parseFloat(formData.oldPrice) - parseFloat(formData.price)) /
           parseFloat(formData.oldPrice)) *
-          100
+          100,
       );
       return discount > 0 ? discount : null;
     }
@@ -278,7 +283,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
         })),
         features: features.filter((f) => f.trim() !== ""),
         specifications: specifications.filter(
-          (s) => s.key.trim() !== "" && s.value.trim() !== ""
+          (s) => s.key.trim() !== "" && s.value.trim() !== "",
         ),
       };
 
@@ -735,7 +740,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                                 updateListItem(
                                   block.id,
                                   itemIndex,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               placeholder="List item..."
@@ -919,7 +924,8 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
 // ============================================================================
 function ProductCard({ product, onEdit, onDelete, onView }) {
   // Use placeholder image if no image available
-  const imageUrl = product.image?.url || "https://via.placeholder.com/300x300?text=No+Image";
+  const imageUrl =
+    product.image?.url || "https://via.placeholder.com/300x300?text=No+Image";
 
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 group">
@@ -929,7 +935,8 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
           alt={product.title}
           className="w-full h-48 object-contain rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-4"
           onError={(e) => {
-            e.target.src = "https://via.placeholder.com/300x300?text=Image+Error";
+            e.target.src =
+              "https://via.placeholder.com/300x300?text=Image+Error";
           }}
         />
         <div className="absolute top-2 right-2">
@@ -963,7 +970,9 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
       </div>
 
       <div className="space-y-2">
-        <h3 className="font-bold text-gray-900 line-clamp-1">{product.title}</h3>
+        <h3 className="font-bold text-gray-900 line-clamp-1">
+          {product.title}
+        </h3>
         <p className="text-sm text-gray-500">{product.category}</p>
         <div className="flex items-center justify-between">
           <span
@@ -1052,12 +1061,16 @@ export default function DashboardProducts() {
         params.search = searchQuery;
       }
 
-      if (selectedCategory && selectedCategory !== "all" && selectedCategory !== "all-products") {
+      if (
+        selectedCategory &&
+        selectedCategory !== "all" &&
+        selectedCategory !== "all-products"
+      ) {
         params.category = selectedCategory;
       }
 
       const response = await productService.getAllProducts(params);
-      
+
       if (response.success) {
         setProducts(response.data);
       } else {
@@ -1105,7 +1118,7 @@ export default function DashboardProducts() {
 
     try {
       const response = await productService.deleteProduct(id);
-      
+
       if (response.success) {
         // Remove from local state
         setProducts(products.filter((p) => p._id !== id));
@@ -1125,15 +1138,15 @@ export default function DashboardProducts() {
         // Update existing product
         const response = await productService.updateProduct(
           editingProduct._id,
-          productData
+          productData,
         );
 
         if (response.success) {
           // Update local state
           setProducts(
             products.map((p) =>
-              p._id === editingProduct._id ? response.data : p
-            )
+              p._id === editingProduct._id ? response.data : p,
+            ),
           );
           alert("Product updated successfully!");
         } else {
@@ -1205,7 +1218,8 @@ export default function DashboardProducts() {
                   setSelectedCategory(category.toLowerCase().replace(/ /g, "-"))
                 }
                 className={`px-4 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all duration-300 ${
-                  selectedCategory === category.toLowerCase().replace(/ /g, "-") ||
+                  selectedCategory ===
+                    category.toLowerCase().replace(/ /g, "-") ||
                   (category === "All Products" && selectedCategory === "all")
                     ? "bg-[#BF1A1A] text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"

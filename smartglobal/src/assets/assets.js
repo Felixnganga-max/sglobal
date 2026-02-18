@@ -17,12 +17,14 @@ import spuds5 from "./spuds-5.png";
 import logo from "./logo.png";
 import recipe from "./recipe.jpg";
 import kizembe from "./kizembe.jpeg";
+import kize from "./kize.jpg";
 
 export const assets = {
   crepes,
   hazelnut,
   kizembe,
   noodle,
+  kize,
   kent,
   hazelnut,
   top,

@@ -391,7 +391,7 @@ function WaterSlide() {
           {/* Floating accent */}
           <div className="absolute bottom-10 left-8 w-20 sm:w-28 h-20 sm:h-28 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/15 rotate-6">
             <img
-              src={assets.crepes}
+              src={assets.kize}
               alt=""
               className="w-full h-full object-cover opacity-80"
             />

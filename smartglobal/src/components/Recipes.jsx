@@ -1,261 +1,333 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Heart, Clock, ChefHat, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { assets } from "../assets/assets";
 
-/**
- * Recipes Component - Smart Global Premium Foods
- * 
- * Features:
- * - 3 category cards showcasing product categories
- * - 3 featured recipe cards using Smart Global products
- * - Horizontal scrolling on mobile devices
- * - "Explore More Recipes" CTA linking to /recipes
- */
+const categories = [
+  {
+    id: 1,
+    title: "Premium Soups",
+    subtitle: "Ready in 5 Minutes",
+    image: assets.kent,
+    accent: "#FF7F11",
+  },
+  {
+    id: 2,
+    title: "Pancake Mixes",
+    subtitle: "Fluffy & Delicious",
+    image: assets.crepes,
+    accent: "#FF0000",
+  },
+  {
+    id: 3,
+    title: "Sweet Toppings",
+    subtitle: "Desserts Elevated",
+    image: assets.topping,
+    accent: "#FF7F11",
+  },
+];
+
+const recipes = [
+  {
+    id: 1,
+    title: "Hearty Vegetable Soup",
+    description:
+      "Made with Kent Boringer Premium Vegetable Soup mix — wholesome, natural, and ready in just 5 minutes.",
+    time: "5 min",
+    difficulty: "Easy",
+    servings: 4,
+    product: "Kent Vegetable Soup",
+    image: assets.kent,
+    accent: "#FF7F11",
+  },
+  {
+    id: 2,
+    title: "Fluffy Morning Pancakes",
+    description:
+      "Perfect breakfast using our premium pancake mix. Just add water, cook, and top with Kent syrups.",
+    time: "10 min",
+    difficulty: "Easy",
+    servings: 4,
+    product: "Kent Pancake Mix",
+    image: assets.crepes,
+    accent: "#FF0000",
+  },
+  {
+    id: 3,
+    title: "Dessert Delight Sundae",
+    description:
+      "Elevate your ice cream with Kent Boringer premium toppings — rich, smooth, and irresistible.",
+    time: "2 min",
+    difficulty: "Easy",
+    servings: 2,
+    product: "Kent Premium Toppings",
+    image: assets.topping,
+    accent: "#FF7F11",
+  },
+];
 
 export default function Recipes() {
-  // Product categories matching Smart Global brand
-  const categories = [
-    {
-      id: 1,
-      title: "Premium Soups",
-      subtitle: "Ready in 5 Minutes",
-      bgClass: "bg-gradient-to-br from-[#4CAF50]/10 to-[#4CAF50]/5",
-      imgSrc: assets.kent,
-    },
-    {
-      id: 2,
-      title: "Pancake Mixes",
-      subtitle: "Fluffy & Delicious",
-      bgClass: "bg-gradient-to-br from-[#FFD41D]/20 to-[#FFD41D]/5",
-      imgSrc: assets.top2,
-    },
-    {
-      id: 3,
-      title: "Premium Toppings",
-      subtitle: "Sweet Perfection",
-      bgClass: "bg-gradient-to-br from-[#BF1A1A]/10 to-[#BF1A1A]/5",
-      imgSrc: assets.topping,
-    },
-  ];
+  const catScrollRef = useRef(null);
+  const recipeScrollRef = useRef(null);
 
-  // Featured recipes using Smart Global products
-  const recipes = [
-    {
-      id: 1,
-      title: "Hearty Vegetable Soup",
-      description: "Made with Kent Boringer Premium Vegetable Soup mix - ready in just 5 minutes!",
-      tags: ["Halal", "100% Natural"],
-      time: "5 min",
-      difficulty: "Easy",
-      servings: 4,
-      product: "Kent Vegetable Soup",
-      imgSrc: assets.kent,
-    },
-    {
-      id: 2,
-      title: "Fluffy Morning Pancakes",
-      description: "Perfect breakfast using our premium pancake mix - just add water and cook!",
-      tags: ["Halal", "Quick Breakfast"],
-      time: "10 min",
-      difficulty: "Easy",
-      servings: 4,
-      product: "Kent Pancake Mix",
-      imgSrc: assets.top2,
-    },
-    {
-      id: 3,
-      title: "Dessert Delight Sundae",
-      description: "Top your ice cream with Kent Boringer Premium Toppings for the ultimate treat!",
-      tags: ["Halal", "Sweet Treat"],
-      time: "2 min",
-      difficulty: "Easy",
-      servings: 2,
-      product: "Kent Premium Toppings",
-      imgSrc: assets.topping,
-    },
-  ];
+  const scroll = (ref, dir) => {
+    if (ref.current)
+      ref.current.scrollBy({ left: dir * 280, behavior: "smooth" });
+  };
 
   return (
-    <main className="w-full px-6 lg:px-12 py-12">
-      {/* Category Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-        {categories.map((cat) => (
-          <div
-            key={cat.id}
-            className={`${cat.bgClass} rounded-2xl p-6 flex items-center gap-5 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100`}
-          >
-            <img
-              src={cat.imgSrc}
-              alt={cat.title}
-              className="w-24 h-24 rounded-xl object-cover flex-shrink-0 shadow-md"
-            />
-            <div className="flex-1">
-              <div
-                className="text-lg font-black text-gray-900 tracking-tight"
-                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+    <main className="w-full bg-white">
+      {/* ── Category Strip ── */}
+      <section className="section-y page-x">
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <p className="text-eyebrow mb-1">Cook With Us</p>
+            <h2 className="text-section-title text-gray-900">By Category</h2>
+            <div className="section-rule mt-2" />
+          </div>
+          <div className="flex gap-2 sm:hidden">
+            {[
+              [-1, "M15 19l-7-7 7-7"],
+              [1, "M9 5l7 7-7 7"],
+            ].map(([dir, d]) => (
+              <button
+                key={dir}
+                onClick={() => scroll(catScrollRef, dir)}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors"
               >
-                {cat.title}
-              </div>
-              <div className="text-xs text-gray-600 font-semibold mt-1">
-                {cat.subtitle}
-              </div>
-              <button className="mt-3 text-xs px-4 py-2 bg-[#BF1A1A] text-white rounded-full font-bold hover:bg-[#8B1414] transition-all duration-300 shadow-md uppercase tracking-wide">
-                Shop Now
+                <svg
+                  className="w-3.5 h-3.5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+                </svg>
               </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Section Header */}
-      <header className="text-center mb-10">
-        <h2
-          className="text-4xl sm:text-5xl font-black text-gray-900"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-        >
-          RECIPE <span className="text-[#BF1A1A]">INSPIRATION</span>
-        </h2>
-        <p className="mt-3 text-gray-600 font-semibold text-lg">
-          Delicious recipes made easy with Smart Global premium products
-        </p>
-      </header>
-
-      {/* Recipe Cards - Horizontal Scroll on Mobile */}
-      <section className="mb-12">
-        {/* Desktop: Grid */}
-        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recipes.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
-          ))}
-        </div>
-
-        {/* Mobile: Horizontal Scroll */}
-        <div className="sm:hidden flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-          {recipes.map((recipe) => (
-            <div key={recipe.id} className="flex-shrink-0 w-[85vw] snap-center">
-              <RecipeCard recipe={recipe} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Explore More CTA */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white p-8 lg:p-10 shadow-2xl">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-center sm:text-left">
-            <div
-              className="text-3xl sm:text-4xl font-black tracking-tight"
-              style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-            >
-              HUNGRY FOR MORE?
-            </div>
-            <div className="text-base sm:text-lg opacity-90 font-semibold mt-2">
-              Discover hundreds of delicious recipes using our premium products
-            </div>
-          </div>
-
-          <a
-            href="/recipes"
-            className="group flex items-center gap-3 px-8 py-4 bg-white text-[#BF1A1A] rounded-full font-black text-base shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 uppercase tracking-wide"
-          >
-            Explore More Recipes
-            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-          </a>
-        </div>
-      </div>
-
-      <style>{`
-        @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&display=swap");
-        
-        /* Hide scrollbar for mobile horizontal scroll */
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </main>
-  );
-}
-
-// Recipe Card Component
-function RecipeCard({ recipe }) {
-  return (
-    <article className="bg-white rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100 flex flex-col hover:shadow-2xl hover:border-[#BF1A1A] transition-all duration-300 group h-full">
-      {/* Recipe Image */}
-      <div className="relative bg-gradient-to-br from-gray-50 to-gray-100">
-        <img
-          src={recipe.imgSrc}
-          alt={recipe.title}
-          className="w-full h-56 object-contain p-6 group-hover:scale-110 transition-transform duration-500"
-        />
-        
-        {/* Product Badge */}
-        <div className="absolute top-4 left-4 bg-white/95 px-3 py-2 rounded-full text-xs font-bold text-gray-700 shadow-lg">
-          <ChefHat className="inline-block h-3 w-3 mr-1" />
-          {recipe.product}
-        </div>
-
-        {/* Favorite Button */}
-        <button
-          aria-label={`Favorite ${recipe.title}`}
-          className="absolute top-4 right-4 bg-white/95 p-2.5 rounded-full shadow-lg hover:bg-[#BF1A1A] hover:text-white transition-all duration-300"
-        >
-          <Heart size={18} />
-        </button>
-
-        {/* Halal Badge */}
-        <div className="absolute bottom-4 left-4 bg-[#4CAF50] text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
-          ✓ Halal Certified
-        </div>
-      </div>
-
-      {/* Recipe Info */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
-        <div>
-          <h3 className="text-xl font-black text-gray-900 leading-tight">
-            {recipe.title}
-          </h3>
-          <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-            {recipe.description}
-          </p>
-
-          {/* Tags */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {recipe.tags.map((tag, i) => (
-              <span
-                key={i}
-                className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full font-bold"
-              >
-                {tag}
-              </span>
             ))}
           </div>
         </div>
 
-        {/* Recipe Details & CTA */}
-        <div className="mt-5 pt-4 border-t border-gray-200">
-          <div className="flex items-center justify-between text-xs text-gray-600 font-semibold mb-4">
-            <div className="flex items-center gap-1">
-              <Clock size={14} className="text-[#BF1A1A]" />
-              <span>{recipe.time}</span>
+        <div
+          ref={catScrollRef}
+          className="flex gap-4 overflow-x-auto sm:overflow-visible sm:grid sm:grid-cols-3 pb-1 sm:pb-0"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {categories.map((cat) => (
+            <Link
+              to="/products"
+              key={cat.id}
+              className="group relative flex-shrink-0 w-[210px] sm:w-auto rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-400"
+              style={{ height: "220px" }}
+            >
+              <img
+                src={cat.image}
+                alt={cat.title}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+              {/* accent top bar */}
+              <div
+                className="absolute top-0 left-0 right-0 h-0.5"
+                style={{ backgroundColor: cat.accent }}
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <p
+                  className="font-body text-[0.6rem] font-bold uppercase tracking-[0.2em] mb-0.5"
+                  style={{ color: cat.accent }}
+                >
+                  {cat.subtitle}
+                </p>
+                <h3 className="font-heading text-white text-base font-bold leading-tight">
+                  {cat.title}
+                </h3>
+                <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="font-body text-white text-xs font-semibold">
+                    Explore
+                  </span>
+                  <ArrowRight size={12} className="text-white" />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Recipe Cards ── */}
+      <section
+        className="section-y page-x"
+        style={{ backgroundColor: "#f9fafb" }}
+      >
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <p className="text-eyebrow mb-1">Smart Global Kitchen</p>
+            <h2 className="text-section-title text-gray-900">
+              Recipe Inspiration
+            </h2>
+            <div className="section-rule mt-2" />
+            <p className="font-body text-sm text-muted mt-2 max-w-sm">
+              Delicious ideas using our premium products — quick, easy, and
+              always satisfying.
+            </p>
+          </div>
+          {/* mobile arrows */}
+          <div className="flex gap-2 sm:hidden">
+            {[
+              [-1, "M15 19l-7-7 7-7"],
+              [1, "M9 5l7 7-7 7"],
+            ].map(([dir, d]) => (
+              <button
+                key={dir}
+                onClick={() => scroll(recipeScrollRef, dir)}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors"
+              >
+                <svg
+                  className="w-3.5 h-3.5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile: horizontal scroll / Desktop: grid */}
+        <div
+          ref={recipeScrollRef}
+          className="flex gap-4 overflow-x-auto sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-3 pb-2 sm:pb-0"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {recipes.map((recipe) => (
+            <RecipeCard key={recipe.id} recipe={recipe} />
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA Banner ── */}
+      <section className="page-x section-y">
+        <div
+          className="relative rounded-2xl overflow-hidden"
+          style={{ minHeight: "160px" }}
+        >
+          <img
+            src={assets.recipe}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/95 via-gray-950/80 to-gray-950/40" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-7 sm:p-10">
+            <div>
+              <p className="text-eyebrow mb-1" style={{ color: "#FF7F11" }}>
+                Hungry for More?
+              </p>
+              <h3 className="font-heading text-white text-xl sm:text-2xl font-bold leading-tight">
+                Discover More Recipes
+                <br className="hidden sm:block" /> & Cooking Ideas
+              </h3>
             </div>
-            <div className="flex items-center gap-1">
-              <ChefHat size={14} className="text-[#BF1A1A]" />
-              <span>{recipe.difficulty}</span>
-            </div>
-            <div className="text-gray-600">
-              {recipe.servings} servings
+            <div className="flex flex-wrap gap-3 flex-shrink-0">
+              <Link
+                to="/recipe"
+                className="group inline-flex items-center gap-2 btn-secondary text-xs"
+              >
+                All Recipes
+                <ArrowRight
+                  size={13}
+                  className="group-hover:translate-x-0.5 transition-transform"
+                />
+              </Link>
+              <Link
+                to="/contact"
+                className="font-body text-xs font-bold uppercase tracking-widest px-5 py-2.5 rounded-full border border-white/30 text-white hover:bg-white/10 transition-all duration-300 inline-flex items-center"
+              >
+                Contact Us
+              </Link>
             </div>
           </div>
-
-          <button className="w-full py-3 bg-[#BF1A1A] hover:bg-[#8B1414] text-white rounded-xl font-bold text-sm transition-all duration-300 shadow-md hover:shadow-xl flex items-center justify-center gap-2">
-            View Full Recipe
-            <ArrowRight size={16} />
-          </button>
         </div>
+      </section>
+    </main>
+  );
+}
+
+/* ── Recipe Card ── */
+function RecipeCard({ recipe }) {
+  return (
+    <article className="group relative flex-shrink-0 w-[78vw] sm:w-auto bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 flex flex-col">
+      {/* Image — full bleed top half */}
+      <div className="relative overflow-hidden h-44 sm:h-52 flex-shrink-0">
+        <img
+          src={recipe.image}
+          alt={recipe.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+        {/* Product chip */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
+          <ChefHat size={11} className="text-gray-500" />
+          <span className="font-body text-[0.6rem] font-bold text-gray-700 uppercase tracking-wide">
+            {recipe.product}
+          </span>
+        </div>
+
+        {/* Fav button */}
+        <button
+          aria-label={`Save ${recipe.title}`}
+          className="absolute top-3 right-3 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm"
+        >
+          <Heart size={13} />
+        </button>
+
+        {/* Meta — time & servings pinned over image bottom */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+            <Clock size={10} className="text-white" />
+            <span className="font-body text-[0.6rem] text-white font-semibold">
+              {recipe.time}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+            <span className="font-body text-[0.6rem] text-white font-semibold">
+              {recipe.servings} servings
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 flex flex-col flex-1 justify-between">
+        <div>
+          {/* Accent rule */}
+          <div
+            className="w-8 h-0.5 mb-3 rounded-full"
+            style={{ backgroundColor: recipe.accent }}
+          />
+          <h3 className="font-heading text-gray-900 text-base font-bold leading-tight mb-2">
+            {recipe.title}
+          </h3>
+          <p className="font-body text-xs text-muted leading-relaxed line-clamp-2">
+            {recipe.description}
+          </p>
+        </div>
+
+        <Link
+          to="/recipe"
+          className="group/btn mt-4 inline-flex items-center gap-1.5 font-body text-xs font-bold uppercase tracking-widest transition-colors duration-200"
+          style={{ color: recipe.accent }}
+        >
+          View Recipe
+          <ArrowRight
+            size={12}
+            className="group-hover/btn:translate-x-0.5 transition-transform"
+          />
+        </Link>
       </div>
     </article>
   );

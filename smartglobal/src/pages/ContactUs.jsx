@@ -2,12 +2,6 @@ import React from "react";
 import { User, Mail, Phone, MapPin, ArrowRight, Clock } from "lucide-react";
 import { assets } from "../assets/assets";
 
-/**
- * Smart Global ContactUs Component
- * Colors: Red (#BF1A1A), Yellow (#FFD41D), Black, White, Brown (#7B4019)
- * Enhanced with brand styling and assets images
- */
-
 export default function ContactUs() {
   const [form, setForm] = React.useState({
     firstName: "",
@@ -26,277 +20,339 @@ export default function ContactUs() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted:", form);
     alert("Thank you for contacting Smart Global! We'll get back to you soon.");
-    // Reset form
-    setForm({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      message: "",
-    });
+    setForm({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   };
 
   return (
-    <main className="min-h-screen bg-white py-12 px-4 sm:px-6">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-12 xl:px-16">
-        <div className="rounded-3xl bg-white shadow-2xl overflow-hidden border-2 border-[#FFD41D]">
-          <div className="lg:grid lg:grid-cols-2">
-            {/* LEFT: Image + Contact Cards */}
-            <div className="relative bg-[#FFF8E1]">
-              {/* Large left image */}
-              <div className="h-96 lg:h-[600px] relative overflow-hidden">
-                <img
-                  src={assets.topping}
-                  alt="Smart Global Premium Products"
-                  className="w-full h-full object-cover"
-                />
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#BF1A1A]/80 via-[#BF1A1A]/40 to-transparent"></div>
-
-                {/* Brand overlay text */}
-                <div className="absolute bottom-8 left-8 right-8 text-white">
-                  <h2
-                    className="text-4xl md:text-5xl font-black mb-2"
-                    style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-                  >
-                    GET IN TOUCH
-                  </h2>
-                  <p className="text-lg text-[#FFD41D] font-bold">
-                    We're Here to Help You
-                  </p>
-                </div>
-              </div>
-
-              {/* Decorative curved white panel bottom */}
-              <svg
-                viewBox="0 0 600 120"
-                className="absolute -bottom-1 left-0 w-full text-white"
-                preserveAspectRatio="none"
-                aria-hidden="true"
+    <main className="min-h-screen bg-white page-x section-y">
+      <div
+        className="grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden shadow-xl"
+        style={{ border: "1px solid var(--color-border)" }}
+      >
+        {/* LEFT — image + contact info */}
+        <div className="relative">
+          {/* Image */}
+          <div
+            className="h-64 sm:h-80 lg:h-full relative overflow-hidden"
+            style={{ minHeight: 400 }}
+          >
+            <img
+              src={assets.topping}
+              alt="Smart Global Premium Products"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to top, var(--color-orange-dark) 0%, rgba(217,104,0,0.5) 40%, transparent 100%)",
+              }}
+            />
+            {/* Overlay text */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+              <p
+                className="text-eyebrow mb-2"
+                style={{ color: "rgba(255,255,255,0.7)" }}
               >
-                <path
-                  d="M0,120 C200,0 400,0 600,120 L600,120 L0,120 Z"
-                  fill="white"
-                />
-              </svg>
-
-              {/* Contact cards below the image */}
-              <div className="bg-white -mt-2 px-6 pb-10">
-                <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8">
-                  <ContactCard
-                    icon={<Mail size={20} />}
-                    title="Email Support"
-                    subtitle="Quick response guaranteed"
-                    linkText="info@smartglobal.com"
-                    href="mailto:info@smartglobal.com"
-                  />
-
-                  <ContactCard
-                    icon={<MapPin size={20} />}
-                    title="Visit Our Office"
-                    subtitle="Nairobi, Kenya"
-                    linkText="Nairobi Business District"
-                    href="#"
-                  />
-
-                  <ContactCard
-                    icon={<Phone size={20} />}
-                    title="Call Us Directly"
-                    subtitle="Available Mon-Sat 8AM-6PM"
-                    linkText="+254 700 000 000"
-                    href="tel:+254700000000"
-                  />
-                </div>
-              </div>
+                Smart Global
+              </p>
+              <h2
+                className="font-heading font-bold text-white mb-1"
+                style={{
+                  fontSize: "clamp(1.4rem, 3vw, 2.2rem)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Get in Touch
+              </h2>
+              <p
+                className="font-body text-sm font-semibold"
+                style={{ color: "rgba(255,255,255,0.8)" }}
+              >
+                We're here to help you
+              </p>
             </div>
+          </div>
 
-            {/* RIGHT: Form Panel */}
-            <div className="px-6 py-10 lg:px-12 lg:py-16 bg-white">
-              <div className="max-w-xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFF8E1] border-2 border-[#FFD41D] mb-4">
-                    <div className="w-2 h-2 bg-[#BF1A1A] rounded-full animate-pulse"></div>
-                    <span className="text-sm font-bold text-[#7B4019]">
-                      Contact Smart Global
-                    </span>
-                  </div>
-
-                  <h1
-                    className="text-4xl sm:text-5xl font-black text-gray-900 mb-3"
-                    style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+          {/* Contact cards */}
+          <div
+            className="p-6 sm:p-8 space-y-3"
+            style={{ backgroundColor: "var(--color-bg-soft)" }}
+          >
+            {[
+              {
+                icon: Mail,
+                title: "Email Support",
+                sub: "Quick response guaranteed",
+                text: "info@smartglobal.com",
+                href: "mailto:info@smartglobal.com",
+              },
+              {
+                icon: MapPin,
+                title: "Visit Our Office",
+                sub: "Nairobi, Kenya",
+                text: "Nairobi Business District",
+                href: "#",
+              },
+              {
+                icon: Phone,
+                title: "Call Us Directly",
+                sub: "Mon–Sat, 8AM–6PM",
+                text: "+254 700 000 000",
+                href: "tel:+254700000000",
+              },
+            ].map(({ icon: Icon, title, sub, text, href }) => (
+              <a
+                key={title}
+                href={href}
+                className="flex items-center gap-4 p-3.5 rounded-xl transition-all duration-200 group"
+                style={{
+                  backgroundColor: "#fff",
+                  border: "1px solid var(--color-border)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-orange)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-border)";
+                }}
+              >
+                <span
+                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200"
+                  style={{ backgroundColor: "rgba(255,127,17,0.1)" }}
+                >
+                  <Icon size={15} style={{ color: "var(--color-orange)" }} />
+                </span>
+                <div>
+                  <p
+                    className="font-body text-xs font-bold"
+                    style={{ color: "var(--color-text)" }}
                   >
-                    Let's Get In Touch
-                  </h1>
-
-                  <p className="text-base text-gray-600 leading-relaxed">
-                    Have questions about our products? Want to become a
-                    distributor? Or just reach out manually to{" "}
-                    <a
-                      href="mailto:info@smartglobal.com"
-                      className="text-[#BF1A1A] font-bold hover:underline"
-                    >
-                      info@smartglobal.com
-                    </a>
+                    {title}
+                  </p>
+                  <p
+                    className="font-body text-[0.6rem]"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    {sub}
+                  </p>
+                  <p
+                    className="font-body text-xs font-semibold mt-0.5"
+                    style={{ color: "var(--color-orange)" }}
+                  >
+                    {text}
                   </p>
                 </div>
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Name row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InputWithIcon
-                      id="firstName"
-                      name="firstName"
-                      placeholder="First name"
-                      value={form.firstName}
-                      onChange={handleChange}
-                      icon={<User size={18} />}
-                      ariaLabel="First name"
-                      required
-                    />
-                    <InputWithIcon
-                      id="lastName"
-                      name="lastName"
-                      placeholder="Last name"
-                      value={form.lastName}
-                      onChange={handleChange}
-                      icon={<User size={18} />}
-                      ariaLabel="Last name"
-                      required
-                    />
-                  </div>
-
-                  {/* Email */}
-                  <InputWithIcon
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Email address"
-                    value={form.email}
-                    onChange={handleChange}
-                    icon={<Mail size={18} />}
-                    ariaLabel="Email address"
-                    required
-                  />
-
-                  {/* Phone */}
-                  <div className="flex gap-3">
-                    <div className="flex items-center gap-2 rounded-xl border-2 border-gray-200 px-4 bg-gray-50">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-700">
-                          🇰🇪
-                        </span>
-                        <span className="text-sm font-bold text-gray-700">
-                          +254
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex-1">
-                      <InputWithIcon
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="700 000 000"
-                        value={form.phone}
-                        onChange={handleChange}
-                        icon={<Phone size={18} />}
-                        ariaLabel="Phone number"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Message */}
-                  <div>
-                    <label htmlFor="message" className="sr-only">
-                      Message
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      value={form.message}
-                      onChange={handleChange}
-                      placeholder="Tell us how we can help you..."
-                      rows={6}
-                      required
-                      className="w-full rounded-xl border-2 border-gray-200 px-5 py-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-[#BF1A1A] transition-all duration-300 font-medium"
-                      style={{ fontFamily: "'Montserrat', sans-serif" }}
-                      aria-label="Message"
-                    />
-                    <div className="mt-2 text-xs text-gray-500 text-right font-semibold">
-                      {form.message.length}/{maxMessage} characters
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      className="group w-full inline-flex items-center justify-center gap-3 bg-[#BF1A1A] hover:bg-[#8B1414] text-white py-4 rounded-full text-base font-black shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-                      style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-                      aria-label="Submit Contact Form"
-                    >
-                      <span className="text-lg">Submit Message</span>
-                      <ArrowRight
-                        size={20}
-                        className="group-hover:translate-x-1 transition-transform"
-                      />
-                    </button>
-                  </div>
-
-                  {/* Office Hours Info */}
-                  <div className="pt-4 border-t-2 border-[#FFD41D]">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock size={16} className="text-[#BF1A1A]" />
-                      <span className="font-semibold">
-                        Office Hours: Monday - Saturday, 8:00 AM - 6:00 PM EAT
-                      </span>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
+              </a>
+            ))}
           </div>
         </div>
 
-        {/* Bottom Info Strip */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600">
-            Expected response time:{" "}
-            <span className="text-[#BF1A1A] font-bold">Within 24 hours</span>
-          </p>
+        {/* RIGHT — form */}
+        <div className="px-6 py-8 sm:px-10 sm:py-10 bg-white">
+          <div className="max-w-lg mx-auto">
+            {/* Header */}
+            <div className="mb-7">
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
+                style={{
+                  backgroundColor: "rgba(255,127,17,0.1)",
+                  border: "1px solid rgba(255,127,17,0.25)",
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ backgroundColor: "var(--color-orange)" }}
+                />
+                <span
+                  className="font-body text-[0.6rem] font-bold uppercase tracking-widest"
+                  style={{ color: "var(--color-orange)" }}
+                >
+                  Contact Smart Global
+                </span>
+              </div>
+
+              <h1
+                className="font-heading font-bold mb-2"
+                style={{
+                  fontSize: "clamp(1.2rem, 2.5vw, 1.8rem)",
+                  color: "var(--color-text)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Let's Get in Touch
+              </h1>
+
+              <p
+                className="font-body text-xs leading-relaxed"
+                style={{ color: "var(--color-muted)" }}
+              >
+                Questions about our products or want to become a distributor?
+                Reach out or email{" "}
+                <a
+                  href="mailto:info@smartglobal.com"
+                  className="font-semibold"
+                  style={{ color: "var(--color-orange)" }}
+                >
+                  info@smartglobal.com
+                </a>
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name row */}
+              <div className="grid grid-cols-2 gap-3">
+                <Field
+                  id="firstName"
+                  name="firstName"
+                  placeholder="First name"
+                  value={form.firstName}
+                  onChange={handleChange}
+                  icon={User}
+                  required
+                />
+                <Field
+                  id="lastName"
+                  name="lastName"
+                  placeholder="Last name"
+                  value={form.lastName}
+                  onChange={handleChange}
+                  icon={User}
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <Field
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Email address"
+                value={form.email}
+                onChange={handleChange}
+                icon={Mail}
+                required
+              />
+
+              {/* Phone */}
+              <div className="flex gap-2">
+                <div
+                  className="flex items-center gap-1.5 px-3 rounded-xl font-body text-xs font-bold flex-shrink-0"
+                  style={{
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text)",
+                    backgroundColor: "var(--color-bg-soft)",
+                  }}
+                >
+                  🇰🇪 +254
+                </div>
+                <Field
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="700 000 000"
+                  value={form.phone}
+                  onChange={handleChange}
+                  icon={Phone}
+                  required
+                />
+              </div>
+
+              {/* Message */}
+              <div>
+                <textarea
+                  id="message"
+                  name="message"
+                  value={form.message}
+                  onChange={handleChange}
+                  placeholder="Tell us how we can help you..."
+                  rows={5}
+                  required
+                  className="w-full rounded-xl font-body text-xs text-gray-700 placeholder-gray-400 focus:outline-none transition-all duration-200 resize-none"
+                  style={{
+                    border: "1px solid var(--color-border)",
+                    padding: "0.75rem 1rem",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "var(--color-orange)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "var(--color-border)";
+                  }}
+                />
+                <p
+                  className="font-body text-[0.58rem] text-right mt-1"
+                  style={{ color: "var(--color-muted)" }}
+                >
+                  {form.message.length}/{maxMessage}
+                </p>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="btn-secondary w-full flex items-center justify-center gap-2 group"
+                style={{ fontSize: "0.65rem" }}
+              >
+                Submit Message
+                <ArrowRight
+                  size={13}
+                  className="group-hover:translate-x-0.5 transition-transform"
+                />
+              </button>
+
+              {/* Office hours */}
+              <div
+                className="flex items-center gap-2 pt-3 border-t font-body"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                <Clock size={12} style={{ color: "var(--color-orange)" }} />
+                <span
+                  className="text-[0.62rem]"
+                  style={{ color: "var(--color-muted)" }}
+                >
+                  Office Hours: Monday – Saturday, 8:00 AM – 6:00 PM EAT
+                </span>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
-      <style>{`
-        @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&display=swap");
-      `}</style>
+      {/* Bottom note */}
+      <p
+        className="text-center font-body text-[0.62rem] mt-5"
+        style={{ color: "var(--color-muted)" }}
+      >
+        Expected response time:{" "}
+        <span className="font-bold" style={{ color: "var(--color-orange)" }}>
+          Within 24 hours
+        </span>
+      </p>
     </main>
   );
 }
 
-/* InputWithIcon - Brand-styled input with left icon */
-function InputWithIcon({
+function Field({
   id,
   name,
   type = "text",
   placeholder,
   value,
   onChange,
-  icon,
-  ariaLabel,
-  required = false,
+  icon: Icon,
+  required,
 }) {
   return (
-    <div className="relative">
+    <div className="relative flex-1">
       <label htmlFor={id} className="sr-only">
-        {ariaLabel}
+        {placeholder}
       </label>
-      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-        {React.cloneElement(icon, { className: "text-gray-400" })}
+      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+        <Icon size={13} style={{ color: "var(--color-muted)" }} />
       </div>
       <input
         id={id}
@@ -306,40 +362,18 @@ function InputWithIcon({
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-xl border-2 border-gray-200 px-5 py-3 pl-12 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-[#BF1A1A] transition-all duration-300 font-semibold"
-        style={{ fontFamily: "'Montserrat', sans-serif" }}
-        aria-label={ariaLabel}
+        className="w-full rounded-xl font-body text-xs text-gray-700 placeholder-gray-400 focus:outline-none transition-all duration-200"
+        style={{
+          border: "1px solid var(--color-border)",
+          padding: "0.65rem 0.75rem 0.65rem 2.2rem",
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = "var(--color-orange)";
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = "var(--color-border)";
+        }}
       />
-    </div>
-  );
-}
-
-/* Contact Card - Brand-styled contact information card */
-function ContactCard({ icon, title, subtitle, linkText, href }) {
-  return (
-    <div className="group flex gap-4 items-start p-4 rounded-xl hover:bg-[#FFF8E1] transition-all duration-300">
-      <div className="w-12 h-12 rounded-xl bg-[#FFF8E1] border-2 border-[#FFD41D] flex items-center justify-center text-[#BF1A1A] group-hover:bg-[#BF1A1A] group-hover:text-white transition-all duration-300">
-        {icon}
-      </div>
-      <div>
-        <div
-          className="text-sm font-black text-gray-900 mb-1"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-        >
-          {title}
-        </div>
-        <div className="text-xs text-gray-600 mb-2 font-semibold">
-          {subtitle}
-        </div>
-        <div className="text-sm">
-          <a
-            href={href}
-            className="text-[#BF1A1A] hover:text-[#8B1414] font-bold hover:underline transition-colors"
-          >
-            {linkText}
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

@@ -4,289 +4,320 @@ import { useNavigate } from "react-router-dom";
 import { recipesData, getRecipesByCategory } from "../lib/recipesData";
 import { assets } from "../assets/assets";
 
-/**
- * Recipes page - Smart Global Limited
- * Colors: Red (#BF1A1A), Yellow (#FFD41D), Black, White, Brown (#7B4019)
- */
-
 const categories = [
-  { id: 1, name: "Breakfast", items: 5, icon: "🥞" },
-  { id: 2, name: "Soups", items: 1, icon: "🍲" },
-  { id: 3, name: "Desserts", items: 4, icon: "🍰" },
-  { id: 4, name: "Snacks", items: 2, icon: "🍿" },
-  { id: 5, name: "Main Course", items: 1, icon: "🍽️" },
+  { id: 1, name: "Breakfast", icon: "🥞" },
+  { id: 2, name: "Soups", icon: "🍲" },
+  { id: 3, name: "Desserts", icon: "🍰" },
+  { id: 4, name: "Snacks", icon: "🍿" },
+  { id: 5, name: "Main Course", icon: "🍽️" },
 ];
 
-// Map image names to actual assets
-const getImageFromAssets = (imageName) => {
-  const imageMap = {
+const getImageFromAssets = (name) =>
+  ({
     top2: assets.top2,
     kent: assets.kent,
     topping: assets.topping,
     spuds: assets.spuds,
     crepes: assets.crepes,
     ice: assets.ice,
-  };
-  return imageMap[imageName] || assets.top2;
-};
+  })[name] || assets.top2;
 
 export default function Recipes() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const navigate = useNavigate();
-
   const filteredRecipes = getRecipesByCategory(selectedCategory);
-  const featuredRecipe = recipesData.find((r) => r.id === 2); // Featured: Creamy Vegetable Soup
-
-  const handleRecipeClick = (slug) => {
-    navigate(`/recipes/${slug}`);
-  };
+  const featuredRecipe = recipesData.find((r) => r.id === 2);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Hero: featured image with overlay title */}
-        <section className="relative rounded-3xl overflow-hidden bg-white shadow-2xl border-2 border-[#FFD41D]">
-          <div className="h-64 md:h-96 lg:h-[480px] relative">
-            <img
-              src={assets.recipe}
-              alt={featuredRecipe.title}
-              className="w-full h-full object-cover"
+    <div className="min-h-screen bg-white">
+      {/* ── Hero ── */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: "380px" }}
+      >
+        <img
+          src={assets.recipe}
+          alt={featuredRecipe.title}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
+          }}
+        />
+
+        <div className="absolute bottom-0 left-0 right-0 page-x pb-8">
+          <span
+            className="inline-block px-3 py-1 rounded-full font-body text-[0.6rem] font-bold uppercase tracking-widest text-white mb-3"
+            style={{ backgroundColor: "var(--color-orange)" }}
+          >
+            Featured Recipe
+          </span>
+          <h2
+            className="font-heading font-bold text-white mb-2"
+            style={{
+              fontSize: "clamp(1.3rem, 3vw, 2rem)",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {featuredRecipe.title}
+          </h2>
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            <span className="flex items-center gap-1.5 font-body text-xs text-white/80">
+              <Clock size={12} /> {featuredRecipe.cookTime}
+            </span>
+            <span className="flex items-center gap-1.5 font-body text-xs text-white/80">
+              <User size={12} /> {featuredRecipe.servings} servings
+            </span>
+            <span
+              className="font-body text-[0.6rem] font-bold px-2 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: "#4CAF50" }}
+            >
+              Halal ✓
+            </span>
+          </div>
+          <button
+            onClick={() => navigate(`/recipes/${featuredRecipe.slug}`)}
+            className="btn-secondary"
+            style={{ fontSize: "0.62rem" }}
+          >
+            View Recipe
+          </button>
+        </div>
+      </div>
+
+      {/* ── Category filter ── */}
+      <div
+        className="page-x py-8"
+        style={{ backgroundColor: "var(--color-bg-soft)" }}
+      >
+        <div className="text-center mb-6">
+          <p className="text-eyebrow mb-1">Browse</p>
+          <h3
+            className="font-heading font-bold text-base"
+            style={{ color: "var(--color-text)" }}
+          >
+            Recipes by Category
+          </h3>
+          <div className="section-rule-center mt-2" />
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          {/* All */}
+          <button
+            onClick={() => setSelectedCategory("All")}
+            className="flex flex-col items-center gap-2 px-5 py-3 rounded-xl transition-all duration-200 font-body"
+            style={{
+              backgroundColor:
+                selectedCategory === "All" ? "var(--color-orange)" : "#fff",
+              color: selectedCategory === "All" ? "#fff" : "var(--color-text)",
+              border: `1px solid ${selectedCategory === "All" ? "var(--color-orange)" : "var(--color-border)"}`,
+              minWidth: "80px",
+            }}
+          >
+            <ChefHat
+              size={18}
+              style={{
+                color:
+                  selectedCategory === "All" ? "#fff" : "var(--color-orange)",
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+            <span className="text-xs font-bold">All</span>
+            <span className="text-[0.58rem] opacity-70">
+              {recipesData.length} recipes
+            </span>
+          </button>
 
-            <div className="absolute left-8 bottom-8 text-white max-w-2xl">
-              <div className="inline-block bg-[#FFD41D] text-[#7B4019] px-4 py-1 rounded-full text-xs font-black mb-3">
-                FEATURED RECIPE
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black leading-tight mb-4">
-                {featuredRecipe.title}
-              </h2>
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <Clock size={16} />
-                  <span>{featuredRecipe.cookTime}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <User size={16} />
-                  <span>{featuredRecipe.servings} servings</span>
-                </div>
-                <div className="bg-[#4CAF50] px-3 py-1 rounded-full text-xs font-bold">
-                  Halal ✓
-                </div>
-              </div>
-              <button
-                onClick={() => handleRecipeClick(featuredRecipe.slug)}
-                className="mt-4 bg-[#BF1A1A] hover:bg-[#8B1414] text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
-                View Recipe
-              </button>
-            </div>
-          </div>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCategory(c.name)}
+              className="flex flex-col items-center gap-2 px-5 py-3 rounded-xl transition-all duration-200 font-body"
+              style={{
+                backgroundColor:
+                  selectedCategory === c.name ? "var(--color-orange)" : "#fff",
+                color:
+                  selectedCategory === c.name ? "#fff" : "var(--color-text)",
+                border: `1px solid ${selectedCategory === c.name ? "var(--color-orange)" : "var(--color-border)"}`,
+                minWidth: "80px",
+              }}
+            >
+              <span className="text-lg">{c.icon}</span>
+              <span className="text-xs font-bold">{c.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
-          {/* Browse by category */}
-          <div className="bg-white px-6 py-10">
-            <h3 className="text-center text-2xl font-black text-[#BF1A1A] mb-2">
-              Browse by Category
-            </h3>
-            <p className="text-center text-sm text-[#7B4019] mb-8">
-              Discover delicious recipes using our premium products
+      {/* ── Recipes grid ── */}
+      <div className="page-x section-y">
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <p className="text-eyebrow mb-1">
+              {selectedCategory === "All" ? "All Recipes" : selectedCategory}
             </p>
-
-            <div className="flex flex-wrap justify-center gap-6">
-              {/* All Categories Button */}
-              <button
-                onClick={() => setSelectedCategory("All")}
-                className={`flex flex-col items-center gap-3 rounded-2xl px-6 py-4 w-32 transition-all duration-300 ${
-                  selectedCategory === "All"
-                    ? "bg-[#BF1A1A] text-white shadow-xl scale-105"
-                    : "bg-gray-50 hover:bg-gray-100 text-gray-700 hover:shadow-lg"
-                }`}
-              >
-                <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-md ${
-                    selectedCategory === "All" ? "bg-white" : "bg-white"
-                  }`}
-                >
-                  <ChefHat className="text-[#BF1A1A]" size={28} />
-                </div>
-                <div className="text-sm font-bold">All Recipes</div>
-                <div className="text-xs opacity-80">
-                  {recipesData.length} items
-                </div>
-              </button>
-
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedCategory(c.name)}
-                  className={`flex flex-col items-center gap-3 rounded-2xl px-6 py-4 w-32 transition-all duration-300 ${
-                    selectedCategory === c.name
-                      ? "bg-[#BF1A1A] text-white shadow-xl scale-105"
-                      : "bg-gray-50 hover:bg-gray-100 text-gray-700 hover:shadow-lg"
-                  }`}
-                >
-                  <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-3xl shadow-md">
-                    {c.icon}
-                  </div>
-                  <div className="text-sm font-bold">{c.name}</div>
-                  <div className="text-xs opacity-80">{c.items} recipes</div>
-                </button>
-              ))}
-            </div>
+            <div className="section-rule-orange mt-1" />
           </div>
-        </section>
+          {selectedCategory !== "All" && (
+            <button
+              onClick={() => setSelectedCategory("All")}
+              className="font-body text-xs font-bold transition-colors"
+              style={{ color: "var(--color-orange)" }}
+            >
+              View all →
+            </button>
+          )}
+        </div>
 
-        {/* Featured Recipes grid */}
-        <section className="mt-12">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-3xl font-black text-[#BF1A1A]">
-                {selectedCategory === "All"
-                  ? "ALL RECIPES"
-                  : `${selectedCategory.toUpperCase()} RECIPES`}
-              </h3>
-              <p className="text-sm text-[#7B4019] mt-1">
-                {filteredRecipes.length} delicious recipes using Smart Global
-                products
-              </p>
-            </div>
-            {selectedCategory !== "All" && (
-              <button
-                onClick={() => setSelectedCategory("All")}
-                className="text-sm text-[#BF1A1A] font-bold hover:text-[#8B1414] flex items-center gap-2 transition-colors"
-              >
-                View all
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredRecipes.map((recipe) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                onClick={() => handleRecipeClick(recipe.slug)}
-              />
-            ))}
-          </div>
-        </section>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredRecipes.map((recipe) => (
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              onClick={() => navigate(`/recipes/${recipe.slug}`)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-/* RecipeCard - Smart Global branded style */
 function RecipeCard({ recipe, onClick }) {
-  const [isLiked, setIsLiked] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const difficultyColor = {
+    Easy: "#4CAF50",
+    Medium: "var(--color-orange)",
+    Hard: "var(--color-red)",
+  };
 
   return (
-    <article className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-gray-100 hover:border-[#FFD41D] cursor-pointer">
-      <div className="relative overflow-hidden" onClick={onClick}>
+    <article
+      className="bg-white rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-lg"
+      style={{ border: "1px solid var(--color-border)" }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.borderColor = "var(--color-orange)")
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.borderColor = "var(--color-border)")
+      }
+    >
+      {/* Image */}
+      <div
+        className="relative overflow-hidden"
+        style={{ height: "200px" }}
+        onClick={onClick}
+      >
         <img
           src={getImageFromAssets(recipe.image)}
           alt={recipe.title}
-          className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
+        {/* Wishlist */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setIsLiked(!isLiked);
+            setLiked(!liked);
           }}
-          className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-full p-2.5 shadow-lg hover:scale-110 transition-transform duration-300 z-10"
+          className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md"
         >
           <Heart
-            size={18}
-            className={`${
-              isLiked ? "fill-[#BF1A1A] text-[#BF1A1A]" : "text-gray-400"
-            } transition-colors`}
+            size={13}
+            style={{
+              fill: liked ? "var(--color-red)" : "transparent",
+              color: liked ? "var(--color-red)" : "#9ca3af",
+            }}
           />
         </button>
-
-        <div className="absolute top-4 left-4">
-          <span className="bg-[#FFD41D] text-[#7B4019] px-3 py-1 rounded-full text-xs font-black shadow-lg">
-            {recipe.category}
-          </span>
-        </div>
-
-        {/* Difficulty badge */}
-        <div className="absolute bottom-4 left-4">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${
-              recipe.difficulty === "Easy"
-                ? "bg-green-500"
-                : recipe.difficulty === "Medium"
-                  ? "bg-orange-500"
-                  : "bg-red-500"
-            }`}
-          >
-            {recipe.difficulty}
-          </span>
-        </div>
+        {/* Category */}
+        <span
+          className="absolute top-3 left-3 font-body text-[0.58rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full text-white"
+          style={{ backgroundColor: "var(--color-orange)" }}
+        >
+          {recipe.category}
+        </span>
+        {/* Difficulty */}
+        <span
+          className="absolute bottom-3 left-3 font-body text-[0.58rem] font-bold px-2 py-0.5 rounded-full text-white"
+          style={{
+            backgroundColor:
+              difficultyColor[recipe.difficulty] || "var(--color-muted)",
+          }}
+        >
+          {recipe.difficulty}
+        </span>
       </div>
 
-      <div className="p-6" onClick={onClick}>
-        <h4 className="text-xl font-black text-gray-900 leading-tight group-hover:text-[#BF1A1A] transition-colors duration-300 mb-3 line-clamp-2">
+      {/* Body */}
+      <div className="p-4" onClick={onClick}>
+        <h4
+          className="font-heading font-bold text-sm leading-snug mb-1.5 line-clamp-2 transition-colors"
+          style={{ color: "var(--color-text)" }}
+        >
           {recipe.title}
         </h4>
-
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+        <p
+          className="font-body text-[0.62rem] line-clamp-2 mb-3"
+          style={{ color: "var(--color-muted)" }}
+        >
           {recipe.description}
         </p>
 
-        <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-          <div className="flex items-center gap-1.5">
-            <Clock size={16} className="text-[#BF1A1A]" />
-            <span className="font-semibold">{recipe.totalTime}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <User size={16} className="text-[#BF1A1A]" />
-            <span className="font-semibold">{recipe.servings} servings</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="text-yellow-400">★</span>
-            <span className="font-semibold">{recipe.rating}</span>
-            <span className="text-gray-400">({recipe.reviews})</span>
-          </div>
+        <div className="flex items-center gap-4 mb-3">
+          <span
+            className="flex items-center gap-1 font-body text-[0.62rem]"
+            style={{ color: "var(--color-muted)" }}
+          >
+            <Clock size={11} style={{ color: "var(--color-orange)" }} />{" "}
+            {recipe.totalTime}
+          </span>
+          <span
+            className="flex items-center gap-1 font-body text-[0.62rem]"
+            style={{ color: "var(--color-muted)" }}
+          >
+            <User size={11} style={{ color: "var(--color-orange)" }} />{" "}
+            {recipe.servings} servings
+          </span>
+          <span
+            className="flex items-center gap-0.5 font-body text-[0.62rem]"
+            style={{ color: "var(--color-muted)" }}
+          >
+            <span style={{ color: "var(--color-orange)" }}>★</span>{" "}
+            {recipe.rating}
+          </span>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-[#BF1A1A] to-[#8B1414] rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+        <div
+          className="flex items-center justify-between pt-3 border-t"
+          style={{ borderColor: "var(--color-border)" }}
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--color-orange) 0%, var(--color-orange-dark) 100%)",
+              }}
+            >
               {recipe.author.avatar}
             </div>
-            <div>
-              <div className="text-sm font-bold text-gray-900">
-                {recipe.author.name}
-              </div>
-              <div className="text-xs text-gray-500">{recipe.date}</div>
-            </div>
+            <span
+              className="font-body text-[0.62rem] font-semibold"
+              style={{ color: "var(--color-text)" }}
+            >
+              {recipe.author.name}
+            </span>
           </div>
-
-          <div className="bg-[#4CAF50] text-white px-2.5 py-1 rounded-full text-xs font-bold">
+          <span
+            className="font-body text-[0.58rem] font-bold px-2 py-0.5 rounded-full text-white"
+            style={{ backgroundColor: "#4CAF50" }}
+          >
             Halal ✓
-          </div>
+          </span>
         </div>
-
-        <button className="w-full mt-4 py-3 rounded-xl bg-white text-[#BF1A1A] border-2 border-[#BF1A1A] font-bold text-sm hover:bg-[#BF1A1A] hover:text-white transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-xl">
-          View Recipe
-        </button>
       </div>
     </article>
   );

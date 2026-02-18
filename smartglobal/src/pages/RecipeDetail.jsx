@@ -14,61 +14,54 @@ import {
   TrendingUp,
   ArrowLeft,
 } from "lucide-react";
-import {
-  recipesData,
-  getRecipesByCategory,
-  getRecipeBySlug,
-  getRelatedRecipes,
-  getFeaturedRecipes,
-} from "../lib/recipesData";
-
+import { getRecipeBySlug, getRelatedRecipes } from "../lib/recipesData";
 import { assets } from "../assets/assets";
 
-/**
- * RecipeDetail page - single recipe view
- * Smart Global Limited branding
- */
-
-// Map image names to actual assets
-const getImageFromAssets = (imageName) => {
-  const imageMap = {
+const getImageFromAssets = (name) =>
+  ({
     top2: assets.top2,
     kent: assets.kent,
     topping: assets.topping,
     spuds: assets.spuds,
     crepes: assets.crepes,
     ice: assets.ice,
-  };
-  return imageMap[imageName] || assets.top2;
+  })[name] || assets.top2;
+
+const difficultyColor = {
+  Easy: "#4CAF50",
+  Medium: "var(--color-orange)",
+  Hard: "var(--color-red)",
 };
 
 export default function RecipeDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const recipe = getRecipeBySlug(slug);
-
-  const [isLiked, setIsLiked] = useState(false);
+  const [liked, setLiked] = useState(false);
   const [cookingMode, setCookingMode] = useState(false);
 
-  if (!recipe) {
+  if (!recipe)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-x">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <p
+            className="font-heading font-bold text-lg mb-3"
+            style={{ color: "var(--color-text)" }}
+          >
             Recipe not found
-          </h2>
+          </p>
           <button
             onClick={() => navigate("/recipes")}
-            className="bg-[#BF1A1A] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#8B1414] transition-colors"
+            className="btn-secondary"
+            style={{ fontSize: "0.62rem" }}
           >
             Back to Recipes
           </button>
         </div>
       </div>
     );
-  }
 
-  const relatedRecipes = getRelatedRecipes(recipe.id, recipe.category);
+  const related = getRelatedRecipes(recipe.id, recipe.category);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -78,223 +71,292 @@ export default function RecipeDetail() {
           text: recipe.description,
           url: window.location.href,
         });
-      } catch (err) {
-        console.log("Error sharing:", err);
-      }
+      } catch (e) {}
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      alert("Link copied!");
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Back button */}
-        <button
-          onClick={() => navigate("/recipes")}
-          className="flex items-center gap-2 text-[#BF1A1A] hover:text-[#8B1414] font-semibold mb-6 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          Back to Recipes
-        </button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main column */}
-          <main className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-lg border-2 border-gray-100">
-            <nav className="text-xs text-gray-500 mb-4">
-              Home &gt; Recipes &gt; {recipe.category}
-            </nav>
-
-            {/* Recipe header */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="bg-[#FFD41D] text-[#7B4019] px-3 py-1 rounded-full text-xs font-black">
-                  {recipe.category}
-                </span>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
-                    recipe.difficulty === "Easy"
-                      ? "bg-green-500"
-                      : recipe.difficulty === "Medium"
-                        ? "bg-orange-500"
-                        : "bg-red-500"
-                  }`}
-                >
-                  {recipe.difficulty}
-                </span>
-                <span className="bg-[#4CAF50] text-white px-3 py-1 rounded-full text-xs font-bold">
-                  Halal ✓
-                </span>
-              </div>
-
-              <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 leading-tight">
-                {recipe.title}
-              </h1>
-
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
-                <div className="flex items-center gap-1">
-                  <Rating value={recipe.rating} />
-                  <span className="ml-2 font-semibold text-gray-700">
-                    {recipe.rating.toFixed(1)}
-                  </span>
-                  <span className="text-gray-400">
-                    ({recipe.reviews} reviews)
-                  </span>
-                </div>
-
-                <div className="text-gray-400">|</div>
-
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-700">by</span>
-                  <span className="text-[#BF1A1A] font-bold">
-                    {recipe.author.name}
-                  </span>
-                </div>
-
-                <div className="text-gray-400">|</div>
-
-                <div className="flex items-center gap-1">
-                  <TrendingUp size={14} className="text-[#BF1A1A]" />
-                  <span>{recipe.views} views</span>
-                </div>
-
-                <div className="text-gray-400">|</div>
-
-                <div className="text-gray-500">
-                  Updated: {recipe.lastUpdated}
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex flex-wrap items-center gap-3">
-                <ActionButton
-                  icon={<Heart size={16} />}
-                  label={isLiked ? "SAVED" : "SAVE"}
-                  onClick={() => setIsLiked(!isLiked)}
-                  active={isLiked}
-                />
-                <ActionButton icon={<Star size={16} />} label="RATE" />
-                <ActionButton
-                  icon={<Printer size={16} />}
-                  label="PRINT"
-                  onClick={handlePrint}
-                />
-                <ActionButton
-                  icon={<Share2 size={16} />}
-                  label="SHARE"
-                  onClick={handleShare}
-                />
-              </div>
-            </div>
-
-            {/* Hero image */}
-            <div className="relative rounded-2xl overflow-hidden mb-8 shadow-xl border-2 border-[#FFD41D]">
-              <img
-                src={getImageFromAssets(recipe.image)}
-                alt={recipe.title}
-                className="w-full h-96 object-cover"
+    <div className="min-h-screen bg-white">
+      {/* ── Hero image ── */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: "320px" }}
+      >
+        <img
+          src={getImageFromAssets(recipe.image)}
+          alt={recipe.title}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)",
+          }}
+        />
+        <div className="absolute bottom-0 left-0 right-0 page-x pb-6">
+          <button
+            onClick={() => navigate("/recipes")}
+            className="flex items-center gap-1.5 font-body text-xs font-bold text-white/70 hover:text-white mb-3 transition-colors"
+          >
+            <ArrowLeft size={13} /> Back to Recipes
+          </button>
+          <div className="flex flex-wrap gap-2 mb-2">
+            <span
+              className="font-body text-[0.58rem] font-bold px-2 py-0.5 rounded-full text-white uppercase tracking-widest"
+              style={{ backgroundColor: "var(--color-orange)" }}
+            >
+              {recipe.category}
+            </span>
+            <span
+              className="font-body text-[0.58rem] font-bold px-2 py-0.5 rounded-full text-white"
+              style={{
+                backgroundColor: difficultyColor[recipe.difficulty] || "#999",
+              }}
+            >
+              {recipe.difficulty}
+            </span>
+            <span
+              className="font-body text-[0.58rem] font-bold px-2 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: "#4CAF50" }}
+            >
+              Halal ✓
+            </span>
+          </div>
+          <h1
+            className="font-heading font-bold text-white"
+            style={{
+              fontSize: "clamp(1.2rem, 2.8vw, 2rem)",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              lineHeight: 1.15,
+            }}
+          >
+            {recipe.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 mt-2">
+            <span className="flex items-center gap-1 font-body text-[0.65rem] text-white/75">
+              <Star
+                size={11}
+                style={{
+                  fill: "var(--color-orange)",
+                  color: "var(--color-orange)",
+                }}
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
-                <div className="flex items-center gap-6 text-white text-sm">
-                  <div className="flex items-center gap-2">
-                    <Timer size={18} />
-                    <span className="font-bold">{recipe.totalTime}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <User size={18} />
-                    <span className="font-bold">
-                      {recipe.servings} servings
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Utensils size={18} />
-                    <span className="font-bold">{recipe.difficulty}</span>
-                  </div>
-                </div>
-              </div>
+              {recipe.rating?.toFixed(1)} ({recipe.reviews} reviews)
+            </span>
+            <span className="flex items-center gap-1 font-body text-[0.65rem] text-white/75">
+              <TrendingUp size={11} /> {recipe.views} views
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="page-x section-y">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* ── Main column ── */}
+          <main className="lg:col-span-2 space-y-7">
+            {/* Action bar */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  icon: Heart,
+                  label: liked ? "Saved" : "Save",
+                  action: () => setLiked(!liked),
+                  active: liked,
+                },
+                { icon: Printer, label: "Print", action: () => window.print() },
+                { icon: Share2, label: "Share", action: handleShare },
+              ].map(({ icon: Icon, label, action, active }) => (
+                <button
+                  key={label}
+                  onClick={action}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-body text-[0.62rem] font-bold transition-all"
+                  style={{
+                    backgroundColor: active
+                      ? "var(--color-orange)"
+                      : "var(--color-bg-soft)",
+                    color: active ? "#fff" : "var(--color-text)",
+                    border: `1px solid ${active ? "var(--color-orange)" : "var(--color-border)"}`,
+                  }}
+                >
+                  <Icon size={12} /> {label}
+                </button>
+              ))}
             </div>
 
             {/* Description */}
-            <section className="mb-8">
-              <p className="text-lg text-gray-700 leading-relaxed">
-                {recipe.description}
-              </p>
-            </section>
+            <p
+              className="font-body text-sm leading-relaxed"
+              style={{ color: "var(--color-muted)" }}
+            >
+              {recipe.description}
+            </p>
 
-            {/* Ingredients & Directions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            {/* Quick stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Timer, label: "Total Time", value: recipe.totalTime },
+                {
+                  icon: User,
+                  label: "Servings",
+                  value: `${recipe.servings} people`,
+                },
+                {
+                  icon: ChefHat,
+                  label: "Difficulty",
+                  value: recipe.difficulty,
+                },
+              ].map(({ icon: Icon, label, value }) => (
+                <div
+                  key={label}
+                  className="rounded-xl p-3 text-center"
+                  style={{
+                    backgroundColor: "var(--color-bg-soft)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                >
+                  <Icon
+                    size={14}
+                    className="mx-auto mb-1"
+                    style={{ color: "var(--color-orange)" }}
+                  />
+                  <p
+                    className="font-body text-[0.58rem] mb-0.5"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    {label}
+                  </p>
+                  <p
+                    className="font-body text-xs font-bold"
+                    style={{ color: "var(--color-text)" }}
+                  >
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Ingredients + Directions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Ingredients */}
-              <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-[#BF1A1A] rounded-full flex items-center justify-center">
-                    <ChefHat className="text-white" size={20} />
+              <div
+                className="rounded-xl p-5"
+                style={{
+                  backgroundColor: "var(--color-bg-soft)",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "var(--color-orange)" }}
+                  >
+                    <ChefHat size={13} className="text-white" />
                   </div>
-                  <h3 className="text-2xl font-black text-gray-900">
+                  <h3
+                    className="font-heading font-bold text-sm"
+                    style={{ color: "var(--color-text)" }}
+                  >
                     Ingredients
                   </h3>
                 </div>
-                <ul className="space-y-3">
-                  {recipe.ingredients.map((ingredient, idx) => (
+                <ul className="space-y-2">
+                  {recipe.ingredients.map((ing, i) => (
                     <li
-                      key={idx}
-                      className="flex items-start gap-3 text-gray-700"
+                      key={i}
+                      className="flex items-start gap-2.5 font-body text-xs"
+                      style={{ color: "var(--color-muted)" }}
                     >
-                      <span className="w-6 h-6 bg-[#FFD41D] rounded-full flex items-center justify-center text-[#7B4019] font-bold text-xs flex-shrink-0 mt-0.5">
-                        {idx + 1}
+                      <span
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-[0.55rem] flex-shrink-0 mt-0.5"
+                        style={{ backgroundColor: "var(--color-orange)" }}
+                      >
+                        {i + 1}
                       </span>
-                      <span className="leading-relaxed">{ingredient}</span>
+                      {ing}
                     </li>
                   ))}
                 </ul>
               </div>
 
               {/* Directions */}
-              <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-[#BF1A1A] rounded-full flex items-center justify-center">
-                    <Utensils className="text-white" size={20} />
+              <div
+                className="rounded-xl p-5"
+                style={{
+                  backgroundColor: "var(--color-bg-soft)",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "var(--color-orange)" }}
+                  >
+                    <Utensils size={13} className="text-white" />
                   </div>
-                  <h3 className="text-2xl font-black text-gray-900">
+                  <h3
+                    className="font-heading font-bold text-sm"
+                    style={{ color: "var(--color-text)" }}
+                  >
                     Directions
                   </h3>
                 </div>
-                <ol className="space-y-4">
-                  {recipe.directions.map((step, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="w-8 h-8 bg-[#BF1A1A] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {idx + 1}
+                <ol className="space-y-3">
+                  {recipe.directions.map((step, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2.5 font-body text-xs"
+                      style={{ color: "var(--color-muted)" }}
+                    >
+                      <span
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-[0.55rem] flex-shrink-0 mt-0.5"
+                        style={{ backgroundColor: "var(--color-orange-dark)" }}
+                      >
+                        {i + 1}
                       </span>
-                      <p className="text-gray-700 leading-relaxed pt-1">
-                        {step}
-                      </p>
+                      {step}
                     </li>
                   ))}
                 </ol>
               </div>
             </div>
 
-            {/* Tips & Nutrition */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Tips + Nutrition */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Pro Tips */}
-              {recipe.tips && recipe.tips.length > 0 && (
-                <div className="bg-[#FFF9E6] rounded-2xl p-6 border-2 border-[#FFD41D]">
-                  <h3 className="text-xl font-black text-[#7B4019] mb-4 flex items-center gap-2">
-                    <span className="text-2xl">💡</span> Pro Tips
-                  </h3>
+              {recipe.tips?.length > 0 && (
+                <div
+                  className="rounded-xl p-5"
+                  style={{
+                    backgroundColor: "rgba(255,127,17,0.06)",
+                    border: "1px solid rgba(255,127,17,0.2)",
+                  }}
+                >
+                  <p
+                    className="text-eyebrow mb-1"
+                    style={{ color: "var(--color-orange)" }}
+                  >
+                    Pro Tips
+                  </p>
+                  <div className="section-rule-orange mb-3" />
                   <ul className="space-y-2">
-                    {recipe.tips.map((tip, idx) => (
+                    {recipe.tips.map((tip, i) => (
                       <li
-                        key={idx}
-                        className="text-sm text-gray-700 leading-relaxed flex items-start gap-2"
+                        key={i}
+                        className="flex items-start gap-2 font-body text-xs"
+                        style={{ color: "var(--color-muted)" }}
                       >
-                        <span className="text-[#BF1A1A] font-bold">•</span>
-                        <span>{tip}</span>
+                        <span
+                          className="font-bold"
+                          style={{ color: "var(--color-orange)" }}
+                        >
+                          •
+                        </span>{" "}
+                        {tip}
                       </li>
                     ))}
                   </ul>
@@ -302,39 +364,68 @@ export default function RecipeDetail() {
               )}
 
               {/* Nutrition */}
-              <div className="bg-green-50 rounded-2xl p-6 border-2 border-green-200">
-                <h3 className="text-xl font-black text-green-800 mb-4 flex items-center gap-2">
-                  <span className="text-2xl">🥗</span> Nutrition (per serving)
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <NutritionItem
-                    label="Calories"
-                    value={recipe.nutrition.calories}
-                  />
-                  <NutritionItem
-                    label="Protein"
-                    value={recipe.nutrition.protein}
-                  />
-                  <NutritionItem label="Carbs" value={recipe.nutrition.carbs} />
-                  <NutritionItem label="Fat" value={recipe.nutrition.fat} />
-                  {recipe.nutrition.fiber && (
-                    <NutritionItem
-                      label="Fiber"
-                      value={recipe.nutrition.fiber}
-                    />
-                  )}
+              <div
+                className="rounded-xl p-5"
+                style={{
+                  backgroundColor: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                }}
+              >
+                <p className="text-eyebrow mb-1" style={{ color: "#16a34a" }}>
+                  Nutrition / serving
+                </p>
+                <div
+                  className="w-8 h-0.5 mb-3"
+                  style={{ backgroundColor: "#16a34a" }}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(recipe.nutrition || {}).map(([key, val]) => (
+                    <div
+                      key={key}
+                      className="bg-white rounded-lg p-2.5 border border-green-100"
+                    >
+                      <p
+                        className="font-body text-[0.58rem] capitalize mb-0.5"
+                        style={{ color: "#6b7280" }}
+                      >
+                        {key}
+                      </p>
+                      <p
+                        className="font-body text-xs font-bold"
+                        style={{ color: "#15803d" }}
+                      >
+                        {val}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
             {/* Tags */}
-            <div className="mt-8 pt-8 border-t border-gray-200">
-              <h3 className="text-sm font-bold text-gray-500 mb-3">TAGS</h3>
+            <div
+              className="pt-5 border-t"
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              <p className="text-eyebrow mb-3">Tags</p>
               <div className="flex flex-wrap gap-2">
-                {recipe.tags.map((tag, idx) => (
+                {recipe.tags.map((tag, i) => (
                   <span
-                    key={idx}
-                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+                    key={i}
+                    className="font-body text-[0.62rem] font-semibold px-3 py-1 rounded-full cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: "var(--color-bg-soft)",
+                      color: "var(--color-muted)",
+                      border: "1px solid var(--color-border)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "var(--color-orange)";
+                      e.currentTarget.style.color = "var(--color-orange)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "var(--color-border)";
+                      e.currentTarget.style.color = "var(--color-muted)";
+                    }}
                   >
                     #{tag}
                   </span>
@@ -343,32 +434,64 @@ export default function RecipeDetail() {
             </div>
           </main>
 
-          {/* Right sidebar */}
-          <aside className="space-y-6">
-            {/* Quick Summary Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-[#FFD41D] sticky top-6">
-              <div className="mb-4">
-                <h3 className="text-lg font-black text-[#BF1A1A] mb-1">
-                  Quick Summary
-                </h3>
-                <p className="text-xs text-gray-500">Recipe at a glance</p>
+          {/* ── Sidebar ── */}
+          <aside className="space-y-5">
+            {/* Quick summary */}
+            <div
+              className="rounded-xl p-5 sticky top-6"
+              style={{ border: "1px solid var(--color-border)" }}
+            >
+              <p className="text-eyebrow mb-1">Quick Summary</p>
+              <div className="section-rule-orange mb-4" />
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {[
+                  ["Prep", recipe.prepTime],
+                  ["Cook", recipe.cookTime],
+                  ["Total", recipe.totalTime],
+                  ["Serves", `${recipe.servings}`],
+                  ["Level", recipe.difficulty],
+                  ["Rating", `${recipe.rating} ★`],
+                ].map(([label, val]) => (
+                  <div
+                    key={label}
+                    className="rounded-lg p-2.5 text-center"
+                    style={{
+                      backgroundColor: "var(--color-bg-soft)",
+                      border: "1px solid var(--color-border)",
+                    }}
+                  >
+                    <p
+                      className="font-body text-[0.55rem] mb-0.5"
+                      style={{ color: "var(--color-muted)" }}
+                    >
+                      {label}
+                    </p>
+                    <p
+                      className="font-body text-xs font-bold"
+                      style={{ color: "var(--color-text)" }}
+                    >
+                      {val}
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <Stat label="Prep Time" value={recipe.prepTime} />
-                <Stat label="Cook Time" value={recipe.cookTime} />
-                <Stat label="Total Time" value={recipe.totalTime} />
-                <Stat label="Servings" value={`${recipe.servings} people`} />
-                <Stat label="Difficulty" value={recipe.difficulty} />
-                <Stat label="Rating" value={`${recipe.rating} ★`} />
-              </div>
-
-              <button className="w-full inline-flex items-center justify-center gap-2 bg-[#BF1A1A] hover:bg-[#8B1414] text-white py-3 rounded-xl font-bold transition-all duration-300 shadow-md hover:shadow-xl mb-4">
-                <Download size={18} /> Download PDF
+              <button
+                className="btn-secondary w-full flex items-center justify-center gap-2 mb-4"
+                style={{ fontSize: "0.6rem" }}
+              >
+                <Download size={12} /> Download PDF
               </button>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <span className="text-sm font-semibold text-gray-700">
+              {/* Cooking mode toggle */}
+              <div
+                className="flex items-center justify-between pt-4 border-t"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                <span
+                  className="font-body text-xs font-semibold"
+                  style={{ color: "var(--color-text)" }}
+                >
                   Cooking Mode
                 </span>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -378,69 +501,111 @@ export default function RecipeDetail() {
                     checked={cookingMode}
                     onChange={(e) => setCookingMode(e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-checked:bg-[#BF1A1A] rounded-full peer-focus:outline-none transition-colors"></div>
-                  <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5 shadow-sm"></div>
+                  <div
+                    className="w-9 h-5 rounded-full transition-colors"
+                    style={{
+                      backgroundColor: cookingMode
+                        ? "var(--color-orange)"
+                        : "#d1d5db",
+                    }}
+                  />
+                  <div
+                    className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform"
+                    style={{
+                      transform: cookingMode
+                        ? "translateX(16px)"
+                        : "translateX(0)",
+                    }}
+                  />
                 </label>
               </div>
             </div>
 
-            {/* Author Card */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
-              <h3 className="text-sm font-black text-gray-900 mb-4">
-                RECIPE BY
-              </h3>
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-[#BF1A1A] to-[#8B1414] rounded-full flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
+            {/* Author */}
+            <div
+              className="rounded-xl p-5"
+              style={{ border: "1px solid var(--color-border)" }}
+            >
+              <p className="text-eyebrow mb-3">Recipe By</p>
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, var(--color-orange) 0%, var(--color-orange-dark) 100%)",
+                  }}
+                >
                   {recipe.author.avatar}
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-gray-900 mb-1">
+                  <p
+                    className="font-body text-sm font-bold mb-1"
+                    style={{ color: "var(--color-text)" }}
+                  >
                     {recipe.author.name}
-                  </div>
-                  <p className="text-xs text-gray-600 mb-3">
+                  </p>
+                  <p
+                    className="font-body text-[0.62rem] leading-relaxed mb-2"
+                    style={{ color: "var(--color-muted)" }}
+                  >
                     {recipe.author.bio}
                   </p>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span>{recipe.date}</span>
-                    <span>•</span>
-                    <span>{recipe.views} views</span>
-                  </div>
+                  <p
+                    className="font-body text-[0.58rem]"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    {recipe.date} · {recipe.views} views
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Related Recipes */}
-            {relatedRecipes.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
-                <h3 className="text-sm font-black text-gray-900 mb-4">
-                  RELATED RECIPES
-                </h3>
-                <div className="space-y-4">
-                  {relatedRecipes.map((related) => (
+            {/* Related */}
+            {related.length > 0 && (
+              <div
+                className="rounded-xl p-5"
+                style={{ border: "1px solid var(--color-border)" }}
+              >
+                <p className="text-eyebrow mb-3">Related Recipes</p>
+                <div className="space-y-3">
+                  {related.map((r) => (
                     <div
-                      key={related.id}
+                      key={r.id}
                       onClick={() => {
-                        navigate(`/recipes/${related.slug}`);
+                        navigate(`/recipes/${r.slug}`);
                         window.scrollTo(0, 0);
                       }}
                       className="flex items-center gap-3 cursor-pointer group"
                     >
                       <img
-                        src={getImageFromAssets(related.image)}
-                        alt={related.title}
-                        className="w-20 h-20 rounded-lg object-cover group-hover:scale-105 transition-transform duration-300"
+                        src={getImageFromAssets(r.image)}
+                        alt={r.title}
+                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="flex-1">
-                        <h4 className="text-sm font-bold text-gray-900 group-hover:text-[#BF1A1A] transition-colors line-clamp-2 leading-tight mb-1">
-                          {related.title}
-                        </h4>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Clock size={12} />
-                          <span>{related.totalTime}</span>
-                          <span>•</span>
-                          <span className="text-yellow-400">★</span>
-                          <span>{related.rating}</span>
-                        </div>
+                      <div>
+                        <p
+                          className="font-body text-xs font-semibold line-clamp-2 leading-snug mb-1 transition-colors"
+                          style={{ color: "var(--color-text)" }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.color =
+                              "var(--color-orange)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.color = "var(--color-text)")
+                          }
+                        >
+                          {r.title}
+                        </p>
+                        <span
+                          className="flex items-center gap-1 font-body text-[0.58rem]"
+                          style={{ color: "var(--color-muted)" }}
+                        >
+                          <Clock size={10} /> {r.totalTime} ·{" "}
+                          <span style={{ color: "var(--color-orange)" }}>
+                            ★
+                          </span>{" "}
+                          {r.rating}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -450,61 +615,6 @@ export default function RecipeDetail() {
           </aside>
         </div>
       </div>
-    </div>
-  );
-}
-
-/* Helper Components */
-
-function Rating({ value = 5 }) {
-  const stars = new Array(5).fill(0);
-  return (
-    <div className="inline-flex items-center">
-      {stars.map((_, i) => (
-        <Star
-          key={i}
-          size={16}
-          className={`${
-            i < Math.round(value)
-              ? "fill-yellow-400 text-yellow-400"
-              : "text-gray-300"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ActionButton({ icon, label, onClick, active }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-        active
-          ? "bg-[#BF1A1A] text-white shadow-md"
-          : "bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-md"
-      }`}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function Stat({ label, value }) {
-  return (
-    <div className="border-2 border-gray-100 rounded-xl p-3 text-center bg-white">
-      <div className="text-xs text-gray-500 mb-1">{label}</div>
-      <div className="text-sm font-black text-gray-900">{value}</div>
-    </div>
-  );
-}
-
-function NutritionItem({ label, value }) {
-  return (
-    <div className="bg-white rounded-lg p-3 border border-green-200">
-      <div className="text-xs text-gray-600 mb-1">{label}</div>
-      <div className="text-lg font-black text-green-800">{value}</div>
     </div>
   );
 }

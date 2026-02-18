@@ -2,17 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Heart } from "lucide-react";
 
-const API_URL = "http://localhost:3000/smartglobal/products";
+const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
 
 /**
  * FeaturedProductsGrid.jsx
- * Grid layout for product cards with API integration
- * Colors: Red (#BF1A1A), Yellow (#FFD41D), Black, White, Brown (#7B4019)
- * Responsive: 1 column mobile, 2 columns tablet, 4 columns desktop
+ * Grouped by category, fully responsive, consistent with global CSS variables.
+ * Image fix: reads product.image?.url (nested object from API).
  */
-
 export default function FeaturedProductsGrid() {
-  const [products, setProducts] = useState([]);
+  const [grouped, setGrouped] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -24,53 +22,70 @@ export default function FeaturedProductsGrid() {
     try {
       setLoading(true);
       const response = await fetch(API_URL);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
+      if (!response.ok) throw new Error("Failed to fetch products");
 
       const data = await response.json();
+      const products = data.success
+        ? data.data || []
+        : Array.isArray(data)
+          ? data
+          : [];
 
-      // Handle different response formats
-      if (data.success) {
-        setProducts(data.data || []);
-      } else {
-        setProducts(data);
-      }
+      // Group by category
+      const groups = products.reduce((acc, product) => {
+        const cat = product.category || "Other";
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(product);
+        return acc;
+      }, {});
 
+      setGrouped(groups);
       setError(null);
     } catch (err) {
-      console.error("Error fetching products:", err);
       setError(err.message);
-      setProducts([]);
+      setGrouped({});
     } finally {
       setLoading(false);
     }
   };
 
-  // Loading State
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, i) => (
-          <ProductCardSkeleton key={i} />
+      <div className="space-y-10">
+        {[...Array(2)].map((_, gi) => (
+          <div key={gi}>
+            <div className="h-6 bg-gray-200 rounded w-40 mb-5 animate-pulse" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     );
   }
 
-  // Error State
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8 max-w-md mx-auto">
-          <p className="text-red-600 font-semibold mb-2">
+        <div
+          className="border-2 rounded-2xl p-8 max-w-md mx-auto"
+          style={{ borderColor: "var(--color-border)" }}
+        >
+          <p
+            className="font-semibold mb-2 text-red"
+            style={{ color: "var(--color-red)" }}
+          >
             Unable to load products
           </p>
-          <p className="text-sm text-gray-600 mb-4">{error}</p>
+          <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
+            {error}
+          </p>
           <button
             onClick={fetchProducts}
-            className="px-6 py-2 bg-[#BF1A1A] text-white font-bold rounded-lg hover:bg-[#8B1414] transition-colors"
+            className="btn-primary"
+            style={{ fontSize: "0.65rem" }}
           >
             Try Again
           </button>
@@ -79,211 +94,235 @@ export default function FeaturedProductsGrid() {
     );
   }
 
-  // Empty State
-  if (products.length === 0) {
+  const categories = Object.keys(grouped);
+
+  if (categories.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-8 max-w-md mx-auto">
-          <p className="text-gray-600 font-semibold mb-2">
-            No products available
-          </p>
-          <p className="text-sm text-gray-500">
-            Check back soon for new products!
-          </p>
-        </div>
+        <p className="font-semibold" style={{ color: "var(--color-muted)" }}>
+          No products available yet. Check back soon!
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {products.map((product) => (
-        <ProductCard key={product._id || product.id} product={product} />
+    <div className="space-y-12">
+      {categories.map((category) => (
+        <section key={category}>
+          {/* Category heading */}
+          <div className="mb-5">
+            <p className="text-eyebrow mb-1">{category}</p>
+            <div className="section-rule" />
+          </div>
+
+          {/* Product grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+            {grouped[category].map((product) => (
+              <ProductCard key={product._id || product.id} product={product} />
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );
 }
 
-/**
- * ProductCard Component
- * Individual product card with image, title, price, rating
- */
+/* ─────────────────────────────────────────
+   PRODUCT CARD
+───────────────────────────────────────── */
 function ProductCard({ product }) {
   const navigate = useNavigate();
   const [isWishlisted, setIsWishlisted] = useState(false);
 
+  const getImage = () =>
+    product.image?.url ||
+    product.imageUrl ||
+    product.img ||
+    product.photo ||
+    "https://via.placeholder.com/300?text=No+Image";
+
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // Prevent card click
-    console.log("Added to cart:", product);
-    // TODO: Integrate with your cart context/state management
-    alert(`Added ${product.name} to cart!`);
+    e.stopPropagation();
+    // TODO: integrate with cart context
+    alert(`Added "${product.title || product.name}" to cart!`);
   };
 
   const toggleWishlist = (e) => {
-    e.stopPropagation(); // Prevent card click
-    setIsWishlisted(!isWishlisted);
-    // TODO: Save to wishlist in backend
+    e.stopPropagation();
+    setIsWishlisted((v) => !v);
   };
 
   const handleCardClick = () => {
     navigate(`/product/${product._id || product.id}`);
   };
 
-  // Get product image - check multiple possible field names
-  const getProductImage = () => {
-    const imageUrl =
-      product.image || product.imageUrl || product.img || product.photo;
-    console.log("Product image URL:", imageUrl); // Debug log
-    return imageUrl || "https://via.placeholder.com/300?text=No+Image";
+  const name = product.title || product.name || "Product";
+  const inStock = product.stock > 0;
+
+  // Badge config
+  const badgeLabel = product.badge || (product.onSale ? "SALE" : null);
+  const badgeStyle = {
+    SALE: { background: "var(--color-red)", color: "#fff" },
+    NEW: { background: "var(--color-orange)", color: "#fff" },
+    HOT: { background: "var(--color-blue)", color: "#fff" },
+    LIMITED: { background: "#1a1a1a", color: "#fff" },
   };
 
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white rounded-2xl p-4 border-2 border-gray-200 hover:border-[#FFD41D] hover:shadow-xl transition-all duration-300 group cursor-pointer"
+      className="bg-white rounded-xl border cursor-pointer group transition-all duration-300 hover:shadow-lg overflow-hidden"
+      style={{ borderColor: "var(--color-border)" }}
     >
-      {/* Product Image */}
-      <div className="relative aspect-square bg-[#FFF8E7] rounded-xl mb-4 overflow-hidden">
+      {/* Image area */}
+      <div className="relative aspect-square bg-gray-50 overflow-hidden">
         <img
-          src={getProductImage()}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          src={getImage()}
+          alt={name}
+          className="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
-            console.error("Image failed to load:", e.target.src);
             e.target.src = "https://via.placeholder.com/300?text=No+Image";
           }}
         />
 
-        {/* Discount Badge */}
-        {product.discount && (
-          <span className="absolute top-2 left-2 px-2 py-1 bg-[#BF1A1A] text-white text-xs font-bold rounded">
-            {product.discount}% OFF
+        {/* Badge */}
+        {badgeLabel && (
+          <span
+            className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded"
+            style={
+              badgeStyle[badgeLabel] || { background: "#1a1a1a", color: "#fff" }
+            }
+          >
+            {badgeLabel}
           </span>
         )}
 
-        {/* Sale Badge */}
-        {product.onSale && (
-          <span className="absolute top-2 right-2 px-2 py-1 bg-[#FFD41D] text-black text-xs font-bold rounded">
-            SALE
-          </span>
-        )}
-
-        {/* Wishlist Heart */}
+        {/* Wishlist */}
         <button
           onClick={toggleWishlist}
-          className={`absolute top-2 ${product.discount ? "right-2" : product.onSale ? "left-2" : "right-2"} w-8 h-8 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 ${
-            isWishlisted ? "opacity-100 bg-red-50" : ""
-          }`}
+          aria-label="Wishlist"
+          className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110"
         >
           <Heart
-            className={`w-4 h-4 ${isWishlisted ? "fill-[#BF1A1A] text-[#BF1A1A]" : "text-gray-400"}`}
+            className="w-3.5 h-3.5"
+            style={{
+              fill: isWishlisted ? "var(--color-red)" : "transparent",
+              color: isWishlisted ? "var(--color-red)" : "#9ca3af",
+            }}
           />
         </button>
       </div>
 
-      {/* Product Info */}
-      <div>
-        {/* Category */}
-        {product.category && (
-          <div className="text-xs text-[#7B4019] mb-1 uppercase tracking-wide font-semibold">
-            {product.category}
-          </div>
-        )}
-
-        {/* Product Name */}
-        <h3 className="text-sm font-bold text-black mb-2 line-clamp-2 min-h-[40px]">
-          {product.name || product.title}
+      {/* Info */}
+      <div className="p-2.5 sm:p-3 space-y-1.5">
+        {/* Name */}
+        <h3
+          className="font-body font-semibold line-clamp-2 leading-snug"
+          style={{ fontSize: "0.75rem", color: "var(--color-text)" }}
+        >
+          {name}
         </h3>
 
         {/* Rating */}
-        {(product.rating || product.reviews || product.reviewCount) && (
-          <div className="flex items-center gap-1 mb-3">
-            {[...Array(5)].map((_, i) => (
-              <span
-                key={i}
-                className={`text-sm ${i < Math.floor(product.rating || 0) ? "text-[#FFD41D]" : "text-gray-300"}`}
-              >
-                ★
-              </span>
-            ))}
-            <span className="text-xs text-gray-400 ml-1">
-              ({product.reviews || product.reviewCount || 0})
-            </span>
-          </div>
-        )}
-
-        {/* Price and Add Button */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-[#BF1A1A]">
-                KSh {product.price?.toLocaleString()}
-              </span>
-              {product.oldPrice && (
-                <span className="text-xs text-gray-400 line-through">
-                  KSh {product.oldPrice.toLocaleString()}
+        {product.rating > 0 && (
+          <div className="flex items-center gap-1">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <span
+                  key={i}
+                  style={{
+                    fontSize: "0.6rem",
+                    color:
+                      i < Math.floor(product.rating)
+                        ? "var(--color-orange)"
+                        : "#d1d5db",
+                  }}
+                >
+                  ★
                 </span>
-              )}
+              ))}
             </div>
-          </div>
-
-          {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-            className={`px-4 py-2 font-bold rounded-full transition-all shadow-md flex items-center gap-1 ${
-              product.stock === 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-[#FFD41D] text-black hover:bg-[#BF1A1A] hover:text-white hover:scale-105"
-            }`}
-          >
-            <ShoppingCart className="w-4 h-4" />
-            Add
-          </button>
-        </div>
-
-        {/* Stock Status */}
-        {product.stock !== undefined && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            {product.stock > 0 ? (
-              <span className="text-xs text-green-600 font-medium">
-                ✓ In Stock ({product.stock} available)
-              </span>
-            ) : (
-              <span className="text-xs text-[#BF1A1A] font-medium">
-                ✗ Out of Stock
+            {product.reviews > 0 && (
+              <span style={{ fontSize: "0.6rem", color: "var(--color-muted)" }}>
+                ({product.reviews})
               </span>
             )}
           </div>
         )}
+
+        {/* Price row */}
+        <div className="flex items-end justify-between gap-1 flex-wrap">
+          <div>
+            <span
+              className="font-heading font-bold"
+              style={{ fontSize: "0.9rem", color: "var(--color-red)" }}
+            >
+              KSh {product.price?.toLocaleString()}
+            </span>
+            {product.oldPrice && product.oldPrice > product.price && (
+              <span
+                className="block line-through"
+                style={{ fontSize: "0.6rem", color: "var(--color-muted)" }}
+              >
+                KSh {product.oldPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          {/* Add to cart */}
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock}
+            aria-label="Add to cart"
+            className="flex items-center gap-1 rounded-full font-body font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105"
+            style={{
+              fontSize: "0.6rem",
+              letterSpacing: "0.1em",
+              padding: "0.3rem 0.65rem",
+              background: inStock ? "var(--color-red)" : "#e5e7eb",
+              color: inStock ? "#fff" : "#9ca3af",
+              boxShadow: inStock ? "0 2px 8px rgba(255,0,0,0.25)" : "none",
+            }}
+          >
+            <ShoppingCart className="w-3 h-3" />
+            Add
+          </button>
+        </div>
+
+        {/* Stock status */}
+        <p
+          className="font-body"
+          style={{
+            fontSize: "0.6rem",
+            color: inStock ? "#16a34a" : "var(--color-red)",
+            fontWeight: 600,
+          }}
+        >
+          {inStock ? "● In Stock" : "● Out of Stock"}
+        </p>
       </div>
     </div>
   );
 }
 
-/**
- * Loading Skeleton Component
- */
+/* ─────────────────────────────────────────
+   SKELETON
+───────────────────────────────────────── */
 function ProductCardSkeleton() {
   return (
-    <div className="bg-white rounded-2xl p-4 border-2 border-gray-200 animate-pulse">
-      {/* Image Skeleton */}
-      <div className="aspect-square bg-gray-200 rounded-xl mb-4"></div>
-
-      {/* Category Skeleton */}
-      <div className="h-3 bg-gray-200 rounded w-1/3 mb-2"></div>
-
-      {/* Title Skeleton */}
-      <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-      <div className="h-4 bg-gray-200 rounded w-2/3 mb-3"></div>
-
-      {/* Rating Skeleton */}
-      <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
-
-      {/* Price Skeleton */}
-      <div className="flex items-center justify-between">
-        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-8 bg-gray-200 rounded-full w-16"></div>
+    <div
+      className="bg-white rounded-xl border animate-pulse"
+      style={{ borderColor: "var(--color-border)" }}
+    >
+      <div className="aspect-square bg-gray-100 rounded-t-xl" />
+      <div className="p-3 space-y-2">
+        <div className="h-3 bg-gray-100 rounded w-4/5" />
+        <div className="h-3 bg-gray-100 rounded w-3/5" />
+        <div className="flex justify-between items-center mt-1">
+          <div className="h-4 bg-gray-100 rounded w-1/3" />
+          <div className="h-6 bg-gray-100 rounded-full w-14" />
+        </div>
       </div>
     </div>
   );

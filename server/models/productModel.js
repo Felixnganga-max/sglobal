@@ -54,6 +54,7 @@ const productSchema = new mongoose.Schema(
         "Brownie & Pancake",
         "Whipped creams",
         "Boringer topping sauces",
+        "Kent soups",
         "Kent stocks",
         "Kent sauces",
         "Kent spreads",

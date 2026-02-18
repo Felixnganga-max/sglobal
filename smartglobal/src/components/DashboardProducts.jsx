@@ -84,6 +84,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
     "Brownie & Pancake",
     "Whipped creams",
     "Boringer topping sauces",
+    "Kent soups",
     "Kent stocks",
     "Kent sauces",
     "Kent spreads",

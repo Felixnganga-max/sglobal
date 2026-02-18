@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Heart } from "lucide-react";
 
 const API_URL = "http://localhost:3000/smartglobal/products";
@@ -108,27 +109,47 @@ export default function FeaturedProductsGrid() {
  * Individual product card with image, title, price, rating
  */
 function ProductCard({ product }) {
+  const navigate = useNavigate();
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e) => {
+    e.stopPropagation(); // Prevent card click
     console.log("Added to cart:", product);
     // TODO: Integrate with your cart context/state management
+    alert(`Added ${product.name} to cart!`);
   };
 
-  const toggleWishlist = () => {
+  const toggleWishlist = (e) => {
+    e.stopPropagation(); // Prevent card click
     setIsWishlisted(!isWishlisted);
     // TODO: Save to wishlist in backend
   };
 
+  const handleCardClick = () => {
+    navigate(`/product/${product._id || product.id}`);
+  };
+
+  // Get product image - check multiple possible field names
+  const getProductImage = () => {
+    const imageUrl =
+      product.image || product.imageUrl || product.img || product.photo;
+    console.log("Product image URL:", imageUrl); // Debug log
+    return imageUrl || "https://via.placeholder.com/300?text=No+Image";
+  };
+
   return (
-    <div className="bg-white rounded-2xl p-4 border-2 border-gray-200 hover:border-[#FFD41D] hover:shadow-xl transition-all duration-300 group cursor-pointer">
+    <div
+      onClick={handleCardClick}
+      className="bg-white rounded-2xl p-4 border-2 border-gray-200 hover:border-[#FFD41D] hover:shadow-xl transition-all duration-300 group cursor-pointer"
+    >
       {/* Product Image */}
       <div className="relative aspect-square bg-[#FFF8E7] rounded-xl mb-4 overflow-hidden">
         <img
-          src={product.image || product.imageUrl}
+          src={getProductImage()}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           onError={(e) => {
+            console.error("Image failed to load:", e.target.src);
             e.target.src = "https://via.placeholder.com/300?text=No+Image";
           }}
         />

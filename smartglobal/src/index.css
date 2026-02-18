@@ -1,1 +1,380 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
+
+/* ─────────────────────────────────────────
+   CSS VARIABLES
+───────────────────────────────────────── */
+:root {
+  /* Fonts */
+  --font-heading: "Ubuntu", sans-serif; /* top-level headings */
+  --font-body: "Poppins", sans-serif; /* all body / UI text */
+  --font-lora: "Lora", Georgia, serif; /* reserved, not used yet */
+
+  /* Brand Colors */
+  --color-red: #ff0000;
+  --color-red-dark: #cc0000;
+  --color-orange: #ff7f11;
+  --color-orange-dark: #d96800;
+  --color-blue: #1565c0;
+  --color-blue-dark: #0d47a1;
+  --color-blue-light: #1e88e5;
+
+  /* Neutrals */
+  --color-text: #1a1a1a;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-bg-soft: #f9fafb;
+}
+
+/* ─────────────────────────────────────────
+   BASE DEFAULTS
+───────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─────────────────────────────────────────
+   TYPOGRAPHY CLASSES
+───────────────────────────────────────── */
+
+/* Ubuntu — top-level headings only */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Poppins — body copy, labels, UI */
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Hero / page title — Ubuntu, fluid scale */
+.text-hero {
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 5.5vw, 3.75rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+/* Section heading e.g. "WHO WE ARE" — Ubuntu */
+.text-section-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.2rem, 2.8vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Card / product heading — Poppins bold */
+.text-card-title {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Eyebrow label — tiny Poppins above headings */
+.text-eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-orange);
+}
+
+/* Standard body copy — Poppins */
+.text-body {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.8;
+  color: #374151;
+}
+
+/* Small label / meta text */
+.text-label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────
+   COLOR UTILITY CLASSES
+───────────────────────────────────────── */
+
+/* Text */
+.text-red {
+  color: var(--color-red);
+}
+.text-orange {
+  color: var(--color-orange);
+}
+.text-blue {
+  color: var(--color-blue);
+}
+.text-muted {
+  color: var(--color-muted);
+}
+
+/* Backgrounds */
+.bg-red {
+  background-color: var(--color-red);
+}
+.bg-red-dark {
+  background-color: var(--color-red-dark);
+}
+.bg-orange {
+  background-color: var(--color-orange);
+}
+.bg-orange-dark {
+  background-color: var(--color-orange-dark);
+}
+.bg-blue {
+  background-color: var(--color-blue);
+}
+.bg-blue-dark {
+  background-color: var(--color-blue-dark);
+}
+.bg-blue-light {
+  background-color: var(--color-blue-light);
+}
+.bg-soft {
+  background-color: var(--color-bg-soft);
+}
+
+/* Borders */
+.border-red {
+  border-color: var(--color-red);
+}
+.border-orange {
+  border-color: var(--color-orange);
+}
+.border-blue {
+  border-color: var(--color-blue);
+}
+
+/* ─────────────────────────────────────────
+   SECTION DIVIDER (accent underline rule)
+───────────────────────────────────────── */
+.section-rule {
+  width: 4rem;
+  height: 0.25rem;
+  background-color: var(--color-red);
+  margin-top: 0.75rem;
+}
+
+.section-rule-orange {
+  width: 4rem;
+  height: 0.25rem;
+  background-color: var(--color-orange);
+  margin-top: 0.75rem;
+}
+
+.section-rule-blue {
+  width: 4rem;
+  height: 0.25rem;
+  background-color: var(--color-blue);
+  margin-top: 0.75rem;
+}
+
+/* Centered variants */
+.section-rule-center {
+  width: 4rem;
+  height: 0.25rem;
+  background-color: var(--color-red);
+  margin: 0.75rem auto 0;
+}
+
+/* ─────────────────────────────────────────
+   BUTTONS
+───────────────────────────────────────── */
+
+/* Red primary */
+.btn-primary {
+  display: inline-block;
+  padding: 0.7rem 1.9rem;
+  background-color: var(--color-red);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+  box-shadow: 0 4px 14px rgba(255, 0, 0, 0.3);
+}
+.btn-primary:hover {
+  background-color: var(--color-red-dark);
+  box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Orange secondary */
+.btn-secondary {
+  display: inline-block;
+  padding: 0.7rem 1.9rem;
+  background-color: var(--color-orange);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+  box-shadow: 0 4px 14px rgba(255, 127, 17, 0.3);
+}
+.btn-secondary:hover {
+  background-color: var(--color-orange-dark);
+  box-shadow: 0 6px 20px rgba(255, 127, 17, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Blue ghost */
+.btn-blue {
+  display: inline-block;
+  padding: 0.7rem 1.9rem;
+  background-color: var(--color-blue);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  transition:
+    background-color 0.22s ease,
+    transform 0.18s ease;
+  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.3);
+}
+.btn-blue:hover {
+  background-color: var(--color-blue-dark);
+  transform: translateY(-1px);
+}
+
+/* Outline (red border, transparent bg) */
+.btn-outline {
+  display: inline-block;
+  padding: 0.7rem 1.9rem;
+  background-color: transparent;
+  color: var(--color-red);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  border: 2px solid var(--color-red);
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+.btn-outline:hover {
+  background-color: var(--color-red);
+  color: #ffffff;
+}
+
+/* White (for use on dark/image backgrounds) */
+.btn-white {
+  display: inline-block;
+  padding: 0.7rem 1.9rem;
+  background-color: #ffffff;
+  color: var(--color-red);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  transition:
+    background-color 0.22s ease,
+    transform 0.18s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+.btn-white:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+/* ─────────────────────────────────────────
+   LAYOUT HELPERS
+───────────────────────────────────────── */
+
+/* Responsive horizontal page padding */
+.page-x {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .page-x {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .page-x {
+    padding-left: 5rem;
+    padding-right: 5rem;
+  }
+}
+
+/* Responsive vertical section padding */
+.section-y {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+@media (min-width: 768px) {
+  .section-y {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
+
+/* ─────────────────────────────────────────
+   IMAGE CARD (hover zoom)
+───────────────────────────────────────── */
+.img-card {
+  overflow: hidden;
+  border-radius: 0.125rem;
+  height: 13rem;
+}
+@media (min-width: 768px) {
+  .img-card {
+    height: 14rem;
+  }
+}
+
+.img-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.img-card:hover img {
+  transform: scale(1.06);
+}

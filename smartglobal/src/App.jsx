@@ -11,6 +11,7 @@ import Recipes from "./pages/Recipes";
 import RecipeDetail from "./pages/RecipeDetail";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import About from "./pages/About";
 
 function App() {
   const location = useLocation();
@@ -30,6 +31,7 @@ function App() {
         <Route path="/recipes/:id" element={<RecipeDetail />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/auth" element={<Login />} />
+        <Route path="/about" element={<About />} />
       </Routes>
       {!isDashboard && !isAuth && <Footer />}
     </>

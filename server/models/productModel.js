@@ -56,6 +56,7 @@ const productSchema = new mongoose.Schema(
         "Boringer topping sauces",
         "Kent soups",
         "Kent stocks",
+        "Kent syrups",
         "Kent sauces",
         "Kent spreads",
         "Kizembe spring water",

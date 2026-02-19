@@ -87,6 +87,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
     "Kent soups",
     "Kent stocks",
     "Kent sauces",
+    "Kent syrups",
     "Kent spreads",
     "Kizembe spring water",
   ];

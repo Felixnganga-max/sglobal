@@ -184,7 +184,7 @@ const About = () => {
             Discover Flavours Worth Loving
           </h2>
           <Link
-            to="/sales"
+            to="/products"
             className="inline-block mt-3 px-6 sm:px-8 py-3 bg-[#BF1A1A] text-white text-xs sm:text-sm font-black uppercase tracking-widest rounded-full hover:bg-[#8B1414] transition-colors shadow-lg"
           >
             See Our Products

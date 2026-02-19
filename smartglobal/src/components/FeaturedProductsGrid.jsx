@@ -21,18 +21,36 @@ export default function FeaturedProductsGrid() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("Failed to fetch products");
 
-      const data = await response.json();
-      const products = data.success
-        ? data.data || []
-        : Array.isArray(data)
-          ? data
+      // Fetch first page to get total page count
+      const firstRes = await fetch(`${API_URL}?page=1&limit=100`);
+      if (!firstRes.ok) throw new Error("Failed to fetch products");
+      const firstData = await firstRes.json();
+
+      const totalPages = firstData.pages || 1;
+      let allProducts = firstData.success
+        ? firstData.data || []
+        : Array.isArray(firstData)
+          ? firstData
           : [];
 
+      // Fetch remaining pages in parallel
+      if (totalPages > 1) {
+        const rest = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, i) =>
+            fetch(`${API_URL}?page=${i + 2}&limit=100`)
+              .then((r) => r.json())
+              .then((d) => (d.success ? d.data || [] : []))
+              .catch(() => []),
+          ),
+        );
+        rest.forEach((page) => {
+          allProducts = allProducts.concat(page);
+        });
+      }
+
       // Group by category
-      const groups = products.reduce((acc, product) => {
+      const groups = allProducts.reduce((acc, product) => {
         const cat = product.category || "Other";
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push(product);

@@ -1,8 +1,6 @@
 import React from "react";
 import HeroPromo from "../components/HeroPromo";
-import CategoryChips from "../components/CategoryChips";
 import FeaturedProductsGrid from "../components/FeaturedProductsGrid";
-import StatsBar from "../components/StatsBar";
 import RightSidebar from "../components/RightSidebar";
 import { sampleProducts } from "../components/ProductCard";
 
@@ -31,18 +29,6 @@ export default function Products() {
           {/* Main content */}
           <div className="lg:col-span-9 space-y-8">
             <HeroPromo />
-
-            <CategoryChips
-              categories={[
-                "All Categories",
-                "Soups",
-                "Pancake Mixes",
-                "Stock Cubes",
-                "Syrups & Sauces",
-                "Craft Cooked Crisps",
-                "Baby Pouches",
-              ]}
-            />
 
             <section aria-labelledby="featured-products">
               <div className="flex items-center justify-between">
@@ -89,7 +75,7 @@ export default function Products() {
               </div>
             </div>
 
-            <StatsBar />
+            {/* <StatsBar /> */}
           </div>
 
           {/* Right Sidebar (desktop-only) */}

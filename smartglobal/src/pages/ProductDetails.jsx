@@ -11,13 +11,16 @@ import {
   Truck,
   Shield,
   Share2,
+  Check,
 } from "lucide-react";
+import { useCart } from "../context/Cartcontext";
 
 const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart, cartItems } = useCart();
 
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -26,8 +29,8 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [addedFeedback, setAddedFeedback] = useState(false);
 
-  // Scroll to top whenever this page loads or the id changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [id]);
@@ -37,9 +40,7 @@ export default function ProductDetails() {
   }, [id]);
 
   useEffect(() => {
-    if (product?.category) {
-      fetchRelatedProducts();
-    }
+    if (product?.category) fetchRelatedProducts();
   }, [product]);
 
   const fetchProductDetails = async () => {
@@ -48,8 +49,7 @@ export default function ProductDetails() {
       const response = await fetch(`${API_URL}/${id}`);
       if (!response.ok) throw new Error("Product not found");
       const data = await response.json();
-      const productData = data.success ? data.data : data;
-      setProduct(productData);
+      setProduct(data.success ? data.data : data);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -60,7 +60,6 @@ export default function ProductDetails() {
 
   const fetchRelatedProducts = async () => {
     try {
-      // Fetch all products and filter by category client-side
       const response = await fetch(API_URL);
       if (response.ok) {
         const data = await response.json();
@@ -85,16 +84,21 @@ export default function ProductDetails() {
   };
 
   const handleQuantityChange = (type) => {
-    if (type === "increment" && quantity < (product?.stock || 1)) {
+    if (type === "increment" && quantity < (product?.stock || 1))
       setQuantity(quantity + 1);
-    } else if (type === "decrement" && quantity > 1) {
-      setQuantity(quantity - 1);
-    }
+    else if (type === "decrement" && quantity > 1) setQuantity(quantity - 1);
   };
 
+  // ── Cart ──
+  const prodId = product?._id || product?.id;
+  const isInCart = cartItems.some((item) => (item._id || item.id) === prodId);
+
   const handleAddToCart = () => {
-    // TODO: Integrate with cart context/state
-    alert(`Added ${quantity}x "${product.title}" to cart!`);
+    if (!product?.inStock) return;
+    // addToCart adds 1 at a time; call it `quantity` times to respect the selector
+    for (let i = 0; i < quantity; i++) addToCart(product);
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 1800);
   };
 
   const handleShare = async () => {
@@ -108,14 +112,13 @@ export default function ProductDetails() {
       } catch (err) {}
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
     }
   };
 
-  // Loading State
+  // ── Loading ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="min-h-screen bg-soft py-8 page-x">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-4">
@@ -133,14 +136,12 @@ export default function ProductDetails() {
               <div className="h-8 bg-gray-200 rounded w-3/4 animate-pulse" />
               <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
               <div className="h-12 bg-gray-200 rounded w-1/3 animate-pulse" />
-              <div className="space-y-2">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-4 bg-gray-200 rounded animate-pulse"
-                  />
-                ))}
-              </div>
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-4 bg-gray-200 rounded animate-pulse"
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -150,16 +151,13 @@ export default function ProductDetails() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-soft flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8">
-            <p
-              className="font-bold text-xl mb-2"
-              style={{ color: "var(--color-red)" }}
-            >
+          <div className="bg-red-50 border-2 border-red rounded-2xl p-8">
+            <p className="font-heading font-bold text-xl mb-2 text-red">
               Product Not Found
             </p>
-            <p className="text-gray-600 mb-6">
+            <p className="text-body mb-6">
               {error || "This product doesn't exist"}
             </p>
             <button onClick={() => navigate(-1)} className="btn-primary">
@@ -171,7 +169,6 @@ export default function ProductDetails() {
     );
   }
 
-  // API returns image as { url, publicId } object
   const getProductImages = () => {
     if (product.images && Array.isArray(product.images)) {
       return product.images
@@ -188,7 +185,6 @@ export default function ProductDetails() {
     images[selectedImage] ||
     images[0] ||
     "https://via.placeholder.com/600?text=No+Image";
-
   const discount =
     product.discount ||
     (product.oldPrice && product.oldPrice > product.price
@@ -197,25 +193,42 @@ export default function ProductDetails() {
         )
       : null);
 
+  // Button label + color
+  const cartBtnColor = addedFeedback
+    ? "#16a34a"
+    : isInCart
+      ? "#8B1414"
+      : "var(--color-red)";
+  const cartBtnLabel = addedFeedback ? (
+    <>
+      <Check className="w-4 h-4" /> Added!
+    </>
+  ) : isInCart ? (
+    <>
+      <ShoppingCart className="w-4 h-4" /> In Cart
+    </>
+  ) : (
+    <>
+      <ShoppingCart className="w-4 h-4" /> Add to Cart
+    </>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-soft">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-2 text-sm font-body">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-600 transition-colors hover:text-red-600"
-              style={{ "--tw-text-opacity": 1 }}
+              className="flex items-center gap-2 text-muted hover:text-red transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </button>
-            <span className="text-gray-400">/</span>
-            <span className="text-gray-600">
-              {product.category || "Products"}
-            </span>
-            <span className="text-gray-400">/</span>
+            <span className="text-gray-300">/</span>
+            <span className="text-muted">{product.category || "Products"}</span>
+            <span className="text-gray-300">/</span>
             <span className="text-gray-900 font-semibold truncate">
               {product.title}
             </span>
@@ -223,12 +236,12 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* Main Product Section */}
+      {/* Main */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Left - Images */}
+          {/* Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border-2 border-gray-100 group">
+            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border-2 border-border group">
               <img
                 src={currentImage}
                 alt={product.title}
@@ -238,20 +251,15 @@ export default function ProductDetails() {
                     "https://via.placeholder.com/600?text=No+Image";
                 }}
               />
-
-              {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {discount && (
-                  <span
-                    className="px-3 py-1 text-white text-sm font-bold rounded font-body"
-                    style={{ backgroundColor: "var(--color-red)" }}
-                  >
+                  <span className="px-3 py-1 text-white text-sm font-body font-bold rounded bg-red">
                     {discount}% OFF
                   </span>
                 )}
                 {product.badge && (
                   <span
-                    className="px-3 py-1 text-sm font-bold rounded font-body"
+                    className="px-3 py-1 text-sm font-body font-bold rounded text-white"
                     style={{
                       backgroundColor:
                         product.badge === "NEW"
@@ -259,20 +267,17 @@ export default function ProductDetails() {
                           : product.badge === "HOT"
                             ? "var(--color-orange)"
                             : "var(--color-red)",
-                      color: "#fff",
                     }}
                   >
                     {product.badge}
                   </span>
                 )}
                 {!product.inStock && (
-                  <span className="px-3 py-1 bg-gray-900 text-white text-sm font-bold rounded font-body">
+                  <span className="px-3 py-1 bg-gray-900 text-white text-sm font-body font-bold rounded">
                     OUT OF STOCK
                   </span>
                 )}
               </div>
-
-              {/* Wishlist */}
               <button
                 onClick={() => setIsWishlisted(!isWishlisted)}
                 className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110"
@@ -287,7 +292,6 @@ export default function ProductDetails() {
               </button>
             </div>
 
-            {/* Thumbnails */}
             {images.length > 1 && (
               <div className="grid grid-cols-4 gap-3">
                 {images.map((img, index) => (
@@ -317,27 +321,18 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* Right - Info */}
+          {/* Info */}
           <div className="space-y-5">
-            {/* Category */}
             {product.category && (
-              <span
-                className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide rounded font-body"
-                style={{
-                  backgroundColor: "var(--color-orange)20",
-                  color: "var(--color-orange)",
-                }}
-              >
+              <span className="text-eyebrow inline-block">
                 {product.category}
               </span>
             )}
 
-            {/* Title */}
             <h1 className="text-section-title text-gray-900">
               {product.title}
             </h1>
 
-            {/* Rating */}
             {product.rating > 0 && (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-0.5">
@@ -358,25 +353,21 @@ export default function ProductDetails() {
                     />
                   ))}
                 </div>
-                <span className="font-body text-sm text-gray-500">
+                <span className="font-body text-sm text-muted">
                   {product.rating?.toFixed(1)} ({product.reviews || 0} reviews)
                 </span>
               </div>
             )}
 
-            {/* Halal badge */}
             {product.isHalal && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full font-body border border-green-200">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 text-xs font-body font-bold rounded-full border border-green-200">
                 ✓ Halal Certified
               </span>
             )}
 
             {/* Price */}
             <div className="flex items-baseline gap-3">
-              <span
-                className="font-heading font-bold text-3xl"
-                style={{ color: "var(--color-red)" }}
-              >
+              <span className="font-heading font-bold text-3xl text-red">
                 Ksh {(product.price * quantity).toLocaleString()}
               </span>
               {product.oldPrice && product.oldPrice > product.price && (
@@ -386,18 +377,12 @@ export default function ProductDetails() {
               )}
             </div>
 
-            {/* Short description */}
             {product.shortDescription && (
-              <p
-                className="font-body text-sm leading-relaxed"
-                style={{ color: "var(--color-muted)" }}
-              >
-                {product.shortDescription}
-              </p>
+              <p className="text-body">{product.shortDescription}</p>
             )}
 
-            {/* Stock */}
-            <div className="flex items-center gap-2 py-3 px-4 bg-gray-50 rounded-xl">
+            {/* Stock indicator */}
+            <div className="flex items-center gap-2 py-3 px-4 bg-white rounded-xl border border-border">
               <Package
                 className="w-4 h-4"
                 style={{
@@ -414,14 +399,14 @@ export default function ProductDetails() {
               </span>
             </div>
 
-            {/* Quantity */}
+            {/* Quantity selector */}
             {product.inStock && (
               <div>
-                <label className="block font-body text-sm font-bold text-gray-700 mb-2">
+                <label className="text-label block mb-2 text-gray-700">
                   Quantity
                 </label>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                  <div className="flex items-center border-2 border-border rounded-xl overflow-hidden">
                     <button
                       onClick={() => handleQuantityChange("decrement")}
                       disabled={quantity <= 1}
@@ -429,7 +414,7 @@ export default function ProductDetails() {
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="px-5 py-2.5 font-bold text-lg min-w-[52px] text-center font-body">
+                    <span className="px-5 py-2.5 font-heading font-bold text-lg min-w-[52px] text-center">
                       {quantity}
                     </span>
                     <button
@@ -449,22 +434,21 @@ export default function ProductDetails() {
               <button
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-body font-bold text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                style={{ backgroundColor: "var(--color-red)" }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-body font-bold text-sm text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
+                style={{ backgroundColor: cartBtnColor }}
               >
-                <ShoppingCart className="w-4 h-4" />
-                {product.inStock ? "Add to Cart" : "Out of Stock"}
+                {cartBtnLabel}
               </button>
               <button
                 onClick={handleShare}
-                className="px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-gray-400 transition-all"
+                className="px-4 py-3 border-2 border-border rounded-xl hover:border-gray-400 transition-all"
               >
-                <Share2 className="w-4 h-4 text-gray-600" />
+                <Share2 className="w-4 h-4 text-muted" />
               </button>
             </div>
 
             {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
+            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
               {[
                 {
                   icon: Truck,
@@ -487,20 +471,18 @@ export default function ProductDetails() {
                   className="flex flex-col items-center text-center gap-1.5"
                 >
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: "var(--color-orange)15" }}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center bg-orange/10"
+                    style={{ backgroundColor: "rgba(255,127,17,0.1)" }}
                   >
                     <Icon
-                      className="w-4 h-4"
+                      className="w-4 h-4 text-orange"
                       style={{ color: "var(--color-orange)" }}
                     />
                   </div>
                   <p className="font-body text-[0.65rem] font-bold text-gray-800">
                     {label}
                   </p>
-                  <p className="font-body text-[0.58rem] text-gray-400">
-                    {sub}
-                  </p>
+                  <p className="font-body text-[0.58rem] text-muted">{sub}</p>
                 </div>
               ))}
             </div>
@@ -517,7 +499,7 @@ export default function ProductDetails() {
             <div className="section-rule mb-6" />
             <div className="space-y-4">
               {product.descriptionBlocks.map((block, i) => {
-                if (block.type === "heading") {
+                if (block.type === "heading")
                   return (
                     <h3
                       key={i}
@@ -526,60 +508,40 @@ export default function ProductDetails() {
                       {block.content}
                     </h3>
                   );
-                }
-                if (block.type === "paragraph") {
+                if (block.type === "paragraph")
                   return (
-                    <p
-                      key={i}
-                      className="font-body text-sm leading-relaxed"
-                      style={{ color: "var(--color-muted)" }}
-                    >
+                    <p key={i} className="text-body">
                       {block.content}
                     </p>
                   );
-                }
-                if (block.type === "bullet-list") {
+                if (block.type === "bullet-list")
                   return (
                     <ul key={i} className="space-y-1">
                       {block.content.map((item, j) => (
                         <li
                           key={j}
-                          className="flex items-start gap-2 font-body text-sm"
-                          style={{ color: "var(--color-muted)" }}
+                          className="flex items-start gap-2 font-body text-sm text-muted"
                         >
-                          <span
-                            style={{ color: "var(--color-red)" }}
-                            className="mt-0.5"
-                          >
-                            ●
-                          </span>
+                          <span className="text-red mt-0.5">●</span>
                           {item}
                         </li>
                       ))}
                     </ul>
                   );
-                }
-                if (block.type === "ordered-list") {
+                if (block.type === "ordered-list")
                   return (
                     <ol key={i} className="space-y-1">
                       {block.content.map((item, j) => (
                         <li
                           key={j}
-                          className="flex items-start gap-2 font-body text-sm"
-                          style={{ color: "var(--color-muted)" }}
+                          className="flex items-start gap-2 font-body text-sm text-muted"
                         >
-                          <span
-                            className="font-bold"
-                            style={{ color: "var(--color-red)" }}
-                          >
-                            {j + 1}.
-                          </span>
+                          <span className="font-bold text-red">{j + 1}.</span>
                           {item}
                         </li>
                       ))}
                     </ol>
                   );
-                }
                 return null;
               })}
             </div>
@@ -596,15 +558,9 @@ export default function ProductDetails() {
               {product.features.map((f, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 font-body text-sm"
-                  style={{ color: "var(--color-muted)" }}
+                  className="flex items-center gap-2 font-body text-sm text-muted"
                 >
-                  <span
-                    className="font-bold"
-                    style={{ color: "var(--color-red)" }}
-                  >
-                    ✓
-                  </span>
+                  <span className="font-bold text-red">✓</span>
                   {f}
                 </div>
               ))}
@@ -618,7 +574,7 @@ export default function ProductDetails() {
             <h3 className="font-heading text-lg font-bold text-gray-900 mb-3">
               Specifications
             </h3>
-            <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <div className="border border-border rounded-xl overflow-hidden">
               {product.specifications.map((spec, i) => (
                 <div
                   key={i}
@@ -630,13 +586,10 @@ export default function ProductDetails() {
                         : "none",
                   }}
                 >
-                  <div className="w-1/3 px-4 py-3 bg-gray-50 font-body text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  <div className="w-1/3 px-4 py-3 bg-soft text-label text-gray-700">
                     {spec.key}
                   </div>
-                  <div
-                    className="flex-1 px-4 py-3 font-body text-sm"
-                    style={{ color: "var(--color-muted)" }}
-                  >
+                  <div className="flex-1 px-4 py-3 font-body text-sm text-muted">
                     {spec.value}
                   </div>
                 </div>
@@ -660,13 +613,11 @@ export default function ProductDetails() {
                 onClick={() =>
                   navigate(`/products?category=${product.category}`)
                 }
-                className="font-body text-sm font-bold transition-colors"
-                style={{ color: "var(--color-red)" }}
+                className="font-body text-sm font-bold text-red hover:underline transition-colors"
               >
                 View All →
               </button>
             </div>
-
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((rel) => (
                 <RelatedProductCard
@@ -692,10 +643,9 @@ function RelatedProductCard({ product, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl border overflow-hidden cursor-pointer group hover:shadow-md transition-all duration-300"
-      style={{ borderColor: "var(--color-border)" }}
+      className="bg-white rounded-xl border border-border overflow-hidden cursor-pointer group hover:shadow-md transition-all duration-300"
     >
-      <div className="aspect-square bg-gray-50 overflow-hidden">
+      <div className="aspect-square bg-soft overflow-hidden">
         <img
           src={imageUrl}
           alt={product.title}
@@ -710,10 +660,7 @@ function RelatedProductCard({ product, onClick }) {
           {product.title}
         </h3>
         <div className="flex items-baseline gap-2">
-          <span
-            className="font-heading font-bold text-base"
-            style={{ color: "var(--color-red)" }}
-          >
+          <span className="font-heading font-bold text-base text-red">
             Ksh {product.price?.toLocaleString()}
           </span>
           {product.oldPrice && product.oldPrice > product.price && (

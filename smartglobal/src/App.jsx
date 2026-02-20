@@ -12,6 +12,7 @@ import RecipeDetail from "./pages/RecipeDetail";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import About from "./pages/About";
+import PlaceOrder from "./pages/PlaceOrder";
 
 function App() {
   const location = useLocation();
@@ -32,6 +33,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/auth" element={<Login />} />
         <Route path="/about" element={<About />} />
+        <Route path="/place-order" element={<PlaceOrder />} />
       </Routes>
       {!isDashboard && !isAuth && <Footer />}
     </>

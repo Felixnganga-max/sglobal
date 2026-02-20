@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Check } from "lucide-react";
+import { useCart } from "../context/Cartcontext";
 
 const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
 
-/**
- * FeaturedProductsGrid.jsx
- * Grouped by category, fully responsive, consistent with global CSS variables.
- * Image fix: reads product.image?.url (nested object from API).
- */
 export default function FeaturedProductsGrid() {
   const [grouped, setGrouped] = useState({});
   const [loading, setLoading] = useState(true);
@@ -21,8 +17,6 @@ export default function FeaturedProductsGrid() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-
-      // Fetch first page to get total page count
       const firstRes = await fetch(`${API_URL}?page=1&limit=100`);
       if (!firstRes.ok) throw new Error("Failed to fetch products");
       const firstData = await firstRes.json();
@@ -34,7 +28,6 @@ export default function FeaturedProductsGrid() {
           ? firstData
           : [];
 
-      // Fetch remaining pages in parallel
       if (totalPages > 1) {
         const rest = await Promise.all(
           Array.from({ length: totalPages - 1 }, (_, i) =>
@@ -49,7 +42,6 @@ export default function FeaturedProductsGrid() {
         });
       }
 
-      // Group by category
       const groups = allProducts.reduce((acc, product) => {
         const cat = product.category || "Other";
         if (!acc[cat]) acc[cat] = [];
@@ -87,19 +79,11 @@ export default function FeaturedProductsGrid() {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div
-          className="border-2 rounded-2xl p-8 max-w-md mx-auto"
-          style={{ borderColor: "var(--color-border)" }}
-        >
-          <p
-            className="font-semibold mb-2 text-red"
-            style={{ color: "var(--color-red)" }}
-          >
+        <div className="border-2 rounded-2xl p-8 max-w-md mx-auto border-border">
+          <p className="font-body font-semibold mb-2 text-red">
             Unable to load products
           </p>
-          <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
-            {error}
-          </p>
+          <p className="text-body mb-4">{error}</p>
           <button
             onClick={fetchProducts}
             className="btn-primary"
@@ -117,7 +101,7 @@ export default function FeaturedProductsGrid() {
   if (categories.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="font-semibold" style={{ color: "var(--color-muted)" }}>
+        <p className="font-body font-semibold text-muted">
           No products available yet. Check back soon!
         </p>
       </div>
@@ -128,13 +112,10 @@ export default function FeaturedProductsGrid() {
     <div className="space-y-12">
       {categories.map((category) => (
         <section key={category}>
-          {/* Category heading */}
           <div className="mb-5">
             <p className="text-eyebrow mb-1">{category}</p>
             <div className="section-rule" />
           </div>
-
-          {/* Product grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             {grouped[category].map((product) => (
               <ProductCard key={product._id || product.id} product={product} />
@@ -147,11 +128,13 @@ export default function FeaturedProductsGrid() {
 }
 
 /* ─────────────────────────────────────────
-   PRODUCT CARD
+   PRODUCT CARD — wired to CartContext
 ───────────────────────────────────────── */
 function ProductCard({ product }) {
   const navigate = useNavigate();
+  const { addToCart, cartItems } = useCart();
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [addedFeedback, setAddedFeedback] = useState(false);
 
   const getImage = () =>
     product.image?.url ||
@@ -160,10 +143,17 @@ function ProductCard({ product }) {
     product.photo ||
     "https://via.placeholder.com/300?text=No+Image";
 
+  const prodId = product._id || product.id;
+  const inStock = product.stock > 0;
+  const isInCart = cartItems.some((item) => (item._id || item.id) === prodId);
+  const name = product.title || product.name || "Product";
+
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    // TODO: integrate with cart context
-    alert(`Added "${product.title || product.name}" to cart!`);
+    if (!inStock) return;
+    addToCart(product);
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 1500);
   };
 
   const toggleWishlist = (e) => {
@@ -171,30 +161,21 @@ function ProductCard({ product }) {
     setIsWishlisted((v) => !v);
   };
 
-  const handleCardClick = () => {
-    navigate(`/product/${product._id || product.id}`);
-  };
-
-  const name = product.title || product.name || "Product";
-  const inStock = product.stock > 0;
-
-  // Badge config
   const badgeLabel = product.badge || (product.onSale ? "SALE" : null);
-  const badgeStyle = {
-    SALE: { background: "var(--color-red)", color: "#fff" },
-    NEW: { background: "var(--color-orange)", color: "#fff" },
-    HOT: { background: "var(--color-blue)", color: "#fff" },
-    LIMITED: { background: "#1a1a1a", color: "#fff" },
+  const badgeColors = {
+    SALE: "var(--color-red)",
+    NEW: "var(--color-orange)",
+    HOT: "var(--color-blue)",
+    LIMITED: "#1a1a1a",
   };
 
   return (
     <div
-      onClick={handleCardClick}
-      className="bg-white rounded-xl border cursor-pointer group transition-all duration-300 hover:shadow-lg overflow-hidden"
-      style={{ borderColor: "var(--color-border)" }}
+      onClick={() => navigate(`/product/${prodId}`)}
+      className="bg-white rounded-xl border border-border cursor-pointer group transition-all duration-300 hover:shadow-lg overflow-hidden"
     >
-      {/* Image area */}
-      <div className="relative aspect-square bg-gray-50 overflow-hidden">
+      {/* Image */}
+      <div className="relative aspect-square bg-soft overflow-hidden">
         <img
           src={getImage()}
           alt={name}
@@ -204,19 +185,15 @@ function ProductCard({ product }) {
           }}
         />
 
-        {/* Badge */}
         {badgeLabel && (
           <span
-            className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded"
-            style={
-              badgeStyle[badgeLabel] || { background: "#1a1a1a", color: "#fff" }
-            }
+            className="absolute top-2 left-2 text-[10px] font-body font-bold px-2 py-0.5 rounded text-white"
+            style={{ backgroundColor: badgeColors[badgeLabel] || "#1a1a1a" }}
           >
             {badgeLabel}
           </span>
         )}
 
-        {/* Wishlist */}
         <button
           onClick={toggleWishlist}
           aria-label="Wishlist"
@@ -234,7 +211,6 @@ function ProductCard({ product }) {
 
       {/* Info */}
       <div className="p-2.5 sm:p-3 space-y-1.5">
-        {/* Name */}
         <h3
           className="font-body font-semibold line-clamp-2 leading-snug"
           style={{ fontSize: "0.75rem", color: "var(--color-text)" }}
@@ -242,7 +218,6 @@ function ProductCard({ product }) {
           {name}
         </h3>
 
-        {/* Rating */}
         {product.rating > 0 && (
           <div className="flex items-center gap-1">
             <div className="flex">
@@ -269,7 +244,6 @@ function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Price row */}
         <div className="flex items-end justify-between gap-1 flex-wrap">
           <div>
             <span
@@ -288,27 +262,44 @@ function ProductCard({ product }) {
             )}
           </div>
 
-          {/* Add to cart */}
+          {/* Add to cart button */}
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
             aria-label="Add to cart"
-            className="flex items-center gap-1 rounded-full font-body font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105"
+            className="flex items-center gap-1 rounded-full font-body font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 text-white"
             style={{
               fontSize: "0.6rem",
               letterSpacing: "0.1em",
               padding: "0.3rem 0.65rem",
-              background: inStock ? "var(--color-red)" : "#e5e7eb",
+              backgroundColor: addedFeedback
+                ? "#16a34a"
+                : isInCart
+                  ? "#8B1414"
+                  : inStock
+                    ? "var(--color-red)"
+                    : "#e5e7eb",
               color: inStock ? "#fff" : "#9ca3af",
-              boxShadow: inStock ? "0 2px 8px rgba(255,0,0,0.25)" : "none",
+              boxShadow: inStock ? "0 2px 8px rgba(255,0,0,0.2)" : "none",
+              transition: "background-color 0.2s ease",
             }}
           >
-            <ShoppingCart className="w-3 h-3" />
-            Add
+            {addedFeedback ? (
+              <>
+                <Check className="w-3 h-3" /> Done
+              </>
+            ) : isInCart ? (
+              <>
+                <ShoppingCart className="w-3 h-3" /> In Cart
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-3 h-3" /> Add
+              </>
+            )}
           </button>
         </div>
 
-        {/* Stock status */}
         <p
           className="font-body"
           style={{
@@ -329,10 +320,7 @@ function ProductCard({ product }) {
 ───────────────────────────────────────── */
 function ProductCardSkeleton() {
   return (
-    <div
-      className="bg-white rounded-xl border animate-pulse"
-      style={{ borderColor: "var(--color-border)" }}
-    >
+    <div className="bg-white rounded-xl border border-border animate-pulse">
       <div className="aspect-square bg-gray-100 rounded-t-xl" />
       <div className="p-3 space-y-2">
         <div className="h-3 bg-gray-100 rounded w-4/5" />

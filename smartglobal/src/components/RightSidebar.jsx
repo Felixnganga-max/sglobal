@@ -19,28 +19,22 @@ const CATEGORY_ICONS = {
 
 const BRANDS = [
   {
-    name: "Kent",
+    name: "Kent Boringer",
     desc: "Soups, stocks & sauces",
     color: "var(--color-red)",
     letter: "K",
   },
   {
-    name: "SPUDS",
+    name: "Food Trip",
     desc: "Craft cooked crisps",
     color: "var(--color-orange)",
-    letter: "S",
+    letter: "F",
   },
   {
     name: "Kizembe",
     desc: "Natural spring water",
     color: "var(--color-blue)",
     letter: "K",
-  },
-  {
-    name: "Boringer",
-    desc: "Toppings & sauces",
-    color: "var(--color-orange-dark)",
-    letter: "B",
   },
 ];
 

@@ -20,13 +20,12 @@ const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, cartItems } = useCart();
+  const { addToCart, removeFromCart, updateQty, cartItems } = useCart();
 
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addedFeedback, setAddedFeedback] = useState(false);
@@ -81,24 +80,6 @@ export default function ProductDetails() {
     } catch (err) {
       console.error("Error fetching related products:", err);
     }
-  };
-
-  const handleQuantityChange = (type) => {
-    if (type === "increment" && quantity < (product?.stock || 1))
-      setQuantity(quantity + 1);
-    else if (type === "decrement" && quantity > 1) setQuantity(quantity - 1);
-  };
-
-  // ── Cart ──
-  const prodId = product?._id || product?.id;
-  const isInCart = cartItems.some((item) => (item._id || item.id) === prodId);
-
-  const handleAddToCart = () => {
-    if (!product?.inStock) return;
-    // addToCart adds 1 at a time; call it `quantity` times to respect the selector
-    for (let i = 0; i < quantity; i++) addToCart(product);
-    setAddedFeedback(true);
-    setTimeout(() => setAddedFeedback(false), 1800);
   };
 
   const handleShare = async () => {
@@ -169,6 +150,37 @@ export default function ProductDetails() {
     );
   }
 
+  // ── Derived cart state ──
+  const prodId = product._id || product.id;
+  const cartItem = cartItems.find((item) => (item._id || item.id) === prodId);
+  const cartQty = cartItem?.cartQty || 0;
+  const inStock = product.stock > 0; // ← fixed: use stock not inStock
+  const maxQty = product.stock || 99;
+
+  // ── Cart actions ──
+  const handleAddToCart = () => {
+    if (!inStock) return;
+    addToCart(product, 1);
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 1800);
+  };
+
+  const handleIncrement = () => {
+    if (cartQty === 0) {
+      addToCart(product, 1);
+    } else if (cartQty < maxQty) {
+      updateQty(prodId, cartQty + 1);
+    }
+  };
+
+  const handleDecrement = () => {
+    if (cartQty <= 1) {
+      removeFromCart(prodId);
+    } else {
+      updateQty(prodId, cartQty - 1);
+    }
+  };
+
   const getProductImages = () => {
     if (product.images && Array.isArray(product.images)) {
       return product.images
@@ -193,19 +205,19 @@ export default function ProductDetails() {
         )
       : null);
 
-  // Button label + color
+  // ── Button state ──
   const cartBtnColor = addedFeedback
     ? "#16a34a"
-    : isInCart
+    : cartQty > 0
       ? "#8B1414"
       : "var(--color-red)";
   const cartBtnLabel = addedFeedback ? (
     <>
       <Check className="w-4 h-4" /> Added!
     </>
-  ) : isInCart ? (
+  ) : cartQty > 0 ? (
     <>
-      <ShoppingCart className="w-4 h-4" /> In Cart
+      <ShoppingCart className="w-4 h-4" /> In Cart ({cartQty})
     </>
   ) : (
     <>
@@ -272,7 +284,7 @@ export default function ProductDetails() {
                     {product.badge}
                   </span>
                 )}
-                {!product.inStock && (
+                {!inStock && (
                   <span className="px-3 py-1 bg-gray-900 text-white text-sm font-body font-bold rounded">
                     OUT OF STOCK
                   </span>
@@ -365,14 +377,14 @@ export default function ProductDetails() {
               </span>
             )}
 
-            {/* Price */}
+            {/* Price — reflects cart quantity */}
             <div className="flex items-baseline gap-3">
               <span className="font-heading font-bold text-3xl text-red">
-                Ksh {(product.price * quantity).toLocaleString()}
+                Ksh {(product.price * (cartQty || 1)).toLocaleString()}
               </span>
               {product.oldPrice && product.oldPrice > product.price && (
                 <span className="font-body text-lg text-gray-400 line-through">
-                  Ksh {(product.oldPrice * quantity).toLocaleString()}
+                  Ksh {(product.oldPrice * (cartQty || 1)).toLocaleString()}
                 </span>
               )}
             </div>
@@ -385,59 +397,103 @@ export default function ProductDetails() {
             <div className="flex items-center gap-2 py-3 px-4 bg-white rounded-xl border border-border">
               <Package
                 className="w-4 h-4"
-                style={{
-                  color: product.inStock ? "#16a34a" : "var(--color-red)",
-                }}
+                style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
               />
               <span
                 className="font-body text-sm font-semibold"
-                style={{
-                  color: product.inStock ? "#16a34a" : "var(--color-red)",
-                }}
+                style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
               >
-                {product.inStock ? "In Stock" : "Out of Stock"}
+                {inStock
+                  ? `In Stock (${product.stock} available)`
+                  : "Out of Stock"}
               </span>
             </div>
 
-            {/* Quantity selector */}
-            {product.inStock && (
+            {/* ── Quantity selector — wired to cart ── */}
+            {inStock && (
               <div>
                 <label className="text-label block mb-2 text-gray-700">
                   Quantity
                 </label>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center border-2 border-border rounded-xl overflow-hidden">
+                  {cartQty === 0 ? (
+                    /* Not in cart yet — show Add to Cart button */
                     <button
-                      onClick={() => handleQuantityChange("decrement")}
-                      disabled={quantity <= 1}
-                      className="px-4 py-2.5 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      onClick={handleAddToCart}
+                      className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-body font-bold text-sm text-white transition-all duration-300 hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
+                      style={{ backgroundColor: "var(--color-red)" }}
                     >
-                      <Minus className="w-4 h-4" />
+                      <ShoppingCart className="w-4 h-4" /> Add to Cart
                     </button>
-                    <span className="px-5 py-2.5 font-heading font-bold text-lg min-w-[52px] text-center">
-                      {quantity}
+                  ) : (
+                    /* In cart — show stepper */
+                    <div
+                      className="flex items-center border-2 rounded-xl overflow-hidden transition-all"
+                      style={{ borderColor: "var(--color-red)" }}
+                    >
+                      <button
+                        onClick={handleDecrement}
+                        className="px-4 py-2.5 hover:bg-red-50 transition-colors"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus
+                          className="w-4 h-4"
+                          style={{ color: "var(--color-red)" }}
+                        />
+                      </button>
+                      <span
+                        className="px-5 py-2.5 font-heading font-bold text-lg min-w-[52px] text-center"
+                        style={{ color: "var(--color-red)" }}
+                      >
+                        {cartQty}
+                      </span>
+                      <button
+                        onClick={handleIncrement}
+                        disabled={cartQty >= maxQty}
+                        className="px-4 py-2.5 hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus
+                          className="w-4 h-4"
+                          style={{ color: "var(--color-red)" }}
+                        />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Cart count badge when in cart */}
+                  {cartQty > 0 && (
+                    <span className="font-body text-xs text-muted">
+                      Ksh {(product.price * cartQty).toLocaleString()} total
                     </span>
-                    <button
-                      onClick={() => handleQuantityChange("increment")}
-                      disabled={quantity >= product.stock}
-                      className="px-4 py-2.5 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Actions */}
+            {/* Actions row */}
             <div className="flex gap-3">
               <button
-                onClick={handleAddToCart}
-                disabled={!product.inStock}
+                onClick={
+                  cartQty > 0 ? () => navigate("/place-order") : handleAddToCart
+                }
+                disabled={!inStock}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-body font-bold text-sm text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
                 style={{ backgroundColor: cartBtnColor }}
               >
-                {cartBtnLabel}
+                {addedFeedback ? (
+                  <>
+                    <Check className="w-4 h-4" /> Added!
+                  </>
+                ) : cartQty > 0 ? (
+                  <>
+                    <ShoppingCart className="w-4 h-4" /> View Cart ({cartQty})
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4" /> Add to Cart
+                  </>
+                )}
               </button>
               <button
                 onClick={handleShare}
@@ -471,11 +527,11 @@ export default function ProductDetails() {
                   className="flex flex-col items-center text-center gap-1.5"
                 >
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center bg-orange/10"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: "rgba(255,127,17,0.1)" }}
                   >
                     <Icon
-                      className="w-4 h-4 text-orange"
+                      className="w-4 h-4"
                       style={{ color: "var(--color-orange)" }}
                     />
                   </div>

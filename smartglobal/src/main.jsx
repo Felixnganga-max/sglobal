@@ -13,7 +13,7 @@ const SITE_URL = "https://www.smartglobal.co.ke";
 ───────────────────────────────────────────────────────── */
 
 const organizationSchema = {
-  "@context": "https://schema.org",
+  "@context": SITE_URL,
   "@type": "Organization",
   name: "Smart Global Limited",
   alternateName: ["Smart Global", "SMART GLOBAL"],
@@ -48,7 +48,7 @@ const organizationSchema = {
 };
 
 const websiteSchema = {
-  "@context": "https://schema.org",
+  "@context": SITE_URL,
   "@type": "WebSite",
   name: "Smart Global Limited",
   alternateName: "Smart Global Kenya",
@@ -67,7 +67,7 @@ const websiteSchema = {
 };
 
 const localBusinessSchema = {
-  "@context": "https://schema.org",
+  "@context": SITE_URL,
   "@type": "FoodEstablishment",
   name: "Smart Global Limited",
   image: `${SITE_URL}/logo.png`,
@@ -136,7 +136,7 @@ const localBusinessSchema = {
 };
 
 const siteNavigationSchema = {
-  "@context": "https://schema.org",
+  "@context": SITE_URL,
   "@type": "ItemList",
   name: "Smart Global Limited — Site Navigation",
   itemListElement: [

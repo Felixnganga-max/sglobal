@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import {
   Search,
   Grid as GridIcon,
@@ -34,7 +34,11 @@ export default function Blogs() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [page, setPage] = useState(1);
   const [currentPost, setCurrentPost] = useState(null);
-  const perPage = 6;
+  const perPage = 5;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const allTags = useMemo(() => {
     const s = new Set();
@@ -282,13 +286,12 @@ export default function Blogs() {
               lineHeight: 1.1,
             }}
           >
-            Food, Nutrition &<br />
-            <span style={{ color: "var(--color-orange)" }}>Healthy Living</span>
+            Learn about our products &<br />
+            <span style={{ color: "var(--color-white)" }}>
+              {" "}
+              more nutritional concepts
+            </span>
           </h1>
-          <p className="font-body text-sm text-white/75 max-w-xl leading-relaxed">
-            Expert tips, delicious recipes, and nutrition guides for modern
-            families who value quality halal food.
-          </p>
         </div>
       </div>
 

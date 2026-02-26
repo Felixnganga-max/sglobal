@@ -233,7 +233,7 @@ export default function Recipes() {
             </div>
             <div className="flex flex-wrap gap-3 flex-shrink-0">
               <Link
-                to="/recipe"
+                to="/recipes"
                 className="group inline-flex items-center gap-2 btn-secondary text-xs"
               >
                 All Recipes
@@ -318,7 +318,7 @@ function RecipeCard({ recipe }) {
         </div>
 
         <Link
-          to="/recipe"
+          to="/recipes"
           className="group/btn mt-4 inline-flex items-center gap-1.5 font-body text-xs font-bold uppercase tracking-widest transition-colors duration-200"
           style={{ color: recipe.accent }}
         >

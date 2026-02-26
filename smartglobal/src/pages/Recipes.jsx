@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Heart, Clock, User, ChefHat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { recipesData, getRecipesByCategory } from "../lib/recipesData";
@@ -27,6 +27,10 @@ export default function Recipes() {
   const navigate = useNavigate();
   const filteredRecipes = getRecipesByCategory(selectedCategory);
   const featuredRecipe = recipesData.find((r) => r.id === 2);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">

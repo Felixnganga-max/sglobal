@@ -14,6 +14,8 @@ import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 
+const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
+
 export default function Navbar() {
   const navigate = useNavigate();
   const { totalItems } = useCart();
@@ -24,9 +26,27 @@ export default function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, width: 0 });
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Mobile search state
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  const [mobileResults, setMobileResults] = useState([]);
+  const [mobileSearching, setMobileSearching] = useState(false);
+  const [showMobileResults, setShowMobileResults] = useState(false);
+
+  // Desktop search state
+  const [desktopResults, setDesktopResults] = useState([]);
+  const [desktopSearching, setDesktopSearching] = useState(false);
+  const [showDesktopResults, setShowDesktopResults] = useState(false);
+
   const navRef = useRef(null);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+  const mobileResultsRef = useRef(null);
+  const desktopSearchRef = useRef(null);
+  const desktopResultsRef = useRef(null);
+  const searchTimerRef = useRef(null);
+  const desktopTimerRef = useRef(null);
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -80,9 +100,44 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userDropdownOpen]);
 
-  // Auto-focus search input when it opens
+  // Close mobile results on outside click
   useEffect(() => {
-    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50);
+    const handleOutside = (e) => {
+      if (
+        mobileResultsRef.current &&
+        !mobileResultsRef.current.contains(e.target) &&
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(e.target)
+      )
+        setShowMobileResults(false);
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
+
+  // Close desktop results on outside click
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (
+        desktopResultsRef.current &&
+        !desktopResultsRef.current.contains(e.target) &&
+        desktopSearchRef.current &&
+        !desktopSearchRef.current.contains(e.target)
+      )
+        setShowDesktopResults(false);
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
+
+  useEffect(() => {
+    if (searchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    } else {
+      setDesktopResults([]);
+      setShowDesktopResults(false);
+      setSearchQuery("");
+    }
   }, [searchOpen]);
 
   const handleMouseEnter = (e, index) => {
@@ -95,18 +150,132 @@ export default function Navbar() {
     });
   };
 
-  /* ── Search: push ?q= to URL so Sales.jsx can read it ── */
-  const submitSearch = (term) => {
-    const q = (term ?? searchQuery).trim();
-    setSearchOpen(false);
-    setMobileOpen(false);
-    setSearchQuery("");
-    navigate(q ? `/?q=${encodeURIComponent(q)}` : "/");
+  /* ── Shared live search from API ── */
+  const fetchSearchResults = async (query) => {
+    const res = await fetch(`${API_URL}?page=1&limit=100`);
+    const data = await res.json();
+    const all = data.success
+      ? data.data || []
+      : Array.isArray(data)
+        ? data
+        : [];
+    const q = query.toLowerCase();
+    return all
+      .filter((p) => {
+        const name = (p.title || p.name || "").toLowerCase();
+        const cat = (p.category || "").toLowerCase();
+        return name.includes(q) || cat.includes(q);
+      })
+      .slice(0, 8);
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    submitSearch();
+  /* ── Mobile search ── */
+  const handleMobileSearchChange = (e) => {
+    const val = e.target.value;
+    setMobileSearchQuery(val);
+    clearTimeout(searchTimerRef.current);
+    if (!val.trim()) {
+      setMobileResults([]);
+      setShowMobileResults(false);
+      return;
+    }
+    searchTimerRef.current = setTimeout(async () => {
+      setMobileSearching(true);
+      setShowMobileResults(true);
+      try {
+        setMobileResults(await fetchSearchResults(val));
+      } catch {
+        setMobileResults([]);
+      } finally {
+        setMobileSearching(false);
+      }
+    }, 350);
+  };
+
+  /* ── Desktop search ── */
+  const handleDesktopSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    clearTimeout(desktopTimerRef.current);
+    if (!val.trim()) {
+      setDesktopResults([]);
+      setShowDesktopResults(false);
+      return;
+    }
+    desktopTimerRef.current = setTimeout(async () => {
+      setDesktopSearching(true);
+      setShowDesktopResults(true);
+      try {
+        setDesktopResults(await fetchSearchResults(val));
+      } catch {
+        setDesktopResults([]);
+      } finally {
+        setDesktopSearching(false);
+      }
+    }, 350);
+  };
+
+  const handleResultClick = (product) => {
+    const id = product._id || product.id;
+    setMobileSearchQuery("");
+    setMobileResults([]);
+    setShowMobileResults(false);
+    setSearchQuery("");
+    setDesktopResults([]);
+    setShowDesktopResults(false);
+    setSearchOpen(false);
+    navigate(`/product/${id}`);
+  };
+
+  const getImage = (product) =>
+    product.image?.url ||
+    product.imageUrl ||
+    product.img ||
+    product.photo ||
+    "https://via.placeholder.com/300?text=No+Image";
+
+  /* ── Result row (shared UI) ── */
+  const ResultRow = ({ product }) => {
+    const name = product.title || product.name || "Product";
+    const inStock = product.stock > 0;
+    return (
+      <button
+        onClick={() => handleResultClick(product)}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-50 last:border-0"
+      >
+        <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
+          <img
+            src={getImage(product)}
+            alt={name}
+            className="w-full h-full object-contain p-1"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/300?text=No+Image";
+            }}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-body font-semibold text-gray-900 text-xs leading-snug truncate">
+            {name}
+          </p>
+          <p className="text-[0.6rem] text-gray-400 font-body mt-0.5">
+            {product.category}
+          </p>
+        </div>
+        <div className="flex-shrink-0 text-right">
+          <p
+            className="font-heading font-bold text-xs"
+            style={{ color: "var(--color-red)" }}
+          >
+            KSh {product.price?.toLocaleString()}
+          </p>
+          <p
+            className={`text-[0.55rem] font-bold mt-0.5 ${inStock ? "text-green-500" : "text-red-400"}`}
+          >
+            {inStock ? "In Stock" : "Out of Stock"}
+          </p>
+        </div>
+      </button>
+    );
   };
 
   return (
@@ -118,8 +287,9 @@ export default function Navbar() {
             : "bg-gradient-to-b from-white/90 via-white/80 to-transparent backdrop-blur-sm"
         }`}
       >
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-12">
-          <div className="flex items-center justify-between h-20">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-12">
+          {/* ── Main row ── */}
+          <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <a href="/" className="group flex items-center gap-3 relative z-10">
               <div className="relative">
@@ -127,7 +297,7 @@ export default function Navbar() {
                 <img
                   src={assets.logo}
                   alt="Smart Global"
-                  className="h-12 w-auto relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
+                  className="h-10 lg:h-12 w-auto relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
                 />
               </div>
               <div className="hidden lg:block">
@@ -189,36 +359,22 @@ export default function Navbar() {
               </div>
             </nav>
 
-            {/* Right Actions */}
+            {/* Desktop Right Actions */}
             <div className="hidden lg:flex items-center gap-2">
-              {/* Search toggle */}
               <button
                 onClick={() => setSearchOpen((v) => !v)}
                 aria-label="Search"
-                className={`group relative p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${
-                  searchOpen ? "bg-red" : "hover:bg-gray-100/80"
-                }`}
-                style={{
-                  animation: "slideDown 0.6s ease-out forwards",
-                  animationDelay: "400ms",
-                  opacity: 0,
-                }}
+                className={`group relative p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${searchOpen ? "bg-red" : "hover:bg-gray-100/80"}`}
               >
                 <Search
                   className={`h-5 w-5 transition-colors duration-300 ${searchOpen ? "text-white" : "text-gray-600 group-hover:text-red"}`}
                 />
               </button>
 
-              {/* Cart */}
               <button
                 onClick={() => navigate("/place-order")}
                 aria-label="Shopping Cart"
                 className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{
-                  animation: "slideDown 0.6s ease-out forwards",
-                  animationDelay: "450ms",
-                  opacity: 0,
-                }}
               >
                 <ShoppingCart className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
                 {totalItems > 0 && (
@@ -234,11 +390,6 @@ export default function Navbar() {
                     onClick={() => navigate("/orders")}
                     aria-label="Order History"
                     className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-                    style={{
-                      animation: "slideDown 0.6s ease-out forwards",
-                      animationDelay: "500ms",
-                      opacity: 0,
-                    }}
                   >
                     <History className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
                   </button>
@@ -248,11 +399,6 @@ export default function Navbar() {
                       onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                       aria-label="User Profile"
                       className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-                      style={{
-                        animation: "slideDown 0.6s ease-out forwards",
-                        animationDelay: "550ms",
-                        opacity: 0,
-                      }}
                     >
                       <UserCircle className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
                       <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
@@ -351,124 +497,217 @@ export default function Navbar() {
                     href="/auth"
                     aria-label="User Account"
                     className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-                    style={{
-                      animation: "slideDown 0.6s ease-out forwards",
-                      animationDelay: "500ms",
-                      opacity: 0,
-                    }}
                   >
                     <User className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
                   </a>
-                  <a
-                    href="/place-order"
-                    className="btn-primary ml-2"
-                    style={{
-                      animation: "slideDown 0.6s ease-out forwards",
-                      animationDelay: "550ms",
-                      opacity: 0,
-                    }}
-                  >
+                  <a href="/place-order" className="btn-primary ml-2">
                     Place Order
                   </a>
                 </>
               )}
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-all duration-300"
-            >
-              {mobileOpen ? (
-                <X className="h-6 w-6 text-gray-800" />
+            {/* ── Mobile right: Cart + Login + Hamburger ── */}
+            <div className="flex lg:hidden items-center gap-1">
+              <button
+                onClick={() => navigate("/place-order")}
+                aria-label="Cart"
+                className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-all"
+              >
+                <ShoppingCart className="h-5 w-5 text-gray-700" />
+                {totalItems > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-red text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                    {totalItems > 9 ? "9+" : totalItems}
+                  </span>
+                )}
+              </button>
+
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  aria-label="User"
+                  className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-all"
+                >
+                  <UserCircle className="h-5 w-5 text-gray-700" />
+                  <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
+                </button>
               ) : (
-                <Menu className="h-6 w-6 text-gray-800" />
+                <a
+                  href="/auth"
+                  aria-label="Login"
+                  className="p-2.5 rounded-xl hover:bg-gray-100 transition-all"
+                >
+                  <User className="h-5 w-5 text-gray-700" />
+                </a>
               )}
-            </button>
+
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                className="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-300"
+              >
+                {mobileOpen ? (
+                  <X className="h-5 w-5 text-gray-800" />
+                ) : (
+                  <Menu className="h-5 w-5 text-gray-800" />
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* ── Desktop Search Bar (slides down) ── */}
+          {/* ── Mobile Search Bar (always visible on mobile) ── */}
+          <div className="lg:hidden pb-3">
+            <div className="flex justify-center">
+              <div className="relative w-[90%]" ref={mobileSearchRef}>
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={mobileSearchQuery}
+                  onChange={handleMobileSearchChange}
+                  onFocus={() => {
+                    if (mobileResults.length > 0) setShowMobileResults(true);
+                  }}
+                  placeholder="Search products..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-body font-medium outline-none focus:border-red focus:ring-2 focus:ring-red/15 transition-all shadow-sm"
+                  style={{ fontSize: "0.8rem" }}
+                />
+                {mobileSearchQuery && (
+                  <button
+                    onClick={() => {
+                      setMobileSearchQuery("");
+                      setMobileResults([]);
+                      setShowMobileResults(false);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center"
+                  >
+                    <X className="w-3 h-3 text-gray-500" />
+                  </button>
+                )}
+
+                {showMobileResults && (
+                  <div
+                    ref={mobileResultsRef}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                    style={{ maxHeight: "320px", overflowY: "auto" }}
+                  >
+                    {mobileSearching ? (
+                      <div className="flex items-center justify-center py-6 gap-2">
+                        <div className="w-4 h-4 border-2 border-red border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs font-body text-gray-500">
+                          Searching...
+                        </span>
+                      </div>
+                    ) : mobileResults.length === 0 ? (
+                      <div className="py-6 text-center text-xs font-body text-gray-400">
+                        No products found for "{mobileSearchQuery}"
+                      </div>
+                    ) : (
+                      mobileResults.map((product) => (
+                        <ResultRow
+                          key={product._id || product.id}
+                          product={product}
+                        />
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Desktop Search Bar (slides down, with live results) ── */}
           {searchOpen && (
             <div
-              className="overflow-hidden pb-5"
+              className="overflow-hidden pb-5 hidden lg:block"
               style={{ animation: "expandDown 0.35s ease-out forwards" }}
             >
-              <form
-                onSubmit={handleSearchSubmit}
-                className="relative max-w-2xl"
-              >
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              <div className="relative max-w-2xl" ref={desktopSearchRef}>
+                <Search className="absolute left-5 top-[1.1rem] h-5 w-5 text-gray-400 pointer-events-none z-10" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleDesktopSearchChange}
+                  onFocus={() => {
+                    if (desktopResults.length > 0) setShowDesktopResults(true);
+                  }}
                   placeholder="Search products by name or category..."
-                  className="w-full pl-14 pr-28 py-4 text-sm font-body font-semibold rounded-2xl bg-white border border-gray-200 focus:border-red focus:outline-none focus:ring-2 focus:ring-red/20 transition-all duration-300 shadow-lg"
+                  className="w-full pl-14 pr-10 py-4 text-sm font-body font-semibold rounded-2xl bg-white border border-gray-200 focus:border-red focus:outline-none focus:ring-2 focus:ring-red/20 transition-all duration-300 shadow-lg"
                 />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5 text-gray-500" />
-                    </button>
-                  )}
+                {searchQuery && (
                   <button
-                    type="submit"
-                    className="btn-primary"
-                    style={{ padding: "0.4rem 1rem", fontSize: "0.65rem" }}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setDesktopResults([]);
+                      setShowDesktopResults(false);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
                   >
-                    Search
+                    <X className="w-3.5 h-3.5 text-gray-500" />
                   </button>
-                </div>
-              </form>
-              {/* Quick chips */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {["Soups", "Pancake Mixes", "Syrups", "Baby Pouches"].map(
-                  (term) => (
-                    <button
-                      key={term}
-                      type="button"
-                      onClick={() => submitSearch(term)}
-                      className="px-3 py-1.5 bg-gray-100 hover:bg-red hover:text-white rounded-full text-xs font-body font-bold transition-all duration-300"
-                    >
-                      {term}
-                    </button>
-                  ),
+                )}
+
+                {/* Live results dropdown */}
+                {showDesktopResults && (
+                  <div
+                    ref={desktopResultsRef}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                    style={{ maxHeight: "360px", overflowY: "auto" }}
+                  >
+                    {desktopSearching ? (
+                      <div className="flex items-center justify-center py-6 gap-2">
+                        <div className="w-4 h-4 border-2 border-red border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-body text-gray-500">
+                          Searching...
+                        </span>
+                      </div>
+                    ) : desktopResults.length === 0 ? (
+                      <div className="py-8 text-center text-sm font-body text-gray-400">
+                        No products found for "{searchQuery}"
+                      </div>
+                    ) : (
+                      desktopResults.map((product) => (
+                        <ResultRow
+                          key={product._id || product.id}
+                          product={product}
+                        />
+                      ))
+                    )}
+                  </div>
                 )}
               </div>
+
+              {/* Quick chips */}
+              {!showDesktopResults && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {["Soups", "Pancake Mixes", "Syrups", "Baby Pouches"].map(
+                    (term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery(term);
+                          handleDesktopSearchChange({
+                            target: { value: term },
+                          });
+                        }}
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-red hover:text-white rounded-full text-xs font-body font-bold transition-all duration-300"
+                      >
+                        {term}
+                      </button>
+                    ),
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Mobile Nav Panel */}
+        {/* ── Mobile Nav Panel ── */}
         {mobileOpen && (
           <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl">
             <nav className="max-w-[1600px] mx-auto px-6 py-6">
-              {/* Mobile search */}
-              <form onSubmit={handleSearchSubmit} className="relative mb-5">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="w-full pl-11 pr-14 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-body font-medium outline-none focus:border-red focus:ring-2 focus:ring-red/15 transition-all"
-                />
-                {searchQuery && (
-                  <button
-                    type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-body font-bold text-red"
-                  >
-                    Go
-                  </button>
-                )}
-              </form>
-
               <div className="space-y-1">
                 {navLinks.map((link, index) => (
                   <a
@@ -489,44 +728,6 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="flex items-center justify-around pt-6 mt-6 border-t border-gray-200">
-                <button
-                  onClick={() => navigate("/place-order")}
-                  className="relative p-4 rounded-xl hover:bg-gray-100 transition-all"
-                >
-                  <ShoppingCart className="h-6 w-6 text-gray-700" />
-                  {totalItems > 0 && (
-                    <span className="absolute top-2 right-2 w-4 h-4 bg-red text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                      {totalItems > 9 ? "9+" : totalItems}
-                    </span>
-                  )}
-                </button>
-                {isAuthenticated ? (
-                  <>
-                    <button
-                      onClick={() => navigate("/orders")}
-                      className="p-4 rounded-xl hover:bg-gray-100 transition-all"
-                    >
-                      <History className="h-6 w-6 text-gray-700" />
-                    </button>
-                    <button
-                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="p-4 rounded-xl hover:bg-gray-100 transition-all relative"
-                    >
-                      <UserCircle className="h-6 w-6 text-gray-700" />
-                      <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
-                    </button>
-                  </>
-                ) : (
-                  <a
-                    href="/auth"
-                    className="p-4 rounded-xl hover:bg-gray-100 transition-all"
-                  >
-                    <User className="h-6 w-6 text-gray-700" />
-                  </a>
-                )}
-              </div>
-
               {isAuthenticated && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
@@ -540,19 +741,41 @@ export default function Navbar() {
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                   </div>
-                  {user?.role === "admin" && (
+                  <div className="mt-3 space-y-1">
                     <a
-                      href="/dashboard"
-                      className="mt-3 block px-4 py-3 bg-yellow-50 rounded-xl text-center font-body font-bold text-sm text-gray-900 hover:bg-yellow-100 transition-colors"
+                      href="/profile"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                      Go to Dashboard
+                      <UserCircle className="w-4 h-4 text-gray-500" />
+                      <span className="font-body text-sm font-semibold text-gray-700">
+                        My Profile
+                      </span>
                     </a>
-                  )}
+                    <a
+                      href="/orders"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                      <History className="w-4 h-4 text-gray-500" />
+                      <span className="font-body text-sm font-semibold text-gray-700">
+                        Order History
+                      </span>
+                    </a>
+                    {user?.role === "admin" && (
+                      <a
+                        href="/dashboard"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
+                      >
+                        <span className="font-body text-sm font-semibold text-gray-700">
+                          Dashboard
+                        </span>
+                      </a>
+                    )}
+                  </div>
                   <button
                     onClick={handleLogout}
-                    className="mt-3 w-full px-4 py-3 bg-red-50 rounded-xl text-center font-body font-bold text-sm text-red hover:bg-red-100 transition-colors"
+                    className="mt-3 w-full px-4 py-3 bg-red-50 rounded-xl text-center font-body font-bold text-sm text-red hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
                   >
-                    Logout
+                    <LogOut className="w-4 h-4" /> Logout
                   </button>
                 </div>
               )}
@@ -568,12 +791,12 @@ export default function Navbar() {
         )}
       </header>
 
-      <div className="h-20" />
+      <div className="h-[108px] lg:h-20" />
 
       <style>{`
         @keyframes slideDown  { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes slideRight { from { opacity:0; transform:translateX(-20px);} to { opacity:1; transform:translateX(0);} }
-        @keyframes expandDown { from { max-height:0; opacity:0; } to { max-height:220px; opacity:1; } }
+        @keyframes expandDown { from { max-height:0; opacity:0; } to { max-height:500px; opacity:1; } }
       `}</style>
     </>
   );

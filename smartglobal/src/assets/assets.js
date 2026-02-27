@@ -16,7 +16,7 @@ import spuds4 from "./spuds-4.png";
 import spuds5 from "./spuds-5.png";
 import logo from "./logo.png";
 import recipe from "./recipe.jpg";
-import kizembe from "./kizembe.jpeg";
+import kizembe from "./kizembe.jpg";
 import kize from "./kize.jpg";
 
 export const assets = {

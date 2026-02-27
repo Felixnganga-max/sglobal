@@ -72,13 +72,16 @@ function buildCategories(products) {
     const cat = p.category || "Other";
     if (!seen.has(cat)) seen.set(cat, p);
   });
-  return Array.from(seen.entries()).map(([title, rep], i) => ({
-    id: title,
-    title,
-    subtitle: rep.shortDescription || title,
-    image: getImage(rep),
-    accent: CATEGORY_ACCENTS[i % CATEGORY_ACCENTS.length],
-  }));
+  // Restrict to first 4 categories only
+  return Array.from(seen.entries())
+    .slice(0, 4)
+    .map(([title, rep], i) => ({
+      id: title,
+      title,
+      subtitle: rep.shortDescription || title,
+      image: getImage(rep),
+      accent: CATEGORY_ACCENTS[i % CATEGORY_ACCENTS.length],
+    }));
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -87,8 +90,8 @@ function buildCategories(products) {
 function CategorySkeleton() {
   return (
     <div
-      className="flex-shrink-0 w-[210px] sm:w-auto rounded-2xl bg-gray-200 animate-pulse"
-      style={{ height: 270 }}
+      className="flex-shrink-0 w-[160px] rounded-xl bg-gray-200 animate-pulse"
+      style={{ height: 200 }}
     />
   );
 }
@@ -96,8 +99,8 @@ function CategorySkeleton() {
 function ProductSkeleton() {
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
-      <div className="h-36 sm:h-44 bg-gray-100" />
-      <div className="p-3 sm:p-4 space-y-2">
+      <div className="h-32 sm:h-36 bg-gray-100" />
+      <div className="p-3 space-y-2">
         <div className="h-4 bg-gray-100 rounded w-3/4" />
         <div className="h-3 bg-gray-100 rounded w-full" />
         <div className="flex justify-between items-center mt-3">
@@ -146,49 +149,44 @@ function ProductCard({ prod }) {
         <img
           src={getImage(prod)}
           alt={prod.title}
-          className="w-full h-36 sm:h-44 object-contain p-3 group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-32 sm:h-36 object-contain p-2 group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {
             e.target.src = "https://via.placeholder.com/300?text=No+Image";
           }}
         />
-        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[0.58rem] font-body font-bold text-gray-600 px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
+        <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
           {prod.category}
         </div>
         {prod.badge && (
           <div
-            className="absolute top-2 right-2 text-[0.58rem] font-black px-2 py-0.5 rounded-full text-white uppercase tracking-wide"
+            className="absolute top-1.5 right-1.5 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-wide"
             style={{ backgroundColor: BADGE_COLORS[prod.badge] || "#1a1a1a" }}
           >
             {prod.badge}
           </div>
         )}
         {discount && (
-          <div className="absolute bottom-2 right-2 text-[0.58rem] font-black px-2 py-0.5 rounded-full text-white bg-red">
+          <div className="absolute bottom-1.5 right-1.5 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white bg-red">
             -{discount}%
           </div>
         )}
       </div>
 
-      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
+      <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
         <div>
           <h3
             id={`prod-${prodId}`}
-            className="font-heading text-gray-900 text-sm leading-tight font-bold"
+            className="font-heading text-gray-900 text-xs leading-tight font-bold line-clamp-2"
           >
             {prod.title}
           </h3>
-          {prod.shortDescription && (
-            <p className="text-body mt-1.5 line-clamp-2">
-              {prod.shortDescription}
-            </p>
-          )}
           {prod.rating > 0 && (
-            <div className="flex items-center gap-1.5 mt-2">
+            <div className="flex items-center gap-1 mt-1.5">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
                   <svg
                     key={i}
-                    className="w-3 h-3"
+                    className="w-2.5 h-2.5"
                     fill={i < Math.floor(prod.rating) ? "#FF7F11" : "#e5e7eb"}
                     viewBox="0 0 20 20"
                   >
@@ -197,7 +195,7 @@ function ProductCard({ prod }) {
                 ))}
               </div>
               {prod.reviews > 0 && (
-                <span className="text-[0.62rem] text-gray-400">
+                <span className="text-[0.55rem] text-gray-400">
                   ({prod.reviews})
                 </span>
               )}
@@ -205,26 +203,26 @@ function ProductCard({ prod }) {
           )}
         </div>
 
-        <div className="mt-3">
-          <div className="flex items-end gap-1.5 mb-2.5">
-            <span className="font-heading text-lg font-bold text-red">
+        <div className="mt-2">
+          <div className="flex items-end gap-1 mb-1.5">
+            <span className="font-heading text-sm font-bold text-red">
               Ksh {prod.price?.toLocaleString()}
             </span>
             {prod.oldPrice && prod.oldPrice > prod.price && (
-              <span className="text-xs text-gray-400 line-through pb-0.5">
+              <span className="text-[0.6rem] text-gray-400 line-through pb-0.5">
                 Ksh {prod.oldPrice.toLocaleString()}
               </span>
             )}
           </div>
 
           <p
-            className="text-[0.6rem] font-semibold mb-2"
+            className="text-[0.55rem] font-semibold mb-1.5"
             style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
           >
             {inStock ? "● In Stock" : "● Out of Stock"}
           </p>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               aria-label={`Save ${prod.title}`}
@@ -232,10 +230,10 @@ function ProductCard({ prod }) {
                 e.stopPropagation();
                 setWishlisted((v) => !v);
               }}
-              className="p-2 rounded-lg bg-gray-50 border border-gray-100 hover:border-gray-300 transition-all duration-200"
+              className="p-1.5 rounded-lg bg-gray-50 border border-gray-100 hover:border-gray-300 transition-all duration-200"
             >
               <Heart
-                size={13}
+                size={11}
                 style={{
                   fill: wishlisted ? "var(--color-red)" : "transparent",
                   color: wishlisted ? "var(--color-red)" : "#9ca3af",
@@ -248,7 +246,7 @@ function ProductCard({ prod }) {
               disabled={!inStock}
               aria-label={`Add ${prod.title} to cart`}
               onClick={handleAddToCart}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-white text-xs font-body font-bold transition-all duration-300 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-white text-[0.6rem] font-body font-bold transition-all duration-300 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: addedFeedback
                   ? "#16a34a"
@@ -259,15 +257,15 @@ function ProductCard({ prod }) {
             >
               {addedFeedback ? (
                 <>
-                  <Check size={13} /> Added!
+                  <Check size={10} /> Added!
                 </>
               ) : isInCart ? (
                 <>
-                  <ShoppingCart size={13} /> In Cart
+                  <ShoppingCart size={10} /> In Cart
                 </>
               ) : (
                 <>
-                  <ShoppingCart size={13} /> Add to Cart
+                  <ShoppingCart size={10} /> Add to Cart
                 </>
               )}
             </button>
@@ -309,20 +307,21 @@ export default function Sales() {
 
   const scroll = (dir) => {
     if (scrollRef.current)
-      scrollRef.current.scrollBy({ left: dir * 240, behavior: "smooth" });
+      scrollRef.current.scrollBy({ left: dir * 180, behavior: "smooth" });
   };
 
   return (
     <main className="w-full bg-white">
       {/* ── Category Strip ── */}
       <section className="section-y page-x">
-        <div className="flex items-end justify-between mb-6">
+        <div className="flex items-end justify-between mb-4">
           <div>
             <p className="text-eyebrow mb-1">What We Offer</p>
             <h2 className="text-section-title text-gray-900">Our Range</h2>
             <div className="section-rule mt-2" />
           </div>
-          <div className="flex gap-2 sm:hidden">
+          {/* Scroll arrows always visible on mobile */}
+          <div className="flex gap-2 lg:hidden">
             {[
               [-1, "M15 19l-7-7 7-7"],
               [1, "M9 5l7 7-7 7"],
@@ -331,10 +330,10 @@ export default function Sales() {
                 key={dir}
                 onClick={() => scroll(dir)}
                 aria-label={dir === -1 ? "Scroll left" : "Scroll right"}
-                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors"
+                className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors"
               >
                 <svg
-                  className="w-3.5 h-3.5 text-gray-500"
+                  className="w-3 h-3 text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={2.5}
@@ -347,9 +346,10 @@ export default function Sales() {
           </div>
         </div>
 
+        {/* Always horizontal scroll strip — 4 cards max */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-4 pb-1 sm:pb-0"
+          className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {loading ? (
@@ -368,8 +368,8 @@ export default function Sales() {
               <Link
                 to="/products"
                 key={cat.id}
-                className="group relative flex-shrink-0 w-[210px] sm:w-auto rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-400"
-                style={{ height: 270 }}
+                className="group relative flex-shrink-0 w-[160px] lg:w-auto rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-400"
+                style={{ height: 200 }}
               >
                 <img
                   src={cat.image}
@@ -377,7 +377,7 @@ export default function Sales() {
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {
                     e.target.src =
-                      "https://via.placeholder.com/300x270?text=" +
+                      "https://via.placeholder.com/300x200?text=" +
                       encodeURIComponent(cat.title);
                   }}
                 />
@@ -386,22 +386,22 @@ export default function Sales() {
                   className="absolute top-0 left-0 right-0 h-0.5"
                   style={{ backgroundColor: cat.accent }}
                 />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="absolute bottom-0 left-0 right-0 p-3">
                   <p
-                    className="text-[0.6rem] font-body font-bold uppercase tracking-[0.2em] mb-1"
+                    className="text-[0.55rem] font-body font-bold uppercase tracking-[0.15em] mb-0.5"
                     style={{ color: cat.accent }}
                   >
                     {cat.subtitle}
                   </p>
-                  <h3 className="font-heading text-white text-base font-bold leading-tight">
+                  <h3 className="font-heading text-white text-sm font-bold leading-tight">
                     {cat.title}
                   </h3>
-                  <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-white text-xs font-semibold">
+                  <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-white text-[0.6rem] font-semibold">
                       Shop Now
                     </span>
                     <svg
-                      className="w-3 h-3 text-white"
+                      className="w-2.5 h-2.5 text-white"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2.5}
@@ -423,7 +423,7 @@ export default function Sales() {
 
       {/* ── Featured / Search Results ── */}
       <section className="section-y page-x bg-soft">
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center">
           {searchQuery ? (
             <>
               <p className="text-eyebrow mb-1">Search Results</p>
@@ -473,7 +473,7 @@ export default function Sales() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {loading
             ? [...Array(8)].map((_, i) => <ProductSkeleton key={i} />)
             : displayProducts.map((prod) => (

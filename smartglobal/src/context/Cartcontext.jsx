@@ -1,15 +1,37 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
 /**
  * CartContext — global cart state with localStorage persistence.
+ * OrderContext — global order submission state.
  * Wrap your app's root (e.g. App.jsx) with <CartProvider>.
- * Consume via useCart() hook anywhere in the tree.
+ * Consume via useCart() and useOrder() hooks anywhere in the tree.
  */
 
-const CartContext = createContext(null);
+// ── Order API ─────────────────────────────────────────────────────────────────
+const ORDER_API = "http://localhost:3000/smartglobal/orders";
 
+function getSessionId() {
+  let id = sessionStorage.getItem("sg_session_id");
+  if (!id) {
+    id = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    sessionStorage.setItem("sg_session_id", id);
+  }
+  return id;
+}
+
+// ── Contexts ──────────────────────────────────────────────────────────────────
+const CartContext = createContext(null);
+const OrderContext = createContext(null);
+
+// ── Combined Provider ─────────────────────────────────────────────────────────
 export function CartProvider({ children }) {
-  // Initialise from localStorage on first render
+  // ── Cart state ──────────────────────────────────────────────────────────────
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem("sg_cart");
@@ -19,12 +41,9 @@ export function CartProvider({ children }) {
     }
   });
 
-  // Persist to localStorage whenever cart changes
   useEffect(() => {
     localStorage.setItem("sg_cart", JSON.stringify(cartItems));
   }, [cartItems]);
-
-  /* ── helpers ── */
 
   /** Add a product to cart (or increment qty if already present) */
   const addToCart = (product, qty = 1) => {
@@ -74,6 +93,85 @@ export function CartProvider({ children }) {
     0,
   );
 
+  // ── Order state ─────────────────────────────────────────────────────────────
+  const [orderState, setOrderState] = useState({
+    status: "idle", // "idle" | "loading" | "success" | "error"
+    orderId: null,
+    error: null,
+  });
+
+  /**
+   * submitOrder
+   * @param {object} params
+   * @param {object} params.customer       - { name, phone, location, notes }
+   * @param {array}  params.items          - cart items array (defaults to cartItems)
+   * @param {number} params.totalPrice     - defaults to cart totalPrice
+   * @param {"whatsapp"|"email"} params.channel
+   * @param {string} [params.customerEmail] - optional, for confirmation email
+   * @param {string} [params.token]         - JWT if user is logged in
+   */
+  const submitOrder = useCallback(
+    async ({
+      customer,
+      items,
+      totalPrice: overrideTotal,
+      channel,
+      customerEmail,
+      token,
+    }) => {
+      const orderItems = items ?? cartItems;
+      const orderTotal = overrideTotal ?? totalPrice;
+
+      setOrderState({ status: "loading", orderId: null, error: null });
+
+      try {
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(ORDER_API, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            customer,
+            items: orderItems.map((item) => ({
+              productId: item._id || item.id,
+              title: item.title || item.name,
+              price: item.price,
+              quantity: item.cartQty || item.quantity || 1,
+              image: item.image?.url || item.imageUrl || item.img || "",
+              category: item.category || "",
+            })),
+            totalPrice: orderTotal,
+            channel,
+            sessionId: getSessionId(),
+            customerEmail: customerEmail || undefined,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Failed to place order.");
+        }
+
+        setOrderState({
+          status: "success",
+          orderId: data.data._id,
+          error: null,
+        });
+        return { success: true, order: data.data };
+      } catch (err) {
+        setOrderState({ status: "error", orderId: null, error: err.message });
+        return { success: false, error: err.message };
+      }
+    },
+    [cartItems, totalPrice],
+  );
+
+  const resetOrder = useCallback(() => {
+    setOrderState({ status: "idle", orderId: null, error: null });
+  }, []);
+
   return (
     <CartContext.Provider
       value={{
@@ -86,14 +184,23 @@ export function CartProvider({ children }) {
         totalPrice,
       }}
     >
-      {children}
+      <OrderContext.Provider value={{ orderState, submitOrder, resetOrder }}>
+        {children}
+      </OrderContext.Provider>
     </CartContext.Provider>
   );
 }
 
-/** Hook — throws if used outside <CartProvider> */
+/** Cart hook — throws if used outside <CartProvider> */
 export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error("useCart must be used inside <CartProvider>");
+  return ctx;
+}
+
+/** Order hook — throws if used outside <CartProvider> */
+export function useOrder() {
+  const ctx = useContext(OrderContext);
+  if (!ctx) throw new Error("useOrder must be used inside <CartProvider>");
   return ctx;
 }

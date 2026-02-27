@@ -8,6 +8,7 @@ require("dotenv").config();
 const productRoutes = require("./routers/productRoutes");
 const authRoutes = require("./routers/authRoutes");
 const recipeRoutes = require("./routers/Recipe");
+const orderRoutes = require("./routers/Order");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,6 +64,7 @@ app.get("/", (req, res) => {
 app.use("/smartglobal/auth", authRoutes);
 app.use("/smartglobal/products", productRoutes);
 app.use("/smartglobal/recipes", recipeRoutes);
+app.use("/smartglobal/orders", orderRoutes);
 
 // ✅ 404 Handler
 app.use((req, res) => {

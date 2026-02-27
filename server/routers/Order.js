@@ -8,11 +8,11 @@ const {
   getSingleOrder,
   markComplete,
   getAllOrders,
-} = require("../controllers/orderController");
+} = require("../controllers/Order");
 
 // ── Import your existing auth middleware ──
 // Adjust the path to match your project structure
-const { protect } = require("../middleware/auth");
+const { protect } = require("../middleware/authMiddleware");
 
 // ── Public ────────────────────────────────────────────────────────────────
 // Create order — auth is optional (middleware reads token if present)
@@ -44,7 +44,7 @@ module.exports = router;
 // Tries to decode the JWT if present, attaches req.user if valid.
 // Does NOT block the request if no token is found.
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../models/userModel");
 
 async function optionalAuth(req, res, next) {
   try {

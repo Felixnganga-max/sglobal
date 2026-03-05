@@ -29,7 +29,7 @@ const orderSchema = new mongoose.Schema(
     sessionId: {
       type: String,
       default: null,
-      index: true,
+      // index: true,
     },
 
     // ── Customer details (filled from the form) ──

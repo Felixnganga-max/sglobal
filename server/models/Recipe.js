@@ -191,7 +191,7 @@ recipeSchema.pre("validate", function (next) {
 recipeSchema.index({ product: 1 });
 recipeSchema.index({ category: 1 });
 recipeSchema.index({ featured: 1 });
-recipeSchema.index({ slug: 1 });
+
 recipeSchema.index({ createdAt: -1 });
 recipeSchema.index({ title: "text", description: "text", tags: "text" });
 

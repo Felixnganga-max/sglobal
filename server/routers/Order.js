@@ -12,11 +12,11 @@ const {
 
 // ── Import your existing auth middleware ──
 // Adjust the path to match your project structure
-const { protect } = require("../middleware/authMiddleware");
+const { protect, optionalAuth } = require("../middleware/authMiddleware");
 
 // ── Public ────────────────────────────────────────────────────────────────
 // Create order — auth is optional (middleware reads token if present)
-router.post("/", optionalAuth, createOrder);
+router.post("/create-order", optionalAuth, createOrder);
 
 // Guest order lookup by sessionId
 router.get("/session/:sessionId", getOrdersBySession);
@@ -39,23 +39,3 @@ router.get("/", protect, getAllOrders);
 router.patch("/:id/complete", protect, markComplete);
 
 module.exports = router;
-
-// ── optionalAuth middleware ───────────────────────────────────────────────
-// Tries to decode the JWT if present, attaches req.user if valid.
-// Does NOT block the request if no token is found.
-const jwt = require("jsonwebtoken");
-const User = require("../models/userModel");
-
-async function optionalAuth(req, res, next) {
-  try {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
-    }
-  } catch (_) {
-    // Invalid or expired token — treat as guest, don't block
-  }
-  next();
-}

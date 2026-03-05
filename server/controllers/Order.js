@@ -1,25 +1,19 @@
 const Order = require("../models/Order");
 const nodemailer = require("nodemailer");
 
-// ── Nodemailer transporter ──────────────────────────────────────────────────
-// Set these in your .env:
-//   MAIL_USER=your-gmail@gmail.com
-//   MAIL_PASS=your-gmail-app-password   (Gmail App Password, not your login password)
-//   SALES_EMAIL=sales@smartglobal.com
-//   MAIL_FROM=Smart Global <your-gmail@gmail.com>
+const MAIL_USER = "felixngunga22@gmail.com";
+const MAIL_PASS = "rzxa khfj ewdr yyvv";
+const SALES_EMAIL = "felixngunga22@gmail.com";
+const MAIL_FROM = "Smart Global <felixngunga22@gmail.com>";
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    user: MAIL_USER,
+    pass: MAIL_PASS,
   },
 });
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Build a clean HTML email for the sales team.
- */
 function buildSalesEmailHtml(order) {
   const rows = order.items
     .map(
@@ -40,16 +34,12 @@ function buildSalesEmailHtml(order) {
 <head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f9fafb;font-family:Arial,sans-serif;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-    
-    <!-- Header -->
     <div style="background:linear-gradient(135deg,#BF1A1A,#8B1414);padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:22px;letter-spacing:1px;">NEW ORDER — SMART GLOBAL</h1>
       <p style="margin:6px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">
         Received via ${order.channel.toUpperCase()} · ${new Date(order.createdAt).toLocaleString("en-KE")}
       </p>
     </div>
-
-    <!-- Customer Details -->
     <div style="padding:24px 32px;border-bottom:1px solid #f0f0f0;">
       <h2 style="margin:0 0 16px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">Customer Details</h2>
       <table style="width:100%;border-collapse:collapse;">
@@ -59,8 +49,6 @@ function buildSalesEmailHtml(order) {
         ${order.customer.notes ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Notes</td><td style="padding:4px 0;font-size:13px;">${order.customer.notes}</td></tr>` : ""}
       </table>
     </div>
-
-    <!-- Order Items -->
     <div style="padding:24px 32px;border-bottom:1px solid #f0f0f0;">
       <h2 style="margin:0 0 16px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#6b7280;">Order Items</h2>
       <table style="width:100%;border-collapse:collapse;">
@@ -74,14 +62,10 @@ function buildSalesEmailHtml(order) {
         <tbody>${rows}</tbody>
       </table>
     </div>
-
-    <!-- Total -->
     <div style="padding:20px 32px;background:#fafafa;display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:15px;font-weight:700;color:#1a1a1a;">TOTAL</span>
       <span style="font-size:22px;font-weight:900;color:#BF1A1A;">KSh ${order.totalPrice.toLocaleString()}</span>
     </div>
-
-    <!-- Footer -->
     <div style="padding:16px 32px;background:#f9fafb;text-align:center;">
       <p style="margin:0;font-size:11px;color:#9ca3af;">
         Order ID: ${order._id} · Smart Global Foods · Nairobi, Kenya
@@ -95,9 +79,6 @@ function buildSalesEmailHtml(order) {
 </html>`;
 }
 
-/**
- * Build a confirmation email for the customer (only sent if they provide email).
- */
 function buildCustomerEmailHtml(order) {
   const rows = order.items
     .map(
@@ -145,90 +126,56 @@ function buildCustomerEmailHtml(order) {
 </html>`;
 }
 
-// ── Controllers ─────────────────────────────────────────────────────────────
-
-/**
- * POST /smartglobal/orders
- * Creates an order, saves it, and fires emails.
- *
- * Body:
- *  {
- *    customer: { name, phone, location, notes },
- *    items: [{ productId, title, price, quantity, image, category }],
- *    totalPrice: Number,
- *    channel: "whatsapp" | "email",
- *    sessionId: String,      // from localStorage on the frontend (guest token)
- *    customerEmail: String,  // optional — to send confirmation to customer
- *  }
- *
- * Auth: optional — if Authorization header is present and valid, user is attached.
- */
 exports.createOrder = async (req, res) => {
   try {
     const { customer, items, totalPrice, channel, sessionId, customerEmail } =
       req.body;
 
-    // Basic validation
     if (!customer?.name || !customer?.phone || !customer?.location) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Customer name, phone, and location are required.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Customer name, phone, and location are required.",
+      });
     }
     if (!items || items.length === 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Order must contain at least one item.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Order must contain at least one item.",
+      });
     }
     if (!["whatsapp", "email"].includes(channel)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Channel must be 'whatsapp' or 'email'.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Channel must be 'whatsapp' or 'email'.",
+      });
     }
 
-    // Build order doc
     const orderData = {
       customer,
       items,
       totalPrice,
       channel,
       sessionId: sessionId || null,
-      // If request came from a logged-in user, attach their id
       user: req.user ? req.user._id : null,
     };
 
     const order = await Order.create(orderData);
 
-    // ── Send email to sales team ──────────────────────────────────────────
     try {
       await transporter.sendMail({
-        from:
-          process.env.MAIL_FROM ||
-          `"Smart Global Orders" <${process.env.MAIL_USER}>`,
-        to: process.env.SALES_EMAIL,
+        from: MAIL_FROM,
+        to: SALES_EMAIL,
         subject: `New Order from ${customer.name} — KSh ${totalPrice.toLocaleString()}`,
         html: buildSalesEmailHtml(order),
       });
     } catch (mailErr) {
-      // Log but don't fail the request — order is already saved
       console.error("Sales email failed:", mailErr.message);
     }
 
-    // ── Send confirmation to customer (if email provided) ─────────────────
     if (customerEmail && customerEmail.includes("@")) {
       try {
         await transporter.sendMail({
-          from:
-            process.env.MAIL_FROM ||
-            `"Smart Global" <${process.env.MAIL_USER}>`,
+          from: MAIL_FROM,
           to: customerEmail,
           subject: `Your Smart Global Order — ${customer.name}`,
           html: buildCustomerEmailHtml(order),
@@ -251,13 +198,6 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-/**
- * POST /smartglobal/orders/claim
- * After a guest signs up, attach their session orders to their new user ID.
- *
- * Body: { sessionId: String }
- * Auth: required
- */
 exports.claimGuestOrders = async (req, res) => {
   try {
     const { sessionId } = req.body;
@@ -282,11 +222,6 @@ exports.claimGuestOrders = async (req, res) => {
   }
 };
 
-/**
- * GET /smartglobal/orders/my
- * Get all orders for the logged-in user, newest first.
- * Auth: required
- */
 exports.getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -300,11 +235,6 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-/**
- * GET /smartglobal/orders/session/:sessionId
- * Get orders by sessionId — for guests who haven't signed up yet.
- * No auth required, but sessionId must match exactly.
- */
 exports.getOrdersBySession = async (req, res) => {
   try {
     const orders = await Order.find({ sessionId: req.params.sessionId })
@@ -318,11 +248,6 @@ exports.getOrdersBySession = async (req, res) => {
   }
 };
 
-/**
- * GET /smartglobal/orders/:id
- * Get a single order by ID.
- * Auth: required — user can only view their own, admin can view any.
- */
 exports.getSingleOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).lean();
@@ -349,11 +274,6 @@ exports.getSingleOrder = async (req, res) => {
   }
 };
 
-/**
- * PATCH /smartglobal/orders/:id/complete
- * Admin marks an order as complete.
- * Auth: admin only.
- */
 exports.markComplete = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -383,10 +303,6 @@ exports.markComplete = async (req, res) => {
   }
 };
 
-/**
- * GET /smartglobal/orders (admin)
- * Get all orders. Admin only.
- */
 exports.getAllOrders = async (req, res) => {
   try {
     if (req.user.role !== "admin") {

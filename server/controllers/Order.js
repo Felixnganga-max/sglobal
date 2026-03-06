@@ -3,8 +3,8 @@ const nodemailer = require("nodemailer");
 
 const MAIL_USER = "felixngunga22@gmail.com";
 const MAIL_PASS = "rzxa khfj ewdr yyvv";
-const SALES_EMAIL = "felixngunga22@gmail.com";
-const MAIL_FROM = "Smart Global <felixngunga22@gmail.com>";
+const SALES_EMAIL = "felixngunga3620@gmail.com"; //Smart global email
+const MAIL_FROM = "Smart Global <sales@smartglobal.com>";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",

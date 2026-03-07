@@ -21,7 +21,7 @@ import DashboardRecipes from "../components/Dashboardrecipes";
 import DashboardBlogs from "../components/Dashboardblogs";
 import DashboardSettings from "../components/Dashboardsettings";
 
-const API_URL = "http://localhost:3000/api/smartglobal/auth";
+const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/auth";
 
 function Sidebar({
   activeTab,

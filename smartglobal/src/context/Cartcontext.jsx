@@ -14,7 +14,7 @@ import React, {
  */
 
 // ── Order API ─────────────────────────────────────────────────────────────────
-const ORDER_API = "http://localhost:3000/smartglobal/orders";
+const ORDER_API = "https://sglobal-plf6.vercel.app/smartglobal/orders";
 
 function getSessionId() {
   let id = sessionStorage.getItem("sg_session_id");

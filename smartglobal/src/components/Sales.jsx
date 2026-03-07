@@ -4,7 +4,7 @@ import { assets } from "../assets/assets";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 
-const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
+const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
 
 const CATEGORY_ACCENTS = [
   "#FF7F11",

@@ -11,7 +11,7 @@ function scrollToProducts() {
   }
 }
 
-const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
+const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
 
 function getImage(product) {
   return (

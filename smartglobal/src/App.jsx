@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import About from "./pages/About";
 import PlaceOrder from "./pages/PlaceOrder";
+import Orders from "./pages/Orders";
 
 function App() {
   const location = useLocation();
@@ -34,6 +35,7 @@ function App() {
         <Route path="/auth" element={<Login />} />
         <Route path="/about" element={<About />} />
         <Route path="/place-order" element={<PlaceOrder />} />
+        <Route path="/orders" element={<Orders />} />
       </Routes>
       {!isDashboard && !isAuth && <Footer />}
     </>

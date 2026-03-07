@@ -11,8 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-// FIX: Change port to 3000 to match your backend
-const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/auth";
+const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -29,524 +28,345 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
-    // Clear errors
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
-    }
-    if (apiError) {
-      setApiError("");
-    }
-
-    // Calculate password strength
+    if (errors[name]) setErrors({ ...errors, [name]: "" });
+    if (apiError) setApiError("");
     if (name === "password") {
-      calculatePasswordStrength(value);
+      let s = 0;
+      if (value.length >= 8) s += 25;
+      if (value.match(/[a-z]/) && value.match(/[A-Z]/)) s += 25;
+      if (value.match(/[0-9]/)) s += 25;
+      if (value.match(/[^a-zA-Z0-9]/)) s += 25;
+      setPasswordStrength(s);
     }
   };
 
-  // Calculate password strength
-  const calculatePasswordStrength = (password) => {
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength += 25;
-    if (password.match(/[0-9]/)) strength += 25;
-    if (password.match(/[^a-zA-Z0-9]/)) strength += 25;
-    setPasswordStrength(strength);
-  };
-
-  // Get password strength color
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 25) return "bg-red-500";
-    if (passwordStrength <= 50) return "bg-orange-500";
-    if (passwordStrength <= 75) return "bg-yellow-500";
-    return "bg-green-500";
-  };
-
-  // Get password strength label
-  const getPasswordStrengthLabel = () => {
-    if (passwordStrength <= 25) return "Weak";
-    if (passwordStrength <= 50) return "Fair";
-    if (passwordStrength <= 75) return "Good";
-    return "Strong";
-  };
-
-  // Validate form
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    // Sign up specific validations
+  const validate = () => {
+    const e = {};
+    if (!formData.email) e.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      e.email = "Invalid email";
+    if (!formData.password) e.password = "Password is required";
+    else if (formData.password.length < 6) e.password = "Min 6 characters";
     if (!isLogin) {
-      if (!formData.name) {
-        newErrors.name = "Full name is required";
-      }
-
-      if (!formData.confirmPassword) {
-        newErrors.confirmPassword = "Please confirm your password";
-      } else if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
+      if (!formData.name) e.name = "Name is required";
+      if (!formData.confirmPassword) e.confirmPassword = "Please confirm";
+      else if (formData.password !== formData.confirmPassword)
+        e.confirmPassword = "Passwords don't match";
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  // Handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
-
+    if (!validate()) return;
     setIsSubmitting(true);
     setApiError("");
-
     try {
-      let response;
-
-      if (isLogin) {
-        // LOGIN
-        response = await axios.post(`${API_URL}/login`, {
-          email: formData.email,
-          password: formData.password,
-        });
-      } else {
-        // REGISTER - Remove phone field
-        response = await axios.post(`${API_URL}/register`, {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        });
-      }
-
-      // Save token to localStorage
-      localStorage.setItem("token", response.data.token);
-
-      // Save user info to localStorage
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      // Redirect based on role
-      if (response.data.user.role === "admin") {
-        navigate("/dashboard");
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Auth error:", error);
-
-      // Handle error
-      if (error.response && error.response.data) {
-        setApiError(error.response.data.message || "Something went wrong");
-      } else {
-        setApiError("Network error. Please try again.");
-      }
+      const endpoint = isLogin ? "/login" : "/register";
+      const payload = isLogin
+        ? { email: formData.email, password: formData.password }
+        : {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+          };
+      const { data } = await axios.post(`${API_URL}${endpoint}`, payload);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate(data.user.role === "admin" ? "/dashboard" : "/");
+    } catch (err) {
+      setApiError(
+        err.response?.data?.message || "Network error. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Toggle between login and signup
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setErrors({});
     setApiError("");
     setPasswordStrength(0);
-    setFormData({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
+    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
   };
 
-  return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-[#1a0505] to-gray-900">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#BF1A1A] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#FFD41D] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-[#7B4019] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-[#FFD41D] rounded-full opacity-30 animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${5 + Math.random() * 10}s`,
-            }}
-          ></div>
-        ))}
-      </div>
+  const strengthColor =
+    passwordStrength <= 25
+      ? "#ef4444"
+      : passwordStrength <= 50
+        ? "#f97316"
+        : passwordStrength <= 75
+          ? "#eab308"
+          : "#22c55e";
+  const strengthLabel =
+    passwordStrength <= 25
+      ? "Weak"
+      : passwordStrength <= 50
+        ? "Fair"
+        : passwordStrength <= 75
+          ? "Good"
+          : "Strong";
 
-      {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Left Side - Branding */}
-          <div className="hidden lg:block text-white space-y-8">
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <p className="text-xl text-gray-300 leading-relaxed">
-                  Join thousands of families and businesses across Kenya
-                  enjoying premium FMCG products since 2007.
-                </p>
-              </div>
+  const inputClass = (field) =>
+    `w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-xl text-sm outline-none transition-all duration-200 font-medium ${
+      errors[field]
+        ? "border-red-400 bg-red-50"
+        : "border-gray-200 focus:border-[#BF1A1A] focus:bg-white"
+    }`;
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        .login-card { animation: fadeUp 0.4s ease both; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.7s linear infinite; }
+      `}</style>
+
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+        {/* Background blobs */}
+        <div
+          className="fixed inset-0 pointer-events-none overflow-hidden"
+          aria-hidden="true"
+        >
+          <div className="absolute top-[-80px] left-[-80px] w-80 h-80 rounded-full bg-[#BF1A1A] opacity-[0.06] blur-3xl" />
+          <div className="absolute bottom-[-60px] right-[-60px] w-96 h-96 rounded-full bg-[#ff7f11] opacity-[0.06] blur-3xl" />
+        </div>
+
+        <div className="login-card w-full max-w-sm relative">
+          {/* Logo / brand area */}
+          <div className="text-center mb-8">
+            <div
+              className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4"
+              style={{
+                background: "linear-gradient(135deg, #BF1A1A, #8B1414)",
+              }}
+            >
+              <ShieldCheck size={22} color="#fff" />
             </div>
+            <h1
+              className="text-2xl font-black text-gray-900"
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                letterSpacing: "0.05em",
+              }}
+            >
+              {isLogin ? "WELCOME BACK" : "CREATE ACCOUNT"}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {isLogin
+                ? "Sign in to your Smart Global account"
+                : "Join the Smart Global family"}
+            </p>
           </div>
 
-          {/* Right Side - Form */}
-          <div className="w-full max-w-md mx-auto lg:mx-0">
-            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] p-8 text-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3
-                      className="text-3xl font-black"
-                      style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-                    >
-                      {isLogin ? "WELCOME BACK" : "CREATE ACCOUNT"}
-                    </h3>
-                    <ShieldCheck className="text-[#FFD41D]" size={32} />
-                  </div>
-                  <p className="text-white/90">
-                    {isLogin
-                      ? "Sign in to access your account"
-                      : "Join the Smart Global family"}
-                  </p>
-                </div>
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            {/* API error */}
+            {apiError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
+                {apiError}
               </div>
+            )}
 
-              {/* API Error Message */}
-              {apiError && (
-                <div className="mx-8 mt-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-                  <p className="text-red-700 text-sm font-medium">{apiError}</p>
+            <div className="space-y-4">
+              {/* Name — signup only */}
+              {!isLogin && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User
+                      size={15}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Jane Wanjiku"
+                      className={inputClass("name")}
+                    />
+                  </div>
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                  )}
                 </div>
               )}
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                {/* Full Name - Sign Up Only */}
-                {!isLogin && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <User className="text-gray-400" size={20} />
-                      </div>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="John Doe"
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
-                          errors.name
-                            ? "border-red-500"
-                            : "border-gray-200 focus:border-[#BF1A1A]"
-                        } rounded-xl focus:outline-none transition-all duration-300 font-medium`}
-                      />
-                    </div>
-                    {errors.name && (
-                      <p className="text-red-500 text-sm flex items-center gap-1">
-                        <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                        {errors.name}
-                      </p>
-                    )}
-                  </div>
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail
+                    size={15}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="you@example.com"
+                    className={inputClass("email")}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock
+                    size={15}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className={`${inputClass("password")} pr-10`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
                 )}
 
-                {/* Email */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold text-gray-700">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className="text-gray-400" size={20} />
+                {/* Strength bar — signup only */}
+                {!isLogin && formData.password && (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-400">Strength</span>
+                      <span
+                        className="font-bold"
+                        style={{ color: strengthColor }}
+                      >
+                        {strengthLabel}
+                      </span>
                     </div>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="you@example.com"
-                      className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
-                        errors.email
-                          ? "border-red-500"
-                          : "border-gray-200 focus:border-[#BF1A1A]"
-                      } rounded-xl focus:outline-none transition-all duration-300 font-medium`}
-                    />
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-400"
+                        style={{
+                          width: `${passwordStrength}%`,
+                          background: strengthColor,
+                        }}
+                      />
+                    </div>
                   </div>
-                  {errors.email && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                      {errors.email}
-                    </p>
-                  )}
-                </div>
+                )}
+              </div>
 
-                {/* Password */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold text-gray-700">
-                    Password
+              {/* Confirm password — signup only */}
+              {!isLogin && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
+                    Confirm Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="text-gray-400" size={20} />
-                    </div>
+                    <Lock
+                      size={15}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
                     <input
+                      name="confirmPassword"
                       type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
+                      value={formData.confirmPassword}
                       onChange={handleChange}
                       placeholder="••••••••"
-                      className={`w-full pl-12 pr-12 py-4 bg-gray-50 border-2 ${
-                        errors.password
-                          ? "border-red-500"
-                          : "border-gray-200 focus:border-[#BF1A1A]"
-                      } rounded-xl focus:outline-none transition-all duration-300 font-medium`}
+                      className={inputClass("confirmPassword")}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
                   </div>
-                  {errors.password && (
-                    <p className="text-red-500 text-sm flex items-center gap-1">
-                      <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                      {errors.password}
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.confirmPassword}
                     </p>
                   )}
-
-                  {/* Password Strength Indicator */}
-                  {!isLogin && formData.password && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-600 font-semibold">
-                          Password Strength
-                        </span>
-                        <span
-                          className={`font-bold ${
-                            passwordStrength <= 25
-                              ? "text-red-500"
-                              : passwordStrength <= 50
-                                ? "text-orange-500"
-                                : passwordStrength <= 75
-                                  ? "text-yellow-500"
-                                  : "text-green-500"
-                          }`}
-                        >
-                          {getPasswordStrengthLabel()}
-                        </span>
-                      </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${getPasswordStrengthColor()} transition-all duration-500`}
-                          style={{ width: `${passwordStrength}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
                 </div>
+              )}
 
-                {/* Confirm Password - Sign Up Only */}
-                {!isLogin && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Lock className="text-gray-400" size={20} />
-                      </div>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        placeholder="••••••••"
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
-                          errors.confirmPassword
-                            ? "border-red-500"
-                            : "border-gray-200 focus:border-[#BF1A1A]"
-                        } rounded-xl focus:outline-none transition-all duration-300 font-medium`}
-                      />
-                    </div>
-                    {errors.confirmPassword && (
-                      <p className="text-red-500 text-sm flex items-center gap-1">
-                        <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                        {errors.confirmPassword}
-                      </p>
-                    )}
-                  </div>
+              {/* Forgot password — login only */}
+              {isLogin && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className="text-xs font-bold text-[#BF1A1A] hover:text-[#8B1414] transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all duration-200 hover:opacity-90 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                style={{
+                  background: "linear-gradient(135deg, #BF1A1A, #8B1414)",
+                  fontFamily: "'Bebas Neue', sans-serif",
+                  fontSize: "1rem",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full spin" />
+                    PROCESSING...
+                  </>
+                ) : (
+                  <>
+                    {isLogin ? "SIGN IN" : "CREATE ACCOUNT"}{" "}
+                    <ArrowRight size={16} />
+                  </>
                 )}
-
-                {/* Forgot Password - Login Only */}
-                {isLogin && (
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-2 border-gray-300 text-[#BF1A1A] focus:ring-[#BF1A1A]"
-                      />
-                      <span className="text-sm text-gray-600 font-medium">
-                        Remember me
-                      </span>
-                    </label>
-                    <button
-                      type="button"
-                      className="text-sm text-[#BF1A1A] hover:text-[#8B1414] font-bold transition-colors"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] hover:from-[#8B1414] hover:to-[#BF1A1A] text-white py-4 rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                      PROCESSING...
-                    </>
-                  ) : (
-                    <>
-                      {isLogin ? "SIGN IN" : "CREATE ACCOUNT"}
-                      <ArrowRight size={20} />
-                    </>
-                  )}
-                </button>
-
-                {/* Toggle Mode */}
-                <div className="text-center pt-4">
-                  <p className="text-gray-600">
-                    {isLogin
-                      ? "Don't have an account?"
-                      : "Already have an account?"}{" "}
-                    <button
-                      type="button"
-                      onClick={toggleMode}
-                      className="text-[#BF1A1A] hover:text-[#8B1414] font-black transition-colors"
-                    >
-                      {isLogin ? "Sign Up" : "Sign In"}
-                    </button>
-                  </p>
-                </div>
-              </form>
-
-              {/* Footer */}
-              <div className="px-8 pb-8 pt-4 border-t border-gray-200">
-                <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                  <ShieldCheck size={14} className="text-[#4CAF50]" />
-                  <span>Secured by 256-bit SSL encryption</span>
-                </div>
-              </div>
+              </button>
             </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-gray-100" />
+              <span className="text-xs text-gray-400 font-medium">or</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+
+            {/* Toggle */}
+            <p className="text-center text-sm text-gray-500">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button
+                type="button"
+                onClick={toggleMode}
+                className="font-bold text-[#BF1A1A] hover:text-[#8B1414] transition-colors"
+              >
+                {isLogin ? "Sign Up" : "Sign In"}
+              </button>
+            </p>
           </div>
         </div>
       </div>
-
-      {/* Custom Styles */}
-      <style jsx>{`
-        @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
-
-        @keyframes blob {
-          0%,
-          100% {
-            transform: translate(0, 0) scale(1);
-          }
-          25% {
-            transform: translate(20px, -50px) scale(1.1);
-          }
-          50% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-          75% {
-            transform: translate(50px, 50px) scale(1.05);
-          }
-        }
-
-        .animate-blob {
-          animation: blob 15s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0) translateX(0);
-            opacity: 0;
-          }
-          10% {
-            opacity: 0.3;
-          }
-          50% {
-            transform: translateY(-100px) translateX(50px);
-            opacity: 0.5;
-          }
-          90% {
-            opacity: 0.3;
-          }
-        }
-
-        .animate-float {
-          animation: float 10s infinite;
-        }
-
-        .bg-grid-pattern {
-          background-image:
-            linear-gradient(
-              to right,
-              rgba(255, 255, 255, 0.05) 1px,
-              transparent 1px
-            ),
-            linear-gradient(
-              to bottom,
-              rgba(255, 255, 255, 0.05) 1px,
-              transparent 1px
-            );
-          background-size: 40px 40px;
-        }
-      `}</style>
-    </div>
+    </>
   );
 }

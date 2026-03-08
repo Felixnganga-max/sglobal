@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Heart, Check } from "lucide-react";
 import { useCart } from "../context/Cartcontext";
 
-const API_URL = "https://smartglobal-3jfl.vercel.app/smartglobal/products";
+const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
 
 export default function FeaturedProductsGrid() {
   const [grouped, setGrouped] = useState({});

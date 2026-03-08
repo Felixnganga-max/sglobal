@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useCart } from "../context/Cartcontext";
 
-const ORDER_API = "https://sglobal-plf6.vercel.app/ orders/create-order";
+const ORDER_API = "https://sglobal-plf6.vercel.app/orders/create-order";
 const WHATSAPP_NUMBER = "254797743366";
 
 function getSessionId() {

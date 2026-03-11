@@ -308,7 +308,7 @@ export default function Navbar() {
                   className="text-label text-gray-500 -mt-1"
                   style={{ fontSize: "0.6rem", letterSpacing: "0.2em" }}
                 >
-                  Premium Foods
+                  PREMIUM & SPECIALTY FOOD PRODUCTS
                 </div>
               </div>
             </a>

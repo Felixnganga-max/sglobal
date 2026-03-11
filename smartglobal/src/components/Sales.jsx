@@ -387,15 +387,6 @@ export default function Sales() {
                   style={{ backgroundColor: cat.accent }}
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p
-                    className="text-[0.55rem] font-body font-bold uppercase tracking-[0.15em] mb-0.5"
-                    style={{ color: cat.accent }}
-                  >
-                    {cat.subtitle}
-                  </p>
-                  <h3 className="font-heading text-white text-sm font-bold leading-tight">
-                    {cat.title}
-                  </h3>
                   <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <span className="text-white text-[0.6rem] font-semibold">
                       Shop Now

@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import { useCart } from "../context/Cartcontext";
 
-const ORDER_API = "https://sglobal-plf6.vercel.app/smartglobal/orders/create-order";
-const WHATSAPP_NUMBER = "254797743366";
+const ORDER_API =
+  "https://sglobal-plf6.vercel.app/smartglobal/orders/create-order";
+const WHATSAPP_NUMBER = "254140252223";
 
 function getSessionId() {
   let id = sessionStorage.getItem("sg_session_id");

@@ -11,7 +11,7 @@ export default function Hero() {
     { id: 1, name: "toppings" },
     { id: 2, name: "spuds" },
     { id: 3, name: "water" },
-    { id: 4, name: "spices" },
+    { id: 4, name: "hazelnut" },
   ];
 
   const changeSlide = useCallback(
@@ -56,10 +56,10 @@ export default function Hero() {
         {currentSlide === 0 && <ToppingsSlide />}
         {currentSlide === 1 && <SpudsSlide />}
         {currentSlide === 2 && <WaterSlide />}
-        {currentSlide === 3 && <SpicesSlide />}
+        {currentSlide === 3 && <HazelnutSlide />}
       </div>
 
-      {/* ── Arrow Navigation ── */}
+      {/* Arrow Navigation */}
       <button
         onClick={prev}
         aria-label="Previous slide"
@@ -104,7 +104,7 @@ export default function Hero() {
         </div>
       </button>
 
-      {/* ── Dot Navigation ── */}
+      {/* Dot Navigation */}
       <div className="absolute bottom-5 sm:bottom-7 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-40">
         {slides.map((slide, index) => (
           <button
@@ -125,7 +125,6 @@ export default function Hero() {
   );
 }
 
-/* ─── Shared Arrow SVG ─── */
 function ArrowRight() {
   return (
     <svg
@@ -145,15 +144,14 @@ function ArrowRight() {
 }
 
 /* ════════════════════════════════════════
-   SLIDE 1 — Kent Toppings
+   SLIDE 1 — Kent Toppings (caramel.jpeg)
 ════════════════════════════════════════ */
 function ToppingsSlide() {
   return (
     <section className="relative w-full min-h-[88vh] sm:min-h-screen flex items-center overflow-hidden bg-[#1a1008]">
-      {/* Background image layer */}
       <div className="absolute inset-0">
         <img
-          src={assets.recipe}
+          src={assets.cara}
           alt=""
           className="w-full h-full object-cover opacity-25"
         />
@@ -166,7 +164,6 @@ function ToppingsSlide() {
           <p className="text-eyebrow mb-4" style={{ color: "#FF7F11" }}>
             Kent Boringer · Toppings
           </p>
-
           <h1
             className="font-heading text-white leading-[1.05] mb-5"
             style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)", fontWeight: 700 }}
@@ -175,12 +172,10 @@ function ToppingsSlide() {
             <br />
             <span style={{ color: "#FF7F11" }}>Sweet Moments</span>
           </h1>
-
           <p className="font-body text-white/70 text-sm sm:text-base leading-relaxed max-w-md mb-8">
             Transform ordinary desserts into extraordinary experiences. From
             rich raspberry to luscious caramel — every drop adds magic.
           </p>
-
           <div className="flex flex-wrap gap-3">
             <Link
               to="/products"
@@ -198,31 +193,15 @@ function ToppingsSlide() {
           </div>
         </div>
 
-        {/* Right — Images */}
+        {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
-          {/* Main large image */}
           <div className="absolute right-0 top-0 h-full w-[75%] lg:w-full">
             <img
-              src={assets.topping}
+              src={assets.cara}
               alt="Kent Toppings"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#1a1008]/80 lg:to-[#1a1008]/40" />
-          </div>
-          {/* Floating accent */}
-          <div className="absolute bottom-8 left-8 w-24 sm:w-32 h-24 sm:h-32 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 rotate-6">
-            <img
-              src={assets.top2}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="absolute top-8 left-16 w-16 sm:w-20 h-16 sm:h-20 rounded-xl overflow-hidden shadow-xl border-2 border-white/15 -rotate-8 opacity-80">
-            <img
-              src={assets.top1}
-              alt=""
-              className="w-full h-full object-cover"
-            />
           </div>
         </div>
       </div>
@@ -231,15 +210,14 @@ function ToppingsSlide() {
 }
 
 /* ════════════════════════════════════════
-   SLIDE 2 — SPUDS
+   SLIDE 2 — SPUDS (spuds.jpeg)
 ════════════════════════════════════════ */
 function SpudsSlide() {
   return (
     <section className="relative w-full min-h-[88vh] sm:min-h-screen flex items-center overflow-hidden bg-[#0f0a00]">
-      {/* Full bleed bg */}
       <div className="absolute inset-0">
         <img
-          src={assets.spuds3}
+          src={assets.spuds}
           alt=""
           className="w-full h-full object-cover opacity-30"
         />
@@ -250,7 +228,6 @@ function SpudsSlide() {
         {/* Left — Text */}
         <div className="flex flex-col justify-center page-x py-16 sm:py-20 lg:py-24 order-2 lg:order-1">
           <p className="text-eyebrow mb-4">Spuds · Craft Crisps</p>
-
           <h1
             className="font-heading text-white leading-[1.05] mb-5"
             style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)", fontWeight: 700 }}
@@ -259,12 +236,10 @@ function SpudsSlide() {
             <br />
             <span style={{ color: "#FF0000" }}>Bold Flavor</span>
           </h1>
-
           <p className="font-body text-white/70 text-sm sm:text-base leading-relaxed max-w-md mb-8">
             9 unique flavor profiles. Hand-selected potatoes, expertly seasoned,
             perfectly crispy. Snacking — elevated.
           </p>
-
           <div className="flex flex-wrap gap-3">
             <Link
               to="/products"
@@ -287,9 +262,8 @@ function SpudsSlide() {
           </div>
         </div>
 
-        {/* Right — Stacked product images */}
+        {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
-          {/* Main */}
           <div className="absolute right-0 top-0 h-full w-[80%] lg:w-full">
             <img
               src={assets.spuds}
@@ -298,21 +272,6 @@ function SpudsSlide() {
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0f0a00]/85 lg:to-[#0f0a00]/50" />
           </div>
-          {/* Floating packs */}
-          <div className="absolute bottom-10 left-6 w-20 sm:w-28 h-20 sm:h-28 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/15 -rotate-6">
-            <img
-              src={assets.spuds2}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="absolute top-10 left-14 w-14 sm:w-18 h-14 sm:h-18 rounded-xl overflow-hidden shadow-xl border border-white/10 rotate-10 opacity-75">
-            <img
-              src={assets.spuds4}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          </div>
         </div>
       </div>
     </section>
@@ -320,15 +279,14 @@ function SpudsSlide() {
 }
 
 /* ════════════════════════════════════════
-   SLIDE 3 — Kizembe Water
+   SLIDE 3 — Kizembe Water (water.jpeg)
 ════════════════════════════════════════ */
 function WaterSlide() {
   return (
     <section className="relative w-full min-h-[88vh] sm:min-h-screen flex items-center overflow-hidden bg-[#021826]">
-      {/* Background */}
       <div className="absolute inset-0">
         <img
-          src={assets.kizembe}
+          src={assets.water}
           alt=""
           className="w-full h-full object-cover opacity-35"
         />
@@ -341,7 +299,6 @@ function WaterSlide() {
           <p className="text-eyebrow mb-4" style={{ color: "#1E88E5" }}>
             Kizembe · Spring Water
           </p>
-
           <h1
             className="font-heading text-white leading-[1.05] mb-5"
             style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)", fontWeight: 700 }}
@@ -350,12 +307,10 @@ function WaterSlide() {
             <br />
             <span style={{ color: "#1E88E5" }}>Live Fresh.</span>
           </h1>
-
           <p className="font-body text-white/70 text-sm sm:text-base leading-relaxed max-w-md mb-8">
             Sourced from the pristine natural springs of Limuru. Pure, naturally
             filtered, perfectly balanced — available in 6 sizes.
           </p>
-
           <div className="flex flex-wrap gap-3">
             <Link
               to="/products"
@@ -378,23 +333,15 @@ function WaterSlide() {
           </div>
         </div>
 
-        {/* Right — image */}
+        {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
           <div className="absolute right-0 top-0 h-full w-[75%] lg:w-full">
             <img
-              src={assets.kizembe}
+              src={assets.water}
               alt="Kizembe Water"
               className="w-full h-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#021826]/85 lg:to-[#021826]/50" />
-          </div>
-          {/* Floating accent */}
-          <div className="absolute bottom-10 left-8 w-20 sm:w-28 h-20 sm:h-28 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/15 rotate-6">
-            <img
-              src={assets.kize}
-              alt=""
-              className="w-full h-full object-cover opacity-80"
-            />
           </div>
         </div>
       </div>
@@ -403,15 +350,14 @@ function WaterSlide() {
 }
 
 /* ════════════════════════════════════════
-   SLIDE 4 — Kent Soups / Spices
+   SLIDE 4 — Hazelnut Cream (hazelnut.jpeg)
 ════════════════════════════════════════ */
-function SpicesSlide() {
+function HazelnutSlide() {
   return (
     <section className="relative w-full min-h-[88vh] sm:min-h-screen flex items-center overflow-hidden bg-[#0e1409]">
-      {/* Background */}
       <div className="absolute inset-0">
         <img
-          src={assets.kent}
+          src={assets.hazelnut}
           alt=""
           className="w-full h-full object-cover opacity-25"
         />
@@ -422,23 +368,20 @@ function SpicesSlide() {
         {/* Left — Text */}
         <div className="flex flex-col justify-center page-x py-16 sm:py-20 lg:py-24 order-2 lg:order-1">
           <p className="text-eyebrow mb-4" style={{ color: "#FF7F11" }}>
-            Kent Boringer · Soups & Seasonings
+            Kent Boringer · Hazelnut Cream
           </p>
-
           <h1
             className="font-heading text-white leading-[1.05] mb-5"
             style={{ fontSize: "clamp(2.4rem, 6vw, 5rem)", fontWeight: 700 }}
           >
-            Taste The
+            Spread The
             <br />
             <span style={{ color: "#FF7F11" }}>Goodness</span>
           </h1>
-
           <p className="font-body text-white/70 text-sm sm:text-base leading-relaxed max-w-md mb-8">
-            Premium soups and seasonings crafted from 100% natural vegetables.
-            Rich flavor, wholesome nutrition — ready in minutes.
+            Rich hazelnut cream with 13% real hazelnuts and premium cocoa.
+            Velvety smooth, irresistibly indulgent — perfect every morning.
           </p>
-
           <div className="flex flex-wrap gap-3">
             <Link
               to="/products"
@@ -461,30 +404,15 @@ function SpicesSlide() {
           </div>
         </div>
 
-        {/* Right — images */}
+        {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
           <div className="absolute right-0 top-0 h-full w-[75%] lg:w-full">
             <img
-              src={assets.kent}
-              alt="Kent Soups"
+              src={assets.hazelnut}
+              alt="Kent Hazelnut Cream"
               className="w-full h-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0e1409]/85 lg:to-[#0e1409]/50" />
-          </div>
-          {/* Floating accent images */}
-          <div className="absolute bottom-8 left-6 w-20 sm:w-28 h-20 sm:h-28 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/15 -rotate-5">
-            <img
-              src={assets.noodle}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="absolute top-10 left-14 w-14 sm:w-20 h-14 sm:h-20 rounded-xl overflow-hidden shadow-xl border border-white/10 rotate-8 opacity-75">
-            <img
-              src={assets.top3}
-              alt=""
-              className="w-full h-full object-cover"
-            />
           </div>
         </div>
       </div>

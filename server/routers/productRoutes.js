@@ -14,12 +14,11 @@ const {
   getProductsByCategory,
 } = require("../controllers/productController");
 
-// Import auth middleware (you'll need to create this)
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 // Public routes
 router.get("/", getAllProducts);
-router.get("/stats", getProductStats); // Can be made private
+router.get("/stats", getProductStats);
 router.get("/category/:category", getProductsByCategory);
 router.get("/:id", getProductById);
 
@@ -28,14 +27,14 @@ router.post(
   "/",
   protect,
   authorize("admin"),
-  upload.single("image"),
+  upload.array("images", 10),
   createProduct,
 );
 router.put(
   "/:id",
   protect,
   authorize("admin"),
-  upload.single("image"),
+  upload.array("images", 10),
   updateProduct,
 );
 router.delete("/:id", protect, authorize("admin"), deleteProduct);

@@ -1,5 +1,11 @@
 const Product = require("../models/productModel");
-const { deleteImage, uploadBase64Image } = require("../db/claudinary")
+const {
+  deleteImage,
+  deleteMultipleImages,
+  uploadBase64Image,
+  uploadMultipleBase64Images,
+} = require("../db/claudinary");
+
 // @desc    Get all products with filtering, sorting, and pagination
 // @route   GET /api/products
 // @access  Public
@@ -119,6 +125,8 @@ exports.getProductById = async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Admin
 exports.createProduct = async (req, res) => {
+  let uploadedPublicIds = []; // Track uploads for rollback on failure
+
   try {
     const {
       title,
@@ -134,7 +142,7 @@ exports.createProduct = async (req, res) => {
       descriptionBlocks,
       features,
       specifications,
-      imageData, // Base64 image data
+      imageData, // Base64 string or array of base64 strings
     } = req.body;
 
     // Validation
@@ -145,22 +153,21 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    let imageInfo;
+    let images = [];
 
-    // Handle image upload
-    if (req.file) {
-      // Image uploaded via multipart/form-data
-      imageInfo = {
-        url: req.file.path,
-        publicId: req.file.filename,
-      };
+    if (req.files && req.files.length > 0) {
+      // Images uploaded via multipart/form-data
+      images = req.files.map((f) => ({ url: f.path, publicId: f.filename }));
+      uploadedPublicIds = images.map((img) => img.publicId);
     } else if (imageData) {
-      // Image uploaded as base64
-      imageInfo = await uploadBase64Image(imageData);
+      // Images uploaded as base64 (single string or array)
+      const base64Array = Array.isArray(imageData) ? imageData : [imageData];
+      images = await uploadMultipleBase64Images(base64Array);
+      uploadedPublicIds = images.map((img) => img.publicId);
     } else {
       return res.status(400).json({
         success: false,
-        message: "Product image is required",
+        message: "At least one product image is required",
       });
     }
 
@@ -179,7 +186,7 @@ exports.createProduct = async (req, res) => {
       descriptionBlocks: descriptionBlocks || [],
       features: features || [],
       specifications: specifications || [],
-      image: imageInfo,
+      images,
     });
 
     res.status(201).json({
@@ -188,9 +195,11 @@ exports.createProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
-    // If image was uploaded but product creation failed, delete the image
-    if (req.file) {
-      await deleteImage(req.file.filename);
+    // Rollback: delete any uploaded images if product creation failed
+    if (uploadedPublicIds.length > 0) {
+      await deleteMultipleImages(uploadedPublicIds).catch((err) =>
+        console.error("Rollback image delete failed:", err),
+      );
     }
 
     res.status(500).json({
@@ -229,28 +238,24 @@ exports.updateProduct = async (req, res) => {
       descriptionBlocks,
       features,
       specifications,
-      imageData,
+      imageData, // Base64 string or array of base64 strings
     } = req.body;
 
-    // Handle image update
-    let imageInfo = product.image;
+    // Default to existing images unless new ones are provided
+    let images = product.images;
 
-    if (req.file) {
-      // New image uploaded via multipart/form-data
-      // Delete old image
-      await deleteImage(product.image.publicId);
-      imageInfo = {
-        url: req.file.path,
-        publicId: req.file.filename,
-      };
+    if (req.files && req.files.length > 0) {
+      // Delete all old images from Cloudinary
+      await deleteMultipleImages(product.images.map((img) => img.publicId));
+      images = req.files.map((f) => ({ url: f.path, publicId: f.filename }));
     } else if (imageData) {
-      // New image uploaded as base64
-      // Delete old image
-      await deleteImage(product.image.publicId);
-      imageInfo = await uploadBase64Image(imageData);
+      // Delete all old images from Cloudinary
+      await deleteMultipleImages(product.images.map((img) => img.publicId));
+      const base64Array = Array.isArray(imageData) ? imageData : [imageData];
+      images = await uploadMultipleBase64Images(base64Array);
     }
 
-    // Update product
+    // Build update object
     const updateData = {
       title: title || product.title,
       category: category || product.category,
@@ -270,7 +275,7 @@ exports.updateProduct = async (req, res) => {
       descriptionBlocks: descriptionBlocks || product.descriptionBlocks,
       features: features || product.features,
       specifications: specifications || product.specifications,
-      image: imageInfo,
+      images,
     };
 
     product = await Product.findByIdAndUpdate(req.params.id, updateData, {
@@ -306,8 +311,8 @@ exports.deleteProduct = async (req, res) => {
       });
     }
 
-    // Delete image from Cloudinary
-    await deleteImage(product.image.publicId);
+    // Delete all images from Cloudinary
+    await deleteMultipleImages(product.images.map((img) => img.publicId));
 
     // Delete product
     await Product.findByIdAndDelete(req.params.id);
@@ -420,7 +425,7 @@ exports.getProductStats = async (req, res) => {
     const topRatedProducts = await Product.find({ isActive: true })
       .sort({ rating: -1 })
       .limit(5)
-      .select("title rating reviews image");
+      .select("title rating reviews images");
 
     const lowStockProducts = await Product.find({
       isActive: true,

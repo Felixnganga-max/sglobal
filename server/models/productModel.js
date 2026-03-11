@@ -122,14 +122,16 @@ const productSchema = new mongoose.Schema(
       type: [specificationSchema],
       default: [],
     },
-    image: {
-      url: {
-        type: String,
-        required: [true, "Product image is required"],
-      },
-      publicId: {
-        type: String,
-        required: true,
+    images: {
+      type: [
+        {
+          url: { type: String, required: true },
+          publicId: { type: String, required: true },
+        },
+      ],
+      validate: {
+        validator: (arr) => arr.length >= 1 && arr.length <= 10,
+        message: "A product must have between 1 and 10 images",
       },
     },
     inStock: {

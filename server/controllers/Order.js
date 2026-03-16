@@ -1,11 +1,9 @@
 const Order = require("../models/Order");
 const nodemailer = require("nodemailer");
 
-const MAIL_USER = "felixngunga22@gmail.com";
-const MAIL_PASS = "rzxa khfj ewdr yyvv";
-const SALES_EMAIL = "felixngunga3620@gmail.com"; //Smart global email
-const MAIL_FROM = "Smart Global <sales@smartglobal.com>";
-
+const MAIL_USER = "smartgloballimited3@gmail.com";
+const MAIL_PASS = "nkgp enoa whpo impz";
+const MAIL_FROM = "Smart Global <orders@smartglobal.com>";
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {

@@ -40,25 +40,6 @@ function getImage(product) {
   );
 }
 
-// Floating particle background
-function Particles() {
-  return (
-    <div className="particles-container" aria-hidden="true">
-      {[...Array(18)].map((_, i) => (
-        <div
-          key={i}
-          className={`particle particle-${i % 6}`}
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 8}s`,
-            animationDuration: `${6 + Math.random() * 8}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 export default function PlaceOrder() {
   const navigate = useNavigate();
   const { cartItems, removeFromCart, updateQty, clearCart, totalPrice } =
@@ -76,7 +57,6 @@ export default function PlaceOrder() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
-  const [activeStep, setActiveStep] = useState(1);
   const [successChannel, setSuccessChannel] = useState(null);
 
   useEffect(() => {
@@ -166,149 +146,483 @@ export default function PlaceOrder() {
     }
   };
 
-  // ── Styles injected once ──────────────────────────────────────────────────
   const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
-    .po-root { font-family: 'DM Sans', sans-serif; background: #0a0a0a; min-height: 100vh; color: #fff; }
-    .po-heading { font-family: 'Playfair Display', serif; }
+    * { box-sizing: border-box; }
 
-    /* Particles */
-    .particles-container { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-    .particle { position: absolute; border-radius: 50%; opacity: 0; animation: floatUp linear infinite; }
-    .particle-0 { width: 3px; height: 3px; background: #BF1A1A; }
-    .particle-1 { width: 5px; height: 5px; background: rgba(191,26,26,0.4); border-radius: 2px; }
-    .particle-2 { width: 2px; height: 2px; background: rgba(255,255,255,0.3); }
-    .particle-3 { width: 4px; height: 4px; background: rgba(191,26,26,0.2); }
-    .particle-4 { width: 6px; height: 2px; background: rgba(255,200,100,0.2); }
-    .particle-5 { width: 3px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 0; transform: rotate(45deg); }
-    @keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 0.5; } 100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; } }
-
-    /* Noise texture overlay */
-    .po-root::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 1; opacity: 0.5; }
+    .po-root {
+      font-family: 'Outfit', sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      color: #1a1a1a;
+    }
 
     /* Nav */
-    .po-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .po-nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
-    .po-back-btn { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); background: none; border: none; cursor: pointer; transition: color 0.2s; padding: 0; }
-    .po-back-btn:hover { color: #BF1A1A; }
-    .po-nav-title { font-family: 'Playfair Display', serif; font-size: 15px; color: rgba(255,255,255,0.9); letter-spacing: 0.05em; }
-    .po-badge { font-size: 11px; font-weight: 700; color: #BF1A1A; background: rgba(191,26,26,0.12); border: 1px solid rgba(191,26,26,0.3); padding: 4px 10px; border-radius: 20px; letter-spacing: 0.06em; }
+    .po-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .po-nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .po-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .po-back-btn:hover { background: #f0f0f0; color: #BF1A1A; }
+    .po-nav-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+      letter-spacing: -0.01em;
+    }
+    .po-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #BF1A1A;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
 
     /* Layout */
-    .po-layout { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
-    @media (max-width: 900px) { .po-layout { grid-template-columns: 1fr; } }
+    .po-layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .po-layout {
+        grid-template-columns: 1fr;
+        padding: 20px 16px 60px;
+      }
+    }
 
     /* Cards */
-    .po-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 28px; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
-    .po-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(191,26,26,0.5), transparent); }
+    .po-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .po-card + .po-card { margin-top: 16px; }
 
-    /* Step indicator */
-    .po-step-label { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
-    .po-step-dot { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #BF1A1A, #8B1414); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; box-shadow: 0 0 16px rgba(191,26,26,0.4); }
-    .po-step-title { font-family: 'Playfair Display', serif; font-size: 16px; color: rgba(255,255,255,0.95); }
+    /* Section heading */
+    .po-section-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .po-step-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #BF1A1A;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .po-step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
 
     /* Form fields */
-    .po-field { margin-bottom: 16px; }
-    .po-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 8px; }
+    .po-field { margin-bottom: 14px; }
+    .po-field:last-child { margin-bottom: 0; }
+    .po-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .po-label span { font-weight: 400; color: #999; }
     .po-input-wrap { position: relative; }
-    .po-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); pointer-events: none; }
-    .po-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 13px 16px 13px 42px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 400; color: #fff; outline: none; transition: all 0.2s; box-sizing: border-box; }
-    .po-input::placeholder { color: rgba(255,255,255,0.18); }
-    .po-input:focus { border-color: rgba(191,26,26,0.6); background: rgba(191,26,26,0.04); box-shadow: 0 0 0 3px rgba(191,26,26,0.08); }
-    .po-input.error { border-color: rgba(191,26,26,0.8); background: rgba(191,26,26,0.06); }
-    .po-input-no-icon { padding-left: 16px; }
-    .po-textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 13px 16px 13px 42px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #fff; outline: none; transition: all 0.2s; resize: none; box-sizing: border-box; }
-    .po-textarea::placeholder { color: rgba(255,255,255,0.18); }
-    .po-textarea:focus { border-color: rgba(191,26,26,0.6); background: rgba(191,26,26,0.04); box-shadow: 0 0 0 3px rgba(191,26,26,0.08); }
-    .po-error-msg { font-size: 11px; color: #ff6b6b; margin-top: 5px; font-weight: 500; }
+    .po-input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      pointer-events: none;
+    }
+    .po-input {
+      width: 100%;
+      background: #fafafa;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 10px;
+      padding: 11px 14px 11px 38px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .po-input::placeholder { color: #bbb; }
+    .po-input:focus {
+      border-color: #BF1A1A;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(191,26,26,0.08);
+    }
+    .po-input.error { border-color: #ef4444; }
+    .po-textarea {
+      width: 100%;
+      background: #fafafa;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 10px;
+      padding: 11px 14px 11px 38px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      resize: none;
+    }
+    .po-textarea::placeholder { color: #bbb; }
+    .po-textarea:focus {
+      border-color: #BF1A1A;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(191,26,26,0.08);
+    }
+    .po-error-msg { font-size: 11px; color: #ef4444; margin-top: 4px; font-weight: 500; }
 
     /* Cart items */
-    .po-cart-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .po-cart-item:last-child { border-bottom: none; }
-    .po-cart-img { width: 58px; height: 58px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); object-fit: contain; padding: 4px; flex-shrink: 0; }
-    .po-cart-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); line-height: 1.3; }
-    .po-cart-price { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 3px; }
-    .po-qty-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-    .po-qty-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); background: none; color: rgba(255,255,255,0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; padding: 0; }
-    .po-qty-btn:hover { border-color: #BF1A1A; color: #BF1A1A; background: rgba(191,26,26,0.1); }
-    .po-qty-num { font-size: 13px; font-weight: 700; color: #fff; width: 20px; text-align: center; }
-    .po-subtotal { font-size: 13px; font-weight: 700; color: #BF1A1A; margin-left: auto; text-align: right; flex-shrink: 0; }
-    .po-remove { display: block; font-size: 10px; color: rgba(255,255,255,0.2); cursor: pointer; margin-top: 4px; background: none; border: none; padding: 0; transition: color 0.15s; }
-    .po-remove:hover { color: #BF1A1A; }
+    .po-cart-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .po-cart-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .po-cart-item:first-child { padding-top: 0; }
+    .po-cart-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      background: #f5f5f5;
+      border: 1px solid #e8e8e8;
+      object-fit: contain;
+      padding: 6px;
+      flex-shrink: 0;
+    }
+    .po-cart-info { flex: 1; min-width: 0; }
+    .po-cart-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .po-cart-price { font-size: 12px; color: #888; margin-top: 2px; }
+    .po-qty-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .po-qty-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      color: #555;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .po-qty-btn:hover { border-color: #BF1A1A; color: #BF1A1A; background: #fef2f2; }
+    .po-qty-num { font-size: 14px; font-weight: 700; color: #1a1a1a; width: 20px; text-align: center; }
+    .po-cart-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .po-subtotal { font-size: 14px; font-weight: 700; color: #BF1A1A; }
+    .po-remove-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1.5px solid #e8e8e8;
+      background: #fff;
+      color: #bbb;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      padding: 0;
+    }
+    .po-remove-btn:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
 
     /* Summary card */
-    .po-summary-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 24px; position: sticky; top: 80px; backdrop-filter: blur(10px); }
-    .po-summary-title { font-family: 'Playfair Display', serif; font-size: 18px; color: #fff; margin-bottom: 20px; }
-    .po-summary-line { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-    .po-summary-name { font-size: 12px; color: rgba(255,255,255,0.35); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .po-summary-val { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); flex-shrink: 0; margin-left: 8px; }
-    .po-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 16px 0; }
-    .po-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .po-total-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
-    .po-total-amount { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 900; color: #fff; }
-    .po-delivery-note { font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 0.03em; margin-bottom: 24px; }
+    .po-summary-card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 16px;
+      padding: 24px;
+      position: sticky;
+      top: 76px;
+    }
+    @media (max-width: 860px) {
+      .po-summary-card { position: static; order: -1; }
+    }
+    .po-summary-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 16px; }
+    .po-summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+    .po-summary-name {
+      font-size: 13px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .po-summary-val { font-size: 13px; font-weight: 600; color: #1a1a1a; flex-shrink: 0; }
+    .po-divider { height: 1px; background: #f0f0f0; margin: 14px 0; }
+    .po-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .po-total-label { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; }
+    .po-total-amount { font-size: 24px; font-weight: 700; color: #1a1a1a; }
+    .po-delivery-note { font-size: 11px; color: #bbb; margin-top: 4px; margin-bottom: 20px; }
 
     /* CTA buttons */
-    .po-btn-wa { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 14px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 13px; color: #fff; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); box-shadow: 0 8px 28px rgba(37,211,102,0.25); transition: all 0.25s; margin-bottom: 10px; }
-    .po-btn-wa:hover { transform: translateY(-1px); box-shadow: 0 12px 36px rgba(37,211,102,0.35); }
+    .po-btn-wa {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      color: #fff;
+      background: #25D366;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+    .po-btn-wa:hover { background: #1fba58; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.3); }
     .po-btn-wa:active { transform: translateY(0); }
-    .po-btn-wa:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .po-btn-wa:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-    .po-btn-email { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 14px; border: 1px solid rgba(191,26,26,0.5); cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 13px; color: #fff; background: linear-gradient(135deg, rgba(191,26,26,0.15) 0%, rgba(139,20,20,0.25) 100%); transition: all 0.25s; }
-    .po-btn-email:hover { background: linear-gradient(135deg, #BF1A1A 0%, #8B1414 100%); border-color: transparent; box-shadow: 0 8px 28px rgba(191,26,26,0.35); transform: translateY(-1px); }
+    .po-btn-email {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: 1.5px solid #BF1A1A;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      color: #BF1A1A;
+      background: #fff;
+      transition: all 0.2s;
+    }
+    .po-btn-email:hover { background: #BF1A1A; color: #fff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(191,26,26,0.2); }
     .po-btn-email:active { transform: translateY(0); }
-    .po-btn-email:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .po-btn-email:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
     .po-btn-icon-wrap { display: flex; align-items: center; gap: 10px; }
-    .po-btn-label { font-size: 13px; font-weight: 700; }
-    .po-btn-sub { font-size: 10px; opacity: 0.6; font-weight: 400; margin-top: 1px; }
+    .po-btn-label { font-size: 13px; font-weight: 600; }
+    .po-btn-sub { font-size: 10px; opacity: 0.65; font-weight: 400; margin-top: 1px; }
 
-    .po-api-error { background: rgba(191,26,26,0.1); border: 1px solid rgba(191,26,26,0.3); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #ff8080; margin-bottom: 14px; }
+    .po-api-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #ef4444;
+      margin-bottom: 14px;
+    }
 
-    /* Loading spinner inside btn */
-    .po-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    .po-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .po-footer-note {
+      text-align: center;
+      font-size: 11px;
+      color: #ccc;
+      margin-top: 14px;
+    }
+
     /* Success screen */
-    .po-success { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
-    .po-success-inner { max-width: 480px; width: 100%; text-align: center; }
-    .po-success-ring { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 32px; position: relative; display: flex; align-items: center; justify-content: center; }
-    .po-success-ring::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: conic-gradient(#BF1A1A 0%, #25D366 50%, #BF1A1A 100%); animation: rotatering 3s linear infinite; z-index: 0; }
-    .po-success-ring::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #0a0a0a; z-index: 1; }
-    @keyframes rotatering { to { transform: rotate(360deg); } }
-    .po-success-icon { position: relative; z-index: 2; }
-    .po-success-h { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 900; color: #fff; margin-bottom: 8px; line-height: 1.1; }
-    .po-success-sub { font-size: 14px; color: rgba(255,255,255,0.45); margin-bottom: 32px; line-height: 1.6; }
-    .po-success-detail { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px 24px; margin-bottom: 32px; text-align: left; }
-    .po-success-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .po-success {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .po-success-inner { max-width: 440px; width: 100%; text-align: center; }
+    .po-success-icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #fef2f2;
+      border: 2px solid #fecaca;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .po-success-h { font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+    .po-success-sub { font-size: 14px; color: #777; margin-bottom: 28px; line-height: 1.6; }
+    .po-success-detail {
+      background: #fafafa;
+      border: 1px solid #e8e8e8;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .po-success-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+    }
     .po-success-row:last-child { border-bottom: none; }
-    .po-success-key { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
-    .po-success-val { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75); }
-    .po-home-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; background: linear-gradient(135deg, #BF1A1A, #8B1414); color: #fff; border: none; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; transition: all 0.25s; box-shadow: 0 8px 28px rgba(191,26,26,0.35); }
-    .po-home-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(191,26,26,0.45); }
+    .po-success-key { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; }
+    .po-success-val { font-size: 13px; font-weight: 600; color: #1a1a1a; text-align: right; }
+    .po-channel-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .po-channel-wa { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .po-channel-email { background: #fef2f2; color: #BF1A1A; border: 1px solid #fecaca; }
+    .po-home-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 32px;
+      background: #BF1A1A;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .po-home-btn:hover { background: #a51717; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(191,26,26,0.3); }
 
     /* Empty cart */
-    .po-empty { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .po-empty-inner { text-align: center; max-width: 340px; padding: 40px 24px; }
-    .po-empty-icon { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
-    .po-empty-h { font-family: 'Playfair Display', serif; font-size: 22px; color: #fff; margin-bottom: 12px; }
-    .po-empty-p { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 28px; line-height: 1.6; }
-    .po-browse-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: rgba(191,26,26,0.15); border: 1px solid rgba(191,26,26,0.4); color: #fff; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .po-browse-btn:hover { background: #BF1A1A; border-color: #BF1A1A; }
+    .po-empty {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .po-empty-inner { text-align: center; max-width: 320px; }
+    .po-empty-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #f5f5f5;
+      border: 1px solid #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .po-empty-h { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+    .po-empty-p { font-size: 14px; color: #888; margin-bottom: 24px; line-height: 1.6; }
+    .po-browse-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: #BF1A1A;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .po-browse-btn:hover { background: #a51717; }
 
-    /* Red accent line decorative */
-    .po-accent-bar { height: 2px; background: linear-gradient(90deg, #BF1A1A, transparent); border-radius: 2px; margin-bottom: 24px; width: 40px; }
-
-    /* Channel pill */
-    .po-channel-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-    .po-channel-wa { background: rgba(37,211,102,0.15); color: #25D366; border: 1px solid rgba(37,211,102,0.3); }
-    .po-channel-email { background: rgba(191,26,26,0.15); color: #ff6b6b; border: 1px solid rgba(191,26,26,0.3); }
-
-    /* Glow orb */
-    .po-orb { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
-    .po-orb-1 { width: 500px; height: 500px; background: rgba(191,26,26,0.07); top: -100px; right: -100px; }
-    .po-orb-2 { width: 400px; height: 400px; background: rgba(191,26,26,0.04); bottom: -80px; left: -80px; }
+    /* Mobile tweaks */
+    @media (max-width: 480px) {
+      .po-card { padding: 18px; }
+      .po-summary-card { padding: 18px; }
+      .po-cart-img { width: 50px; height: 50px; }
+    }
   `;
 
   if (cartItems.length === 0 && !submitted) {
@@ -316,14 +630,11 @@ export default function PlaceOrder() {
       <>
         <style>{styles}</style>
         <div className="po-root">
-          <Particles />
-          <div className="po-orb po-orb-1" />
-          <div className="po-orb po-orb-2" />
           <div ref={topRef} />
           <div className="po-empty">
             <div className="po-empty-inner">
               <div className="po-empty-icon">
-                <ShoppingCart size={28} color="rgba(255,255,255,0.3)" />
+                <ShoppingCart size={28} color="#bbb" />
               </div>
               <h2 className="po-empty-h">Your cart is empty</h2>
               <p className="po-empty-p">
@@ -347,18 +658,13 @@ export default function PlaceOrder() {
       <>
         <style>{styles}</style>
         <div className="po-root">
-          <Particles />
-          <div className="po-orb po-orb-1" />
-          <div className="po-orb po-orb-2" />
           <div ref={topRef} />
           <div className="po-success">
             <div className="po-success-inner">
-              <div className="po-success-ring">
-                <div className="po-success-icon">
-                  <Package size={36} color="#fff" />
-                </div>
+              <div className="po-success-icon-wrap">
+                <Package size={32} color="#BF1A1A" />
               </div>
-              <h1 className="po-success-h">Order Received.</h1>
+              <h1 className="po-success-h">Order Received!</h1>
               <p className="po-success-sub">
                 Your order has been saved and our team
                 <br />
@@ -423,9 +729,6 @@ export default function PlaceOrder() {
     <>
       <style>{styles}</style>
       <div className="po-root">
-        <Particles />
-        <div className="po-orb po-orb-1" />
-        <div className="po-orb po-orb-2" />
         <div ref={topRef} />
 
         {/* Nav */}
@@ -445,14 +748,12 @@ export default function PlaceOrder() {
           {/* LEFT */}
           <div>
             {/* Details card */}
-            <div className="po-card" style={{ marginBottom: 20 }}>
-              <div className="po-step-label">
+            <div className="po-card">
+              <div className="po-section-head">
                 <div className="po-step-dot">1</div>
                 <span className="po-step-title">Your Details</span>
               </div>
-              <div className="po-accent-bar" />
 
-              {/* Name */}
               <div className="po-field">
                 <label className="po-label">Full Name *</label>
                 <div className="po-input-wrap">
@@ -468,7 +769,6 @@ export default function PlaceOrder() {
                 {errors.name && <p className="po-error-msg">{errors.name}</p>}
               </div>
 
-              {/* Phone */}
               <div className="po-field">
                 <label className="po-label">Phone Number *</label>
                 <div className="po-input-wrap">
@@ -484,7 +784,6 @@ export default function PlaceOrder() {
                 {errors.phone && <p className="po-error-msg">{errors.phone}</p>}
               </div>
 
-              {/* Location */}
               <div className="po-field">
                 <label className="po-label">Delivery Location *</label>
                 <div className="po-input-wrap">
@@ -502,20 +801,9 @@ export default function PlaceOrder() {
                 )}
               </div>
 
-              {/* Email */}
               <div className="po-field">
                 <label className="po-label">
-                  Email{" "}
-                  <span
-                    style={{
-                      opacity: 0.5,
-                      fontWeight: 400,
-                      textTransform: "none",
-                      letterSpacing: 0,
-                    }}
-                  >
-                    — optional, for confirmation
-                  </span>
+                  Email <span>— optional, for confirmation</span>
                 </label>
                 <div className="po-input-wrap">
                   <Mail size={14} className="po-input-icon" />
@@ -530,29 +818,18 @@ export default function PlaceOrder() {
                 </div>
               </div>
 
-              {/* Notes */}
-              <div className="po-field" style={{ marginBottom: 0 }}>
+              <div className="po-field">
                 <label className="po-label">
-                  Notes{" "}
-                  <span
-                    style={{
-                      opacity: 0.5,
-                      fontWeight: 400,
-                      textTransform: "none",
-                      letterSpacing: 0,
-                    }}
-                  >
-                    — optional
-                  </span>
+                  Notes <span>— optional</span>
                 </label>
                 <div className="po-input-wrap">
                   <FileText
                     size={14}
                     style={{
                       position: "absolute",
-                      left: 14,
-                      top: 14,
-                      color: "rgba(255,255,255,0.2)",
+                      left: 12,
+                      top: 13,
+                      color: "#aaa",
                       pointerEvents: "none",
                     }}
                   />
@@ -569,12 +846,11 @@ export default function PlaceOrder() {
             </div>
 
             {/* Cart card */}
-            <div className="po-card">
-              <div className="po-step-label">
+            <div className="po-card" style={{ marginTop: 16 }}>
+              <div className="po-section-head">
                 <div className="po-step-dot">2</div>
                 <span className="po-step-title">Review Your Cart</span>
               </div>
-              <div className="po-accent-bar" />
 
               {cartItems.map((item) => {
                 const id = item._id || item.id;
@@ -590,7 +866,7 @@ export default function PlaceOrder() {
                           "https://via.placeholder.com/80?text=IMG";
                       }}
                     />
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="po-cart-info">
                       <div className="po-cart-name">
                         {item.title || item.name}
                       </div>
@@ -613,15 +889,16 @@ export default function PlaceOrder() {
                         </button>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div className="po-cart-right">
                       <div className="po-subtotal">
                         KSh {((item.price || 0) * qty).toLocaleString()}
                       </div>
                       <button
-                        className="po-remove"
+                        className="po-remove-btn"
                         onClick={() => removeFromCart(id)}
+                        title="Remove item"
                       >
-                        remove
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
@@ -642,7 +919,7 @@ export default function PlaceOrder() {
                   <div key={id} className="po-summary-line">
                     <span className="po-summary-name">
                       {item.title || item.name}{" "}
-                      <span style={{ opacity: 0.4 }}>×{qty}</span>
+                      <span style={{ color: "#bbb" }}>×{qty}</span>
                     </span>
                     <span className="po-summary-val">
                       KSh {((item.price || 0) * qty).toLocaleString()}
@@ -665,7 +942,6 @@ export default function PlaceOrder() {
 
               {apiError && <div className="po-api-error">{apiError}</div>}
 
-              {/* WhatsApp */}
               <button
                 className="po-btn-wa"
                 onClick={() => submitToAPI("whatsapp")}
@@ -687,7 +963,6 @@ export default function PlaceOrder() {
                 <ChevronRight size={14} style={{ opacity: 0.6 }} />
               </button>
 
-              {/* Email */}
               <button
                 className="po-btn-email"
                 onClick={() => submitToAPI("email")}
@@ -695,7 +970,13 @@ export default function PlaceOrder() {
               >
                 <div className="po-btn-icon-wrap">
                   {loading ? (
-                    <div className="po-spinner" />
+                    <div
+                      className="po-spinner"
+                      style={{
+                        borderTopColor: "#BF1A1A",
+                        borderColor: "rgba(191,26,26,0.3)",
+                      }}
+                    />
                   ) : (
                     <Mail size={16} />
                   )}
@@ -711,15 +992,7 @@ export default function PlaceOrder() {
                 <ChevronRight size={14} style={{ opacity: 0.6 }} />
               </button>
 
-              <p
-                style={{
-                  textAlign: "center",
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.15)",
-                  marginTop: 16,
-                  letterSpacing: "0.05em",
-                }}
-              >
+              <p className="po-footer-note">
                 Orders are saved to your account history
               </p>
             </div>

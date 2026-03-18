@@ -8,23 +8,19 @@ const {
 // Helpers
 // ─────────────────────────────────────────────
 
-// Extract images from req.files (multipart) or req.body.imageData (base64)
 const resolveImages = async (req) => {
   if (req.files && req.files.length > 0) {
     return req.files.map((f) => ({ url: f.path, publicId: f.filename }));
   }
-
   if (req.body.imageData) {
     const base64Array = Array.isArray(req.body.imageData)
       ? req.body.imageData
       : [req.body.imageData];
     return await uploadMultipleBase64Images(base64Array);
   }
-
-  return []; // No images provided — allowed
+  return [];
 };
 
-// Safely delete Cloudinary images — never throws
 const safeDeleteImages = async (images = []) => {
   const publicIds = images.map((img) => img.publicId).filter(Boolean);
   if (!publicIds.length) return;
@@ -34,7 +30,7 @@ const safeDeleteImages = async (images = []) => {
 };
 
 // ─────────────────────────────────────────────
-// @desc    Get all products (filter, sort, paginate)
+// @desc    Get all products
 // @route   GET /api/products
 // @access  Public
 // ─────────────────────────────────────────────
@@ -58,27 +54,19 @@ exports.getAllProducts = async (req, res) => {
     if (category && category !== "all" && category !== "all-products") {
       filter.category = category;
     }
-
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
         { shortDescription: { $regex: search, $options: "i" } },
       ];
     }
-
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = parseFloat(minPrice);
       if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
-
-    if (inStock !== undefined) {
-      filter.inStock = inStock === "true";
-    }
-
-    if (badge) {
-      filter.badge = badge;
-    }
+    if (inStock !== undefined) filter.inStock = inStock === "true";
+    if (badge) filter.badge = badge;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sort = { [sortBy]: order === "asc" ? 1 : -1 };
@@ -111,16 +99,13 @@ exports.getAllProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product) {
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
     }
-
     product.views += 1;
     await product.save();
-
     res.status(200).json({ success: true, data: product });
   } catch (error) {
     if (error.kind === "ObjectId") {
@@ -141,7 +126,6 @@ exports.getProductById = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.createProduct = async (req, res) => {
   let uploadedImages = [];
-
   try {
     const {
       title,
@@ -159,7 +143,6 @@ exports.createProduct = async (req, res) => {
       specifications,
     } = req.body;
 
-    // Required field validation
     if (
       !title ||
       !category ||
@@ -169,12 +152,10 @@ exports.createProduct = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Please provide all required fields: title, category, price, stock, shortDescription",
+        message: "Required: title, category, price, stock, shortDescription",
       });
     }
 
-    // Resolve images — returns [] if none provided (that's fine)
     uploadedImages = await resolveImages(req);
 
     const product = await Product.create({
@@ -191,18 +172,18 @@ exports.createProduct = async (req, res) => {
       descriptionBlocks: descriptionBlocks || [],
       features: features || [],
       specifications: specifications || [],
-      images: uploadedImages,
+      images: uploadedImages, // [] is fine — images are optional
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Product created successfully",
-      data: product,
-    });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: "Product created successfully",
+        data: product,
+      });
   } catch (error) {
-    // Rollback: delete any uploaded images if product creation failed
-    await safeDeleteImages(uploadedImages);
-
+    await safeDeleteImages(uploadedImages); // rollback on failure
     res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
@@ -210,14 +191,16 @@ exports.createProduct = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
-// @desc    Update product
+// @desc    Update product — APPENDS images, never replaces
 // @route   PUT /api/products/:id
 // @access  Private/Admin
+//
+// To REMOVE specific images, use DELETE /api/products/:id/images
+// To REPLACE all images, use PUT /api/products/:id/images/replace
 // ─────────────────────────────────────────────
 exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product) {
       return res
         .status(404)
@@ -240,14 +223,20 @@ exports.updateProduct = async (req, res) => {
       specifications,
     } = req.body;
 
-    // Only replace images if new ones are provided
-    let images = product.images;
+    // Resolve any newly uploaded images
     const newImages = await resolveImages(req);
 
-    if (newImages.length > 0) {
-      // Delete old images from Cloudinary before replacing
-      await safeDeleteImages(product.images);
-      images = newImages;
+    // APPEND new images to existing ones — never replace
+    const mergedImages = [...product.images, ...newImages];
+
+    // Guard: max 10 images total
+    if (mergedImages.length > 10) {
+      // Delete the newly uploaded ones since we can't use them
+      await safeDeleteImages(newImages);
+      return res.status(400).json({
+        success: false,
+        message: `Cannot exceed 10 images. Product already has ${product.images.length}. Remove some first.`,
+      });
     }
 
     const updated = await Product.findByIdAndUpdate(
@@ -271,17 +260,107 @@ exports.updateProduct = async (req, res) => {
         descriptionBlocks: descriptionBlocks ?? product.descriptionBlocks,
         features: features ?? product.features,
         specifications: specifications ?? product.specifications,
-        images,
+        images: mergedImages,
       },
       { new: true, runValidators: true },
     );
 
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Product updated successfully",
+        data: updated,
+      });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// @desc    Remove specific images from a product
+// @route   DELETE /api/products/:id/images
+// @body    { publicIds: ["cloudinary_public_id_1", ...] }
+// @access  Private/Admin
+// ─────────────────────────────────────────────
+exports.removeProductImages = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    const { publicIds } = req.body;
+    if (!Array.isArray(publicIds) || publicIds.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "publicIds array is required" });
+    }
+
+    // Find images to remove
+    const toRemove = product.images.filter((img) =>
+      publicIds.includes(img.publicId),
+    );
+    const remaining = product.images.filter(
+      (img) => !publicIds.includes(img.publicId),
+    );
+
+    // Delete from Cloudinary
+    await safeDeleteImages(toRemove);
+
+    // Save remaining images
+    product.images = remaining;
+    await product.save();
+
     res.status(200).json({
       success: true,
-      message: "Product updated successfully",
-      data: updated,
+      message: `${toRemove.length} image(s) removed`,
+      data: product,
     });
   } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// @desc    Replace ALL images on a product
+// @route   PUT /api/products/:id/images/replace
+// @access  Private/Admin
+// ─────────────────────────────────────────────
+exports.replaceProductImages = async (req, res) => {
+  let newImages = [];
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    newImages = await resolveImages(req);
+    if (newImages.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No images provided" });
+    }
+
+    // Delete old images from Cloudinary
+    await safeDeleteImages(product.images);
+
+    product.images = newImages;
+    await product.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Images replaced", data: product });
+  } catch (error) {
+    await safeDeleteImages(newImages);
     res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
@@ -296,16 +375,13 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product) {
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
     }
-
     await safeDeleteImages(product.images);
     await Product.findByIdAndDelete(req.params.id);
-
     res
       .status(200)
       .json({
@@ -321,7 +397,7 @@ exports.deleteProduct = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
-// @desc    Soft delete — set isActive to false
+// @desc    Soft delete
 // @route   PATCH /api/products/:id/deactivate
 // @access  Private/Admin
 // ─────────────────────────────────────────────
@@ -332,13 +408,10 @@ exports.deactivateProduct = async (req, res) => {
       { isActive: false },
       { new: true },
     );
-
-    if (!product) {
+    if (!product)
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
-    }
-
     res
       .status(200)
       .json({ success: true, message: "Product deactivated", data: product });
@@ -361,13 +434,10 @@ exports.activateProduct = async (req, res) => {
       { isActive: true },
       { new: true },
     );
-
-    if (!product) {
+    if (!product)
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
-    }
-
     res
       .status(200)
       .json({ success: true, message: "Product activated", data: product });
@@ -379,7 +449,7 @@ exports.activateProduct = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
-// @desc    Get product statistics
+// @desc    Product statistics
 // @route   GET /api/products/stats
 // @access  Private/Admin
 // ─────────────────────────────────────────────
@@ -441,27 +511,25 @@ exports.getProductStats = async (req, res) => {
 exports.bulkUpdateStock = async (req, res) => {
   try {
     const { updates } = req.body;
-
     if (!Array.isArray(updates) || updates.length === 0) {
       return res
         .status(400)
         .json({ success: false, message: "Updates must be a non-empty array" });
     }
-
     const bulkOps = updates.map(({ productId, stock }) => ({
       updateOne: {
         filter: { _id: productId },
         update: { stock: parseInt(stock), inStock: parseInt(stock) > 0 },
       },
     }));
-
     const result = await Product.bulkWrite(bulkOps);
-
-    res.status(200).json({
-      success: true,
-      message: "Stock updated successfully",
-      data: { modifiedCount: result.modifiedCount },
-    });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Stock updated",
+        data: { modifiedCount: result.modifiedCount },
+      });
   } catch (error) {
     res
       .status(500)
@@ -478,9 +546,7 @@ exports.getProductsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
     const { limit = 12, page = 1 } = req.query;
-
     const skip = (parseInt(page) - 1) * parseInt(limit);
-
     const [products, total] = await Promise.all([
       Product.find({ category, isActive: true })
         .skip(skip)
@@ -488,7 +554,6 @@ exports.getProductsByCategory = async (req, res) => {
         .sort({ createdAt: -1 }),
       Product.countDocuments({ category, isActive: true }),
     ]);
-
     res.status(200).json({
       success: true,
       count: products.length,

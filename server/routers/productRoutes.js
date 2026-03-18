@@ -13,16 +13,20 @@ const {
   bulkUpdateStock,
   getProductsByCategory,
 } = require("../controllers/productController");
-
 const { protect, authorize } = require("../middleware/authMiddleware");
 
-// Public routes
+// ── Public ────────────────────────────────────────────────────────────────────
+// Static routes MUST come before /:id wildcard routes
 router.get("/", getAllProducts);
-router.get("/stats", getProductStats);
-router.get("/category/:category", getProductsByCategory);
-router.get("/:id", getProductById);
+router.get("/stats", getProductStats); // /stats before /:id
+router.get("/category/:category", getProductsByCategory); // /category/:x before /:id
+router.get("/:id", getProductById); // wildcard last
 
-// Protected/Admin routes
+// ── Admin — bulk (no :id) ─────────────────────────────────────────────────────
+// /bulk-stock must come before /:id/... routes
+router.patch("/bulk-stock", protect, authorize("admin"), bulkUpdateStock);
+
+// ── Admin — single product ────────────────────────────────────────────────────
 router.post(
   "/",
   protect,
@@ -40,6 +44,5 @@ router.put(
 router.delete("/:id", protect, authorize("admin"), deleteProduct);
 router.patch("/:id/deactivate", protect, authorize("admin"), deactivateProduct);
 router.patch("/:id/activate", protect, authorize("admin"), activateProduct);
-router.patch("/bulk-stock", protect, authorize("admin"), bulkUpdateStock);
 
 module.exports = router;

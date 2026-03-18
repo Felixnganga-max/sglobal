@@ -12,7 +12,7 @@ const descriptionBlockSchema = new mongoose.Schema(
       required: true,
     },
     content: {
-      type: mongoose.Schema.Types.Mixed, // Can be string or array
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
   },
@@ -21,16 +21,16 @@ const descriptionBlockSchema = new mongoose.Schema(
 
 const specificationSchema = new mongoose.Schema(
   {
-    key: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    value: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    key: { type: String, required: true, trim: true },
+    value: { type: String, required: true, trim: true },
+  },
+  { _id: false },
+);
+
+const imageSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    publicId: { type: String, required: true },
   },
   { _id: false },
 );
@@ -122,18 +122,17 @@ const productSchema = new mongoose.Schema(
       type: [specificationSchema],
       default: [],
     },
+
+    // Images — optional, 0 to 10 allowed
     images: {
-      type: [
-        {
-          url: { type: String, required: true },
-          publicId: { type: String, required: true },
-        },
-      ],
+      type: [imageSchema],
+      default: [],
       validate: {
-        validator: (arr) => arr.length >= 1 && arr.length <= 10,
-        message: "A product must have between 1 and 10 images",
+        validator: (arr) => arr.length <= 10,
+        message: "A product cannot have more than 10 images",
       },
     },
+
     inStock: {
       type: Boolean,
       default: true,
@@ -154,7 +153,7 @@ const productSchema = new mongoose.Schema(
   },
 );
 
-// Virtual for calculated discount percentage
+// Virtual — calculated discount percentage
 productSchema.virtual("calculatedDiscount").get(function () {
   if (this.price && this.oldPrice && this.oldPrice > this.price) {
     return Math.round(((this.oldPrice - this.price) / this.oldPrice) * 100);
@@ -162,11 +161,10 @@ productSchema.virtual("calculatedDiscount").get(function () {
   return null;
 });
 
-// Update inStock based on stock quantity
+// Pre-save — sync inStock and discount
 productSchema.pre("save", function (next) {
   this.inStock = this.stock > 0;
 
-  // Calculate discount if oldPrice exists
   if (this.oldPrice && this.oldPrice > this.price) {
     this.discount = Math.round(
       ((this.oldPrice - this.price) / this.oldPrice) * 100,
@@ -178,7 +176,16 @@ productSchema.pre("save", function (next) {
   next();
 });
 
-// Indexes for better query performance
+// Pre-findOneAndUpdate — sync inStock when updating via findByIdAndUpdate
+productSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+  if (update.stock !== undefined) {
+    update.inStock = update.stock > 0;
+  }
+  next();
+});
+
+// Indexes
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ inStock: 1 });

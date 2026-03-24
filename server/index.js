@@ -9,6 +9,7 @@ const productRoutes = require("./routers/productRoutes");
 const authRoutes = require("./routers/authRoutes");
 const recipeRoutes = require("./routers/Recipe");
 const orderRoutes = require("./routers/Order");
+const zoneRoutes = require("./routers/zone");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,6 +66,7 @@ app.use("/smartglobal/auth", authRoutes);
 app.use("/smartglobal/products", productRoutes);
 app.use("/smartglobal/recipes", recipeRoutes);
 app.use("/smartglobal/orders", orderRoutes);
+app.use("/smartglobal/zones", zoneRoutes);
 
 // ✅ 404 Handler
 app.use((req, res) => {

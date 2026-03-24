@@ -690,12 +690,21 @@ export default function ProductDetails() {
   );
 }
 
+// Replace the RelatedProductCard function at the bottom of ProductDetails.jsx with this:
+
 function RelatedProductCard({ product, onClick }) {
+  // Match the same resolver used for the main product
+  const getImage = (p) => {
+    if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+      const first = p.images[0];
+      return typeof first === "string" ? first : first?.url;
+    }
+    return p.image?.url || p.imageUrl || p.img || p.photo || null;
+  };
+
   const imageUrl =
-    product.image?.url ||
-    product.imageUrl ||
-    product.img ||
-    "https://via.placeholder.com/300?text=No+Image";
+    getImage(product) || "https://via.placeholder.com/300?text=No+Image";
+
   return (
     <div
       onClick={onClick}

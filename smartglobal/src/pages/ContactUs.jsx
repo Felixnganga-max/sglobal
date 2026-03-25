@@ -100,8 +100,8 @@ export default function ContactUs() {
                 icon: Phone,
                 title: "Call Us Directly",
                 sub: "Mon–Sat, 8AM–6PM",
-                text: "+254 700 000 000",
-                href: "tel:+254700000000",
+                text: "+254 140 252 223",
+                href: "tel:+254140252223",
               },
             ].map(({ icon: Icon, title, sub, text, href }) => (
               <a
@@ -187,11 +187,17 @@ export default function ContactUs() {
               </h1>
 
               <p
-                className="font-body text-xs leading-relaxed"
+                className="font-body text-lg leading-relaxed"
                 style={{ color: "var(--color-muted)" }}
               >
-                Questions about our products or want to become a distributor?
-                Reach out or email{" "}
+                Questions about our products? Reach out through{" "}
+                <span
+                  className="font-semibold"
+                  style={{ color: "var(--color-orange)" }}
+                >
+                  +254 140 252 223
+                </span>{" "}
+                or email{" "}
                 <a
                   href="mailto:info@smartglobal.com"
                   className="font-semibold"
@@ -253,7 +259,7 @@ export default function ContactUs() {
                   id="phone"
                   name="phone"
                   type="tel"
-                  placeholder="700 000 000"
+                  placeholder="254 140 252 223"
                   value={form.phone}
                   onChange={handleChange}
                   icon={Phone}

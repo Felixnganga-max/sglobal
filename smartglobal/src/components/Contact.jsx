@@ -200,7 +200,7 @@ export default function Contact() {
       `*Total: Ksh ${total.toLocaleString()}*`,
     ];
     const text = encodeURIComponent(lines.join("\n"));
-    window.open(`https://wa.me/254700000000?text=${text}`, "_blank");
+    window.open(`https://wa.me/254140252223?text=${text}`, "_blank");
   }
 
   // ── Reset ──
@@ -327,8 +327,8 @@ export default function Contact() {
               {/* Contact meta */}
               <div className="mt-6 flex flex-wrap gap-5">
                 {[
-                  { icon: MessageCircle, text: "+254 700 000 000" },
-                  { icon: Mail, text: "orders@smartglobal.co.ke" },
+                  { icon: MessageCircle, text: "+254 140 252 223" },
+                  { icon: Mail, text: "info@smartglobal.com" },
                 ].map(({ icon: Icon, text }) => (
                   <div key={text} className="flex items-center gap-2">
                     <Icon size={13} style={{ color: "var(--color-orange)" }} />

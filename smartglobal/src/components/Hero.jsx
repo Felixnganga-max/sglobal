@@ -41,7 +41,7 @@ export default function Hero() {
   }, [next]);
 
   return (
-    <div className="w-full relative overflow-hidden bg-gray-950">
+    <div className="w-full relative overflow-hidden bg-gray-950 isolate z-50">
       {/* Slide Content */}
       <div
         className={`transition-all duration-450 ease-in-out ${

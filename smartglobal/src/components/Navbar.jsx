@@ -280,12 +280,14 @@ export default function Navbar() {
 
   return (
     <>
+      {/* ── z-index: 9999 ensures header always sits above the Hero ── */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 transition-all duration-500 ${
           scrolled
             ? "bg-white/70 backdrop-blur-2xl shadow-lg border-b border-gray-200/30"
             : "bg-gradient-to-b from-white/90 via-white/80 to-transparent backdrop-blur-sm"
         }`}
+        style={{ zIndex: 9999 }}
       >
         <div className="max-w-[1600px] mx-auto px-4 lg:px-12">
           {/* ── Main row ── */}
@@ -587,8 +589,12 @@ export default function Navbar() {
                 {showMobileResults && (
                   <div
                     ref={mobileResultsRef}
-                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
-                    style={{ maxHeight: "320px", overflowY: "auto" }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+                    style={{
+                      maxHeight: "320px",
+                      overflowY: "auto",
+                      zIndex: 9999,
+                    }}
                   >
                     {mobileSearching ? (
                       <div className="flex items-center justify-center py-6 gap-2">
@@ -618,7 +624,7 @@ export default function Navbar() {
           {/* ── Desktop Search Bar (slides down, with live results) ── */}
           {searchOpen && (
             <div
-              className="overflow-hidden pb-5 hidden lg:block"
+              className="overflow-visible pb-5 hidden lg:block"
               style={{ animation: "expandDown 0.35s ease-out forwards" }}
             >
               <div className="relative max-w-2xl" ref={desktopSearchRef}>
@@ -648,12 +654,16 @@ export default function Navbar() {
                   </button>
                 )}
 
-                {/* Live results dropdown */}
+                {/* Live results dropdown — z-index beats the Hero */}
                 {showDesktopResults && (
                   <div
                     ref={desktopResultsRef}
-                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
-                    style={{ maxHeight: "360px", overflowY: "auto" }}
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+                    style={{
+                      maxHeight: "360px",
+                      overflowY: "auto",
+                      zIndex: 99999,
+                    }}
                   >
                     {desktopSearching ? (
                       <div className="flex items-center justify-center py-6 gap-2">

@@ -64,8 +64,8 @@ export default function Footer() {
                 },
                 {
                   icon: Phone,
-                  text: "+254 700 000 000",
-                  href: "tel:+254700000000",
+                  text: "+254 140 252 223",
+                  href: "tel:+254140252223",
                 },
               ].map(({ icon: Icon, text, href }) => (
                 <li key={href}>
@@ -215,7 +215,7 @@ export default function Footer() {
               Get exclusive deals & recipes
             </h4>
             <p className="font-body text-xs text-gray-400 mt-1">
-              Join 5,000+ subscribers. No spam, ever.
+              Join 5,000+ subscribers.
             </p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">

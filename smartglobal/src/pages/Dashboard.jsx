@@ -20,6 +20,7 @@ import DashboardProducts from "../components/DashboardProducts";
 import DashboardRecipes from "../components/Dashboardrecipes";
 import DashboardBlogs from "../components/Dashboardblogs";
 import DashboardSettings from "../components/Dashboardsettings";
+import ZoneManager from "../components/ZoneManager";
 
 const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/auth";
 
@@ -36,6 +37,7 @@ function Sidebar({
     { id: "products", label: "Products", icon: Package },
     { id: "recipes", label: "Recipes", icon: BookOpen },
     { id: "blogs", label: "Blogs", icon: FileText },
+    { id: "zones", label: "Zones", icon: FileText },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -271,6 +273,8 @@ export default function Dashboard() {
         return <DashboardProducts />;
       case "recipes":
         return <DashboardRecipes />;
+      case "zones":
+        return <ZoneManager />;
       case "blogs":
         return <DashboardBlogs />;
       case "settings":

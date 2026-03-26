@@ -3,6 +3,49 @@ import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { assets } from "../assets/assets";
 
+function FaqItem({ faq }) {
+  const [open, setOpen] = React.useState(false);
+  const bodyRef = React.useRef(null);
+  const innerRef = React.useRef(null);
+
+  const toggle = () => {
+    setOpen((prev) => !prev);
+    if (bodyRef.current && innerRef.current) {
+      bodyRef.current.style.maxHeight = open
+        ? "0"
+        : innerRef.current.scrollHeight + 32 + "px";
+    }
+  };
+
+  return (
+    <div className={`faq-item${open ? " open" : ""}`}>
+      <button className="faq-btn" onClick={toggle} aria-expanded={open}>
+        <span className="faq-q">{faq.q}</span>
+        <span className="faq-icon">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            stroke={open ? "#fff" : "#999"}
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <line x1="6" y1="1" x2="6" y2="11" />
+            <line x1="1" y1="6" x2="11" y2="6" />
+          </svg>
+        </span>
+      </button>
+      <div className="faq-body" ref={bodyRef} style={{ maxHeight: 0 }}>
+        <div className="faq-body-inner" ref={innerRef}>
+          <span className={`faq-tag ${faq.tag}`}>{faq.label}</span>
+          {faq.a}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const About = () => {
   return (
     <div className="w-full bg-white">
@@ -95,6 +138,91 @@ const About = () => {
         </div>
       </section>
 
+      {/* FAQs Section */}
+      <section className="px-4 sm:px-10 md:px-20 py-12 md:py-20 bg-[#f7f5f3]">
+        <style>{`
+    .faq-item { background:#fff; border:1px solid #ebebeb; border-radius:14px; overflow:hidden; transition:border-color 0.25s, box-shadow 0.25s; margin-bottom:10px; }
+    .faq-item.open { border-color:#BF1A1A; box-shadow:0 0 0 3px rgba(191,26,26,0.07); }
+    .faq-btn { width:100%; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; background:none; border:none; cursor:pointer; text-align:left; font-family:inherit; }
+    .faq-q { font-size:14px; font-weight:600; color:#1a1a1a; line-height:1.5; flex:1; transition:color 0.2s; }
+    .faq-item.open .faq-q, .faq-btn:hover .faq-q { color:#BF1A1A; }
+    .faq-icon { width:28px; height:28px; border-radius:50%; border:1.5px solid #e0e0e0; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.25s, border-color 0.25s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    .faq-item.open .faq-icon { background:#BF1A1A; border-color:#BF1A1A; transform:rotate(45deg); }
+    .faq-body { max-height:0; overflow:hidden; transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .faq-body-inner { padding:14px 20px 20px; font-size:13px; color:#666; line-height:1.75; border-top:1px solid #f2f2f2; }
+    .faq-tag { display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:2px 8px; border-radius:20px; margin-right:6px; margin-bottom:10px; }
+    .tag-water { background:#e6f1fb; color:#185FA5; }
+    .tag-spuds { background:#fef2f2; color:#A32D2D; }
+    .tag-kent  { background:#faeeda; color:#633806; }
+    .tag-gen   { background:#f1efe8; color:#5F5E5A; }
+  `}</style>
+
+        <div className="mb-10 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#BF1A1A] mb-2">
+            Got questions?
+          </p>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+            Frequently asked questions
+          </h2>
+          <div className="w-10 h-[3px] bg-[#BF1A1A] rounded-full mx-auto" />{" "}
+          {/* mx-auto centers the bar */}
+        </div>
+
+        <div className="mx-auto max-w-3xl">
+          {[
+            {
+              tag: "tag-water",
+              label: "Kizembe",
+              q: "Is Kizembe spring water safe to drink straight from the bottle?",
+              a: "Yes. Kizembe is natural spring water sourced from Limuru and packaged under strict quality controls — it's ready to drink straight from the bottle with no treatment needed.",
+            },
+            {
+              tag: "tag-water",
+              label: "Kizembe",
+              q: "What sizes does Kizembe spring water come in?",
+              a: "Kizembe is available in 300ml, 500ml, 1L, 5L, 10L, and 18.9L — suitable for personal use, families, offices, and events of any size.",
+            },
+            {
+              tag: "tag-spuds",
+              label: "Spuds",
+              q: "Are Spuds crisps suitable for people with dietary restrictions?",
+              a: "Spuds craft crisps are Halal certified. We recommend checking individual packet labels for allergen information specific to each flavour profile.",
+            },
+            {
+              tag: "tag-spuds",
+              label: "Spuds",
+              q: "How many flavours do Spuds crisps come in?",
+              a: "Spuds currently offers 9 unique flavour profiles including Truffle Cheese, Hot Sriracha, Lime Fusion, Worcester Sauce, Sea Salt, Sweet Chili & Salsa, Sour Cream & Onion, CheeseTwist, and Prime Ribs.",
+            },
+            {
+              tag: "tag-kent",
+              label: "Kent",
+              q: "Can Kent stock cubes and powders be used interchangeably?",
+              a: "Both deliver rich, consistent flavour but serve slightly different purposes. Stock cubes are great for quick seasoning while stock powders are ideal for soups, stews, and recipes where you want to control the concentration.",
+            },
+            {
+              tag: "tag-kent",
+              label: "Kent",
+              q: "What are Kent syrups and topping sauces best used for?",
+              a: "Kent syrups — caramel, chocolate, and pancake — are perfect for beverages, desserts, and breakfast. The topping sauces work beautifully drizzled over ice cream, cakes, and plated desserts.",
+            },
+            {
+              tag: "tag-kent",
+              label: "Kent",
+              q: "Do the Kent muffin and pancake mixes require special ingredients?",
+              a: "No. The mixes are designed to be simple — you typically only need to add water, milk, or eggs. Full preparation instructions are printed clearly on each pack.",
+            },
+            {
+              tag: "tag-gen",
+              label: "General",
+              q: "Where can I find Smart Global products if I don't order online?",
+              a: "Our products are stocked countrywide in leading supermarkets and various retailers, and are also available across the HORECA sector — hotels, restaurants, and catering services throughout Kenya.",
+            },
+          ].map((faq, i) => (
+            <FaqItem key={i} faq={faq} />
+          ))}
+        </div>
+      </section>
       {/* Three Column — Products Section */}
       <section className="px-4 sm:px-10 md:px-20 py-10 md:py-16 bg-white">
         <div className="mb-8 md:mb-10">

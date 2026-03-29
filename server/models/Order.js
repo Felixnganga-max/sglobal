@@ -25,19 +25,20 @@ const orderSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ── Guest session token — used to claim orders after signup ──
+    // ── Guest session token ──
     sessionId: {
       type: String,
       default: null,
-      // index: true,
     },
 
-    // ── Customer details (filled from the form) ──
+    // ── Customer details ──
     customer: {
       name: { type: String, required: true, trim: true },
       phone: { type: String, required: true, trim: true },
       location: { type: String, required: true, trim: true },
       notes: { type: String, default: "" },
+      // ✅ NEW — allows email-based order lookup without an account
+      email: { type: String, default: null, trim: true, lowercase: true },
     },
 
     // ── Order items ──
@@ -51,6 +52,9 @@ const orderSchema = new mongoose.Schema(
     },
 
     // ── Totals ──
+    subtotal: { type: Number, default: 0, min: 0 },
+    deliveryFee: { type: Number, default: 0, min: 0 },
+    deliveryZone: { type: String, default: "" },
     totalPrice: { type: Number, required: true, min: 0 },
 
     // ── How they sent the order ──
@@ -60,23 +64,21 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
-    // ── Status — only the team can flip to complete ──
+    // ── Status ──
     status: {
       type: String,
       enum: ["pending", "complete"],
       default: "pending",
     },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-// Indexes
+// ── Indexes ───────────────────────────────────────────────────────────────────
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ sessionId: 1 });
+orderSchema.index({ "customer.email": 1 }); // ✅ NEW — fast email lookups
 orderSchema.index({ status: 1 });
 
 const Order = mongoose.model("Order", orderSchema);
-
 module.exports = Order;

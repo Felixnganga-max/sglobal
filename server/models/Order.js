@@ -54,7 +54,12 @@ const orderSchema = new mongoose.Schema(
     // ── Totals ──
     subtotal: { type: Number, default: 0, min: 0 },
     deliveryFee: { type: Number, default: 0, min: 0 },
-    deliveryZone: { type: String, default: "" },
+    deliveryZone: {
+      id: { type: mongoose.Schema.Types.ObjectId, ref: "Zone", default: null },
+      name: { type: String, default: "" },
+      location: { type: String, default: "" },
+      fee: { type: Number, default: 0 },
+    },
     totalPrice: { type: Number, required: true, min: 0 },
 
     // ── How they sent the order ──

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ShoppingCart, Heart, Check } from "lucide-react";
 import { useCart } from "../context/Cartcontext";
 
@@ -9,10 +9,32 @@ export default function FeaturedProductsGrid() {
   const [grouped, setGrouped] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  // ── Auto-scroll to category section once products have loaded ──
+  // Runs whenever loading flips to false OR the hash changes.
+  // We wait a tick (100ms) so the DOM has painted the sections before scrolling.
+  useEffect(() => {
+    if (loading) return; // products not ready yet — wait
+    if (!location.hash) return; // no hash in URL — nothing to scroll to
+
+    const categoryName = decodeURIComponent(
+      location.hash.replace(/^#/, ""), // strip the leading "#"
+    );
+
+    const el = document.getElementById(categoryName);
+    if (!el) return;
+
+    const timer = setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [loading, location.hash]);
 
   const fetchProducts = async () => {
     try {
@@ -111,7 +133,15 @@ export default function FeaturedProductsGrid() {
   return (
     <div className="space-y-12">
       {categories.map((category) => (
-        <section key={category}>
+        <section
+          key={category}
+          // ── KEY CHANGE: ID matches the hash we set in Sales.jsx ──
+          // Sales.jsx sets hash as: #cat-${encodeURIComponent(cat.id)}
+          // So the ID here must be: cat-${category}
+          id={`cat-${category}`}
+          // Small scroll-margin so the sticky navbar doesn't overlap the section heading
+          style={{ scrollMarginTop: "80px" }}
+        >
           <div className="mb-5">
             <p className="text-eyebrow mb-1">{category}</p>
             <div className="section-rule" />

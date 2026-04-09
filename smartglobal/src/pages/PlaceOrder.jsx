@@ -1055,7 +1055,7 @@ export default function PlaceOrder() {
                       </span>
                     </div>
                     <p className="text-xl font-medium text-gray-900 tracking-wide">
-                      522 522
+                      880100
                     </p>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-3">
@@ -1066,7 +1066,7 @@ export default function PlaceOrder() {
                       </span>
                     </div>
                     <p className="text-xl font-medium text-gray-900 tracking-wide">
-                      Order #
+                      668800# Customers Name
                     </p>
                   </div>
                 </div>

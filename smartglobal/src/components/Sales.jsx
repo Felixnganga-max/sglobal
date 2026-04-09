@@ -366,7 +366,8 @@ export default function Sales() {
           ) : (
             categories.map((cat) => (
               <Link
-                to="/products"
+                // ── KEY CHANGE: navigate to /products with the category name as a URL hash ──
+                to={`/products#cat-${encodeURIComponent(cat.id)}`}
                 key={cat.id}
                 className="group relative flex-shrink-0 w-[160px] lg:w-auto rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-400"
                 style={{ height: 200 }}
@@ -387,6 +388,9 @@ export default function Sales() {
                   style={{ backgroundColor: cat.accent }}
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <p className="font-heading text-white text-sm font-bold leading-tight">
+                    {cat.title}
+                  </p>
                   <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <span className="text-white text-[0.6rem] font-semibold">
                       Shop Now

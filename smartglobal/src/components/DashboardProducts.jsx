@@ -128,7 +128,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
     "Kizembe spring water",
   ];
 
-  const badges = ["NEW", "SALE", "HOT", "LIMITED"];
+  const badges = ["SPECIAL OFFER", "HOT DEALS", "LIMITED OFFER"];
 
   // ── Image handlers ────────────────────────────────────────────────────────
 

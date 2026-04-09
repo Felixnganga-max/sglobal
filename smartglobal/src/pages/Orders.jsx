@@ -20,24 +20,19 @@ import {
 
 const API_BASE = "https://sglobal-plf6.vercel.app/smartglobal/orders";
 
-function getSessionId() {
-  let id = sessionStorage.getItem("sg_session_id");
-  if (!id) {
-    id = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    sessionStorage.setItem("sg_session_id", id);
-  }
-  return id;
-}
-
-// ── Match exactly how Login.jsx saves these ───────────────────────────────────
 function getToken() {
   return localStorage.getItem("token") || null;
 }
 
+// Normalize _id <-> id so both fields always exist
 function getUser() {
   try {
     const u = localStorage.getItem("user");
-    return u ? JSON.parse(u) : null;
+    if (!u) return null;
+    const parsed = JSON.parse(u);
+    if (parsed._id && !parsed.id) parsed.id = parsed._id;
+    if (parsed.id && !parsed._id) parsed._id = parsed.id;
+    return parsed;
   } catch {
     return null;
   }
@@ -120,8 +115,8 @@ function OrderCard({ order, index }) {
           height: 3,
           background:
             order.status === "complete"
-              ? "linear-gradient(90deg, #22c55e, #16a34a)"
-              : "linear-gradient(90deg, var(--color-red), var(--color-orange))",
+              ? "linear-gradient(90deg,#22c55e,#16a34a)"
+              : "linear-gradient(90deg,var(--color-red),var(--color-orange))",
         }}
       />
 
@@ -245,6 +240,9 @@ function OrderCard({ order, index }) {
               { icon: <User size={11} />, val: order.customer.name },
               { icon: <Phone size={11} />, val: order.customer.phone },
               { icon: <MapPin size={11} />, val: order.customer.location },
+              ...(order.customer.email
+                ? [{ icon: <Mail size={11} />, val: order.customer.email }]
+                : []),
             ].map((row, i) => (
               <div
                 key={i}
@@ -283,81 +281,89 @@ function OrderCard({ order, index }) {
   );
 }
 
-// ── Guest CTA ─────────────────────────────────────────────────────────────────
-function GuestCTA({ navigate }) {
+// ── Not logged in wall ────────────────────────────────────────────────────────
+function LoginWall({ navigate }) {
   return (
-    <div
-      className="rounded-2xl p-6 mt-6"
-      style={{
-        background: "linear-gradient(135deg, #1a1a1a 0%, #2d0a0a 100%)",
-        border: "1px solid rgba(191,26,26,0.25)",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
+    <div className="min-h-screen bg-soft flex items-center justify-center p-6">
       <div
+        className="rounded-2xl p-8 text-center"
         style={{
-          position: "absolute",
-          width: 280,
-          height: 280,
-          background:
-            "radial-gradient(circle, rgba(191,26,26,0.2) 0%, transparent 70%)",
-          top: -80,
-          right: -40,
-          pointerEvents: "none",
+          background: "linear-gradient(135deg,#1a1a1a 0%,#2d0a0a 100%)",
+          border: "1px solid rgba(191,26,26,0.25)",
+          maxWidth: 400,
+          width: "100%",
+          position: "relative",
+          overflow: "hidden",
         }}
-      />
-      <div className="flex items-start gap-4" style={{ position: "relative" }}>
+      >
         <div
-          className="rounded-xl flex items-center justify-center flex-shrink-0"
           style={{
-            width: 44,
-            height: 44,
+            position: "absolute",
+            width: 300,
+            height: 300,
+            background:
+              "radial-gradient(circle,rgba(191,26,26,0.18) 0%,transparent 70%)",
+            top: -80,
+            right: -60,
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          className="rounded-2xl flex items-center justify-center mx-auto mb-5"
+          style={{
+            width: 56,
+            height: 56,
             background: "rgba(191,26,26,0.2)",
             border: "1px solid rgba(191,26,26,0.4)",
             color: "#ff6b6b",
+            position: "relative",
           }}
         >
-          <LogIn size={20} />
+          <LogIn size={24} />
         </div>
-        <div style={{ flex: 1 }}>
-          <div
-            className="font-heading font-bold text-white mb-1"
-            style={{ fontSize: "1rem" }}
+        <h2
+          className="font-heading font-bold text-white mb-2"
+          style={{ fontSize: "1.3rem", position: "relative" }}
+        >
+          Sign in to view your orders
+        </h2>
+        <p
+          className="text-body mb-6"
+          style={{
+            color: "rgba(255,255,255,0.45)",
+            fontSize: "0.85rem",
+            position: "relative",
+          }}
+        >
+          Your order history is saved to your account. Sign in or create a free
+          account to access it.
+        </p>
+        <div
+          className="flex gap-3 justify-center flex-wrap"
+          style={{ position: "relative" }}
+        >
+          <button
+            className="btn-primary inline-flex items-center gap-2"
+            onClick={() => navigate("/auth")}
           >
-            Save your order history permanently
-          </div>
-          <div
-            className="text-body mb-4"
-            style={{ color: "rgba(255,255,255,0.45)" }}
+            Sign In / Sign Up <ArrowRight size={13} />
+          </button>
+          <button
+            onClick={() => navigate("/products")}
+            className="inline-flex items-center font-body font-bold text-white"
+            style={{
+              fontSize: "0.72rem",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              padding: "0.7rem 1.6rem",
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: 9999,
+              cursor: "pointer",
+            }}
           >
-            You're browsing as a guest. Create a free account to keep your
-            orders across all devices.
-          </div>
-          <div className="flex gap-3 flex-wrap">
-            <button
-              className="btn-primary inline-flex items-center gap-2"
-              onClick={() => navigate("/auth")}
-            >
-              Sign Up Free <ArrowRight size={13} />
-            </button>
-            <button
-              onClick={() => navigate("/auth")}
-              className="inline-flex items-center font-body font-bold text-white transition-colors"
-              style={{
-                fontSize: "0.72rem",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                padding: "0.7rem 1.9rem",
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 9999,
-                cursor: "pointer",
-              }}
-            >
-              Log In
-            </button>
-          </div>
+            Shop Now
+          </button>
         </div>
       </div>
     </div>
@@ -372,7 +378,6 @@ export default function Orders() {
   const token = getToken();
   const user = getUser();
   const isLoggedIn = !!token && !!user;
-  const sessionId = getSessionId();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -380,20 +385,18 @@ export default function Orders() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchOrders = async (isRefresh = false) => {
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     setError(null);
 
     try {
-      let res;
-      if (isLoggedIn) {
-        res = await fetch(`${API_BASE}/my`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } else {
-        res = await fetch(`${API_BASE}/session/${sessionId}`);
-      }
-
+      const res = await fetch(`${API_BASE}/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (!res.ok || !data.success)
         throw new Error(data.message || "Failed to load orders.");
@@ -411,28 +414,17 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
+  if (!isLoggedIn) return <LoginWall navigate={navigate} />;
+
   return (
     <>
       <style>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         .oh-spin { animation: spin2 0.8s linear infinite; }
-        @keyframes spin2 { to { transform: rotate(360deg); } }
-        .oh-shimmer {
-          background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-          background-size: 200% 100%;
-          animation: shimmer2 1.4s infinite;
-          border-radius: 10px;
-        }
-        @keyframes shimmer2 { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .top-strip {
-          height: 3px;
-          background: linear-gradient(90deg, var(--color-red), var(--color-orange), var(--color-red));
-          background-size: 200% 100%;
-          animation: shimmer2 3s linear infinite;
-        }
+        @keyframes spin2 { to { transform:rotate(360deg); } }
+        .oh-shimmer { background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%); background-size:200% 100%; animation:shimmer2 1.4s infinite; border-radius:10px; }
+        @keyframes shimmer2 { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
+        .top-strip { height:3px; background:linear-gradient(90deg,var(--color-red),var(--color-orange),var(--color-red)); background-size:200% 100%; animation:shimmer2 3s linear infinite; }
       `}</style>
 
       <div ref={topRef} />
@@ -452,27 +444,15 @@ export default function Orders() {
               Order History
             </span>
             <div className="flex items-center gap-3">
-              {isLoggedIn ? (
-                <span
-                  className="text-label px-3 py-1 rounded-full"
-                  style={{
-                    background: "rgba(191,26,26,0.08)",
-                    color: "var(--color-red)",
-                  }}
-                >
-                  {user.name?.split(" ")[0]}
-                </span>
-              ) : (
-                <span
-                  className="text-label text-muted px-3 py-1 rounded-full"
-                  style={{
-                    background: "var(--color-bg-soft)",
-                    border: "1px solid var(--color-border)",
-                  }}
-                >
-                  Guest
-                </span>
-              )}
+              <span
+                className="text-label px-3 py-1 rounded-full"
+                style={{
+                  background: "rgba(191,26,26,0.08)",
+                  color: "var(--color-red)",
+                }}
+              >
+                {user.name?.split(" ")[0]}
+              </span>
               <button
                 onClick={() => fetchOrders(true)}
                 className="flex items-center justify-center rounded-lg"
@@ -494,15 +474,10 @@ export default function Orders() {
 
         {/* Main content */}
         <div className="max-w-3xl mx-auto page-x py-8">
-          {/* Hero */}
           <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
             <div>
-              <div className="text-eyebrow mb-1">
-                {isLoggedIn ? user.email : "Session Orders"}
-              </div>
-              <h1 className="text-section-title text-gray-900">
-                {isLoggedIn ? "Your Orders" : "Recent Orders"}
-              </h1>
+              <div className="text-eyebrow mb-1">{user.email}</div>
+              <h1 className="text-section-title text-gray-900">Your Orders</h1>
               <div className="section-rule" />
             </div>
             {!loading && !error && (
@@ -587,7 +562,7 @@ export default function Orders() {
 
           {/* Empty state */}
           {!loading && !error && orders.length === 0 && (
-            <div className="text-center py-20">
+            <div className="text-center py-16">
               <div
                 className="rounded-2xl flex items-center justify-center mx-auto mb-5"
                 style={{
@@ -608,8 +583,7 @@ export default function Orders() {
               </h2>
               <div className="section-rule-center mb-4" />
               <p className="text-body mx-auto mb-6" style={{ maxWidth: 300 }}>
-                When you place an order it will appear here. Go explore our
-                products!
+                When you place an order it will appear here.
               </p>
               <button
                 className="btn-primary inline-flex items-center gap-2"
@@ -620,16 +594,13 @@ export default function Orders() {
             </div>
           )}
 
-          {/* Orders */}
+          {/* Orders list */}
           {!loading &&
             !error &&
             orders.length > 0 &&
             orders.map((order, i) => (
               <OrderCard key={order._id} order={order} index={i} />
             ))}
-
-          {/* Guest CTA */}
-          {!loading && !isLoggedIn && <GuestCTA navigate={navigate} />}
         </div>
       </div>
     </>

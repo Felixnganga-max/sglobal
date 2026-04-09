@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
   Trash2,
+  CreditCard,
+  Info,
   Plus,
   Minus,
   Mail,
@@ -15,6 +17,9 @@ import {
   MapPin,
   FileText,
   ChevronDown,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useCart } from "../context/Cartcontext";
 import emailjs from "@emailjs/browser";
@@ -25,15 +30,12 @@ const EMAILJS_CUSTOMER_TEMPLATE_ID = "template_c2c49uz";
 const EMAILJS_PUBLIC_KEY = "zm6PlmVWX9FqeDYD0";
 const WHATSAPP_NUMBER = "254140252223";
 const ZONES_API = "https://sglobal-plf6.vercel.app/smartglobal/zones";
+const ORDERS_API =
+  "https://sglobal-plf6.vercel.app/smartglobal/orders/create-order";
 
-function getSessionId() {
-  let id = sessionStorage.getItem("sg_session_id");
-  if (!id) {
-    id = `SG-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-    sessionStorage.setItem("sg_session_id", id);
-  }
-  return id;
-}
+// Inline SVG fallback — zero external requests, no ad-blocker issues
+const FALLBACK_IMG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='%23bbb' font-family='sans-serif'%3EIMG%3C/text%3E%3C/svg%3E";
 
 function getImage(product) {
   return (
@@ -41,8 +43,37 @@ function getImage(product) {
     product.imageUrl ||
     product.img ||
     product.photo ||
-    "https://via.placeholder.com/80?text=IMG"
+    FALLBACK_IMG
   );
+}
+
+function getToken() {
+  return localStorage.getItem("token") || null;
+}
+
+// Always normalize _id <-> id so both fields are present
+function getUser() {
+  try {
+    const u = localStorage.getItem("user");
+    if (!u) return null;
+    const parsed = JSON.parse(u);
+    if (parsed._id && !parsed.id) parsed.id = parsed._id;
+    if (parsed.id && !parsed._id) parsed._id = parsed.id;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+// Persist session with both id and _id normalized
+function saveSession(token, user) {
+  localStorage.setItem("token", token);
+  const normalized = {
+    ...user,
+    id: user._id || user.id,
+    _id: user._id || user.id,
+  };
+  localStorage.setItem("user", JSON.stringify(normalized));
 }
 
 export default function PlaceOrder() {
@@ -51,23 +82,28 @@ export default function PlaceOrder() {
     useCart();
   const topRef = useRef(null);
 
+  const loggedInUser = getUser();
+  const isLoggedIn = !!getToken() && !!loggedInUser;
+
   const [form, setForm] = useState({
-    name: "",
+    name: loggedInUser?.name || "",
     phone: "",
     notes: "",
-    email: "",
+    email: loggedInUser?.email || "",
+    password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [successChannel, setSuccessChannel] = useState(null);
+  const [countdown, setCountdown] = useState(3);
 
   // Zone state
   const [zones, setZones] = useState([]);
   const [zonesLoading, setZonesLoading] = useState(true);
   const [openRegion, setOpenRegion] = useState(null);
-  // selectedZone: { zoneId, zoneName, deliveryFee, location }
   const [selectedZone, setSelectedZone] = useState(null);
 
   const deliveryFee = selectedZone?.deliveryFee || 0;
@@ -76,9 +112,24 @@ export default function PlaceOrder() {
     ? `${selectedZone.location} (${selectedZone.zoneName})`
     : null;
 
+  // Auto-redirect countdown after successful order
   useEffect(() => {
+    if (!submitted) return;
     topRef.current?.scrollIntoView({ behavior: "smooth" });
+    const interval = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(interval);
+          clearCart();
+          navigate("/orders");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
   }, [submitted]);
+
   useEffect(() => {
     emailjs.init(EMAILJS_PUBLIC_KEY);
   }, []);
@@ -106,6 +157,14 @@ export default function PlaceOrder() {
     if (!form.name.trim()) newErrors.name = "Required";
     if (!form.phone.trim()) newErrors.phone = "Required";
     if (!selectedZone) newErrors.zone = "Please select a delivery location";
+    if (!isLoggedIn) {
+      if (!form.email.trim()) newErrors.email = "Required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+        newErrors.email = "Invalid email";
+      if (!form.password.trim()) newErrors.password = "Required";
+      else if (form.password.length < 6)
+        newErrors.password = "Min 6 characters";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -125,9 +184,9 @@ export default function PlaceOrder() {
       customer_notes: form.notes || "No additional notes",
       customer_email: form.email || "Not provided",
       order_items: itemsList,
+      subtotal: `KSh ${totalPrice.toLocaleString()}`,
       delivery_fee: `KSh ${deliveryFee.toLocaleString()}`,
       total_amount: `KSh ${grandTotal.toLocaleString()}`,
-      session_id: getSessionId(),
       order_date: new Date().toLocaleString(),
     };
   };
@@ -141,8 +200,8 @@ export default function PlaceOrder() {
     return {
       email: form.email,
       name: form.name,
-      order_id: getSessionId(),
       orders,
+      subtotal: `KSh ${totalPrice.toLocaleString()}`,
       delivery_fee: `KSh ${deliveryFee.toLocaleString()}`,
       total_amount: `KSh ${grandTotal.toLocaleString()}`,
       customer_phone: form.phone,
@@ -153,47 +212,56 @@ export default function PlaceOrder() {
   };
 
   const saveOrderToBackend = async (channel) => {
-    const token = localStorage.getItem("sg_token") || null;
+    const token = getToken();
     const headers = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(
-      "https://sglobal-plf6.vercel.app/smartglobal/orders/create-order",
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          customer: {
-            name: form.name,
-            phone: form.phone,
-            location: selectedZoneLabel,
-            notes: form.notes,
-          },
-          items: cartItems.map((item) => ({
-            productId: item._id || item.id,
-            title: item.title || item.name,
-            price: item.price,
-            quantity: item.cartQty || 1,
-            image: item.image?.url || item.imageUrl || item.img || "",
-            category: item.category || "",
-          })),
-          deliveryZone: {
-            id: selectedZone?.zoneId,
-            name: selectedZone?.zoneName,
-            location: selectedZone?.location,
-            fee: deliveryFee,
-          },
-          subtotal: totalPrice,
-          deliveryFee,
-          totalPrice: grandTotal,
-          channel,
-          sessionId: getSessionId(),
-          customerEmail: form.email || undefined,
-        }),
+
+    const body = {
+      customer: {
+        name: form.name,
+        phone: form.phone,
+        location: selectedZoneLabel,
+        notes: form.notes,
+        email: form.email || undefined,
       },
-    );
+      items: cartItems.map((item) => ({
+        productId: item._id || item.id,
+        title: item.title || item.name,
+        price: item.price,
+        quantity: item.cartQty || 1,
+        image: item.image?.url || item.imageUrl || item.img || "",
+        category: item.category || "",
+      })),
+      deliveryZone: {
+        id: selectedZone?.zoneId,
+        name: selectedZone?.zoneName,
+        location: selectedZone?.location,
+        fee: deliveryFee,
+      },
+      subtotal: totalPrice,
+      deliveryFee,
+      totalPrice: grandTotal,
+      channel,
+      // Only send password for guests
+      ...(!isLoggedIn && form.password ? { password: form.password } : {}),
+    };
+
+    const res = await fetch(ORDERS_API, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+
     const data = await res.json();
+
     if (!res.ok || !data.success)
       throw new Error(data.message || "Failed to save order.");
+
+    // Backend returns token + user when it auto-registers or auto-logs-in a guest
+    if (data.token && data.user) {
+      saveSession(data.token, data.user);
+    }
+
     return data;
   };
 
@@ -201,6 +269,7 @@ export default function PlaceOrder() {
     if (!validateForm()) return;
     setLoading(true);
     setApiError(null);
+
     try {
       if (channel === "email") {
         await emailjs.send(
@@ -208,17 +277,17 @@ export default function PlaceOrder() {
           EMAILJS_ADMIN_TEMPLATE_ID,
           buildAdminParams(),
         );
-        if (form.email)
+        if (form.email) {
           await emailjs.send(
             EMAILJS_SERVICE_ID,
             EMAILJS_CUSTOMER_TEMPLATE_ID,
             buildCustomerParams(),
           );
-        saveOrderToBackend(channel).catch((err) =>
-          console.warn("Emails sent — backend sync failed:", err),
-        );
+        }
+        await saveOrderToBackend(channel);
       } else if (channel === "whatsapp") {
         await saveOrderToBackend(channel);
+
         emailjs
           .send(
             EMAILJS_SERVICE_ID,
@@ -226,8 +295,9 @@ export default function PlaceOrder() {
             buildAdminParams(),
           )
           .catch((err) =>
-            console.warn("WhatsApp order placed — admin email failed:", err),
+            console.warn("WhatsApp order — admin email failed:", err),
           );
+
         const lines = cartItems.map(
           (item) =>
             `• ${item.title || item.name} x${item.cartQty || 1} — KSh ${((item.price || 0) * (item.cartQty || 1)).toLocaleString()}`,
@@ -251,8 +321,9 @@ export default function PlaceOrder() {
         );
         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, "_blank");
       }
+
       setSuccessChannel(channel);
-      setSubmitted(true);
+      setSubmitted(true); // triggers the countdown useEffect
     } catch (err) {
       console.error("Order submission error:", err);
       setApiError(err.message || "Something went wrong. Please try again.");
@@ -288,12 +359,16 @@ export default function PlaceOrder() {
     .po-input::placeholder { color: #bbb; }
     .po-input:focus { border-color: #BF1A1A; background: #fff; box-shadow: 0 0 0 3px rgba(191,26,26,0.08); }
     .po-input.error { border-color: #ef4444; }
+    .po-input-pr { padding-right: 40px; }
     .po-textarea { width: 100%; background: #fafafa; border: 1.5px solid #e8e8e8; border-radius: 10px; padding: 11px 14px 11px 38px; font-family: 'Outfit', sans-serif; font-size: 14px; color: #1a1a1a; outline: none; transition: border-color 0.2s, box-shadow 0.2s; resize: none; }
     .po-textarea::placeholder { color: #bbb; }
     .po-textarea:focus { border-color: #BF1A1A; background: #fff; box-shadow: 0 0 0 3px rgba(191,26,26,0.08); }
     .po-error-msg { font-size: 11px; color: #ef4444; margin-top: 4px; font-weight: 500; }
-
-    /* ── Zone accordion ── */
+    .po-pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #aaa; display: flex; align-items: center; padding: 0; }
+    .po-pw-toggle:hover { color: #555; }
+    .po-auth-banner { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #7f1d1d; line-height: 1.6; }
+    .po-auth-banner strong { font-weight: 700; color: #BF1A1A; }
+    .po-logged-in-banner { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; font-size: 12px; color: #166534; font-weight: 500; }
     .po-zone-accordion { border: 1.5px solid #e8e8e8; border-radius: 10px; overflow: hidden; background: #fafafa; }
     .po-zone-accordion.error { border-color: #ef4444; }
     .po-zone-region { border-bottom: 1px solid #f0f0f0; }
@@ -314,7 +389,6 @@ export default function PlaceOrder() {
     .po-zone-location-btn.selected .po-zone-location-dot,
     .po-zone-location-btn:hover .po-zone-location-dot { background: #BF1A1A; }
     .po-zone-fee-pill { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 20px; font-size: 11px; font-weight: 600; color: #BF1A1A; }
-
     .po-cart-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
     .po-cart-item:last-child { border-bottom: none; padding-bottom: 0; }
     .po-cart-item:first-child { padding-top: 0; }
@@ -356,16 +430,17 @@ export default function PlaceOrder() {
     .po-btn-icon-wrap { display: flex; align-items: center; gap: 10px; }
     .po-btn-label { font-size: 13px; font-weight: 600; }
     .po-btn-sub { font-size: 10px; opacity: 0.65; font-weight: 400; margin-top: 1px; }
-    .po-api-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #ef4444; margin-bottom: 14px; }
+    .po-api-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #ef4444; margin-bottom: 14px; font-weight: 500; line-height: 1.5; }
     .po-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .po-footer-note { text-align: center; font-size: 11px; color: #ccc; margin-top: 14px; }
     .po-success { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
     .po-success-inner { max-width: 440px; width: 100%; text-align: center; }
-    .po-success-icon-wrap { width: 80px; height: 80px; border-radius: 50%; background: #fef2f2; border: 2px solid #fecaca; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    .po-success-icon-wrap { width: 80px; height: 80px; border-radius: 50%; background: #f0fdf4; border: 2px solid #bbf7d0; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
     .po-success-h { font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
-    .po-success-sub { font-size: 14px; color: #777; margin-bottom: 28px; line-height: 1.6; }
-    .po-success-detail { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 14px; padding: 18px 20px; margin-bottom: 28px; text-align: left; }
+    .po-success-sub { font-size: 14px; color: #777; margin-bottom: 20px; line-height: 1.6; }
+    .po-redirect-bar { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534; font-weight: 600; display: flex; align-items: center; gap: 8px; justify-content: center; }
+    .po-success-detail { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; text-align: left; }
     .po-success-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f0f0f0; gap: 12px; }
     .po-success-row:last-child { border-bottom: none; }
     .po-success-key { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; }
@@ -373,8 +448,11 @@ export default function PlaceOrder() {
     .po-channel-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
     .po-channel-wa { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
     .po-channel-email { background: #fef2f2; color: #BF1A1A; border: 1px solid #fecaca; }
-    .po-home-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 32px; background: #BF1A1A; color: #fff; border: none; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .po-home-btn:hover { background: #a51717; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(191,26,26,0.3); }
+    .po-success-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .po-orders-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 28px; background: #BF1A1A; color: #fff; border: none; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .po-orders-btn:hover { background: #a51717; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(191,26,26,0.3); }
+    .po-home-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; background: #fff; color: #1a1a1a; border: 1.5px solid #e8e8e8; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .po-home-btn:hover { border-color: #1a1a1a; transform: translateY(-1px); }
     .po-empty { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
     .po-empty-inner { text-align: center; max-width: 320px; }
     .po-empty-icon { width: 72px; height: 72px; border-radius: 50%; background: #f5f5f5; border: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
@@ -385,6 +463,7 @@ export default function PlaceOrder() {
     @media (max-width: 480px) { .po-card { padding: 18px; } .po-summary-card { padding: 18px; } .po-cart-img { width: 50px; height: 50px; } }
   `;
 
+  // ── Empty cart ────────────────────────────────────────────────────────────
   if (cartItems.length === 0 && !submitted) {
     return (
       <>
@@ -413,6 +492,7 @@ export default function PlaceOrder() {
     );
   }
 
+  // ── Success screen ────────────────────────────────────────────────────────
   if (submitted) {
     return (
       <>
@@ -422,20 +502,25 @@ export default function PlaceOrder() {
           <div className="po-success">
             <div className="po-success-inner">
               <div className="po-success-icon-wrap">
-                <Package size={32} color="#BF1A1A" />
+                <Package size={32} color="#16a34a" />
               </div>
-              <h1 className="po-success-h">Order Received!</h1>
+              <h1 className="po-success-h">Order Placed! 🎉</h1>
               <p className="po-success-sub">
-                Your order has been saved and our team will reach out to confirm
-                shortly.
+                Your order is saved and our team will confirm shortly.
                 {successChannel === "email" && form.email && (
                   <>
-                    <br />
-                    <br />A confirmation has been sent to{" "}
-                    <strong>{form.email}</strong>
+                    {" "}
+                    A confirmation was sent to <strong>{form.email}</strong>.
                   </>
                 )}
               </p>
+
+              {/* Countdown redirect */}
+              <div className="po-redirect-bar">
+                <Package size={14} />
+                Taking you to your orders in {countdown}s…
+              </div>
+
               <div className="po-success-detail">
                 <div className="po-success-row">
                   <span className="po-success-key">Customer</span>
@@ -475,15 +560,27 @@ export default function PlaceOrder() {
                   </span>
                 </div>
               </div>
-              <button
-                className="po-home-btn"
-                onClick={() => {
-                  clearCart();
-                  navigate("/");
-                }}
-              >
-                Back to Home
-              </button>
+
+              <div className="po-success-actions">
+                <button
+                  className="po-orders-btn"
+                  onClick={() => {
+                    clearCart();
+                    navigate("/orders");
+                  }}
+                >
+                  <Package size={14} /> View My Orders
+                </button>
+                <button
+                  className="po-home-btn"
+                  onClick={() => {
+                    clearCart();
+                    navigate("/");
+                  }}
+                >
+                  Back to Home
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -491,6 +588,7 @@ export default function PlaceOrder() {
     );
   }
 
+  // ── Main form ─────────────────────────────────────────────────────────────
   return (
     <>
       <style>{styles}</style>
@@ -516,6 +614,34 @@ export default function PlaceOrder() {
                 <div className="po-step-dot">1</div>
                 <span className="po-step-title">Your Details</span>
               </div>
+
+              {isLoggedIn ? (
+                <div className="po-logged-in-banner">
+                  ✓ Signed in as <strong>{loggedInUser.email}</strong> — your
+                  order will be saved to your account.
+                </div>
+              ) : (
+                <div className="po-auth-banner">
+                  <strong>No account needed.</strong> Enter your email and
+                  create a password below — we'll save your order history and
+                  log you in automatically. Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/auth")}
+                    style={{
+                      color: "#BF1A1A",
+                      fontWeight: 700,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      fontSize: "inherit",
+                    }}
+                  >
+                    Sign in
+                  </button>
+                </div>
+              )}
 
               {/* Name */}
               <div className="po-field">
@@ -663,23 +789,60 @@ export default function PlaceOrder() {
                 {errors.zone && <p className="po-error-msg">{errors.zone}</p>}
               </div>
 
-              {/* Email */}
-              <div className="po-field">
-                <label className="po-label">
-                  Email <span>— optional, for order confirmation copy</span>
-                </label>
-                <div className="po-input-wrap">
-                  <Mail size={14} className="po-input-icon" />
-                  <input
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder="e.g. jane@gmail.com"
-                    className="po-input"
-                  />
-                </div>
-              </div>
+              {/* Email + Password — only when NOT logged in */}
+              {!isLoggedIn && (
+                <>
+                  <div className="po-field">
+                    <label className="po-label">Email *</label>
+                    <div className="po-input-wrap">
+                      <Mail size={14} className="po-input-icon" />
+                      <input
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        placeholder="e.g. jane@gmail.com"
+                        className={`po-input ${errors.email ? "error" : ""}`}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="po-error-msg">{errors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="po-field">
+                    <label className="po-label">
+                      Password *{" "}
+                      <span>— to access your order history later</span>
+                    </label>
+                    <div className="po-input-wrap">
+                      <Lock size={14} className="po-input-icon" />
+                      <input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={form.password}
+                        onChange={handleChange}
+                        placeholder="Min 6 characters"
+                        className={`po-input po-input-pr ${errors.password ? "error" : ""}`}
+                      />
+                      <button
+                        type="button"
+                        className="po-pw-toggle"
+                        onClick={() => setShowPassword((p) => !p)}
+                      >
+                        {showPassword ? (
+                          <EyeOff size={14} />
+                        ) : (
+                          <Eye size={14} />
+                        )}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="po-error-msg">{errors.password}</p>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* Notes */}
               <div className="po-field">
@@ -725,8 +888,8 @@ export default function PlaceOrder() {
                       alt={item.title || item.name}
                       className="po-cart-img"
                       onError={(e) => {
-                        e.target.src =
-                          "https://via.placeholder.com/80?text=IMG";
+                        e.target.onerror = null;
+                        e.target.src = FALLBACK_IMG;
                       }}
                     />
                     <div className="po-cart-info">
@@ -770,7 +933,7 @@ export default function PlaceOrder() {
             </div>
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT — Order Summary */}
           <div>
             <div className="po-summary-card">
               <div className="po-summary-title">Order Summary</div>
@@ -816,7 +979,7 @@ export default function PlaceOrder() {
                   Select a location above to see delivery fee
                 </p>
               )}
-              {apiError && <div className="po-api-error">{apiError}</div>}
+              {apiError && <div className="po-api-error">⚠ {apiError}</div>}
               <button
                 className="po-btn-wa"
                 onClick={() => submitToAPI("whatsapp")}
@@ -866,6 +1029,57 @@ export default function PlaceOrder() {
                 </div>
                 <ChevronRight size={14} style={{ opacity: 0.6 }} />
               </button>
+              <div className="rounded-2xl border border-gray-100 bg-white p-5 w-full max-w-sm">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center">
+                    <CreditCard className="w-4 h-4 text-green-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      Pay via M-Pesa
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Lipa na M-Pesa · Paybill
+                    </p>
+                  </div>
+                </div>
+
+                {/* Details grid */}
+                <div className="border-t border-gray-100 pt-4 grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <CreditCard className="w-3 h-3 text-gray-400" />
+                      <span className="text-[10px] uppercase tracking-wide text-gray-400">
+                        Paybill no.
+                      </span>
+                    </div>
+                    <p className="text-xl font-medium text-gray-900 tracking-wide">
+                      522 522
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <FileText className="w-3 h-3 text-gray-400" />
+                      <span className="text-[10px] uppercase tracking-wide text-gray-400">
+                        Account no.
+                      </span>
+                    </div>
+                    <p className="text-xl font-medium text-gray-900 tracking-wide">
+                      Order #
+                    </p>
+                  </div>
+                </div>
+
+                {/* Instruction hint */}
+                <div className="flex items-start gap-2 bg-green-50 rounded-xl px-3 py-2.5">
+                  <Info className="w-3.5 h-3.5 text-green-700 mt-0.5 shrink-0" />
+                  <p className="text-xs text-green-700 leading-relaxed">
+                    M-Pesa → Lipa na M-Pesa → Pay Bill → enter paybill &amp;
+                    account number above.
+                  </p>
+                </div>
+              </div>
               <p className="po-footer-note">
                 Orders are saved to your account history
               </p>

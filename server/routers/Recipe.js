@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { upload } = require("../db/claudinary");
+const { uploadImage } = require("../db/claudinary");
 const {
   getAllRecipes,
   getRecipe,
@@ -11,30 +11,30 @@ const {
   toggleFeatured,
   getRecipeStats,
 } = require("../controllers/Recipe");
-
-// Import auth middleware
 const { protect, authorize } = require("../middleware/authMiddleware");
 
-// Public routes
+// ── Public ────────────────────────────────────────────────────────────────────
 router.get("/", getAllRecipes);
 router.get("/stats", getRecipeStats);
 router.get("/product/:productId", getRecipesByProduct);
-router.get("/:identifier", getRecipe); // Can use ID or slug
+router.get("/:identifier", getRecipe);
 
-// Protected/Admin routes
+// ── Admin ─────────────────────────────────────────────────────────────────────
 router.post(
   "/",
-
-  upload.single("image"),
+  protect,
+  authorize("admin"),
+  uploadImage.single("image"),
   createRecipe,
 );
 router.put(
   "/:id",
-
-  upload.single("image"),
+  protect,
+  authorize("admin"),
+  uploadImage.single("image"),
   updateRecipe,
 );
-router.delete("/:id", deleteRecipe);
-router.patch("/:id/featured", toggleFeatured);
+router.delete("/:id", protect, authorize("admin"), deleteRecipe);
+router.patch("/:id/featured", protect, authorize("admin"), toggleFeatured);
 
 module.exports = router;

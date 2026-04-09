@@ -1,19 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Heart, ShoppingCart, MapPin, Search, X, Check } from "lucide-react";
+import { Heart, ShoppingCart, MapPin, Search, Check } from "lucide-react";
 import { assets } from "../assets/assets";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 
 const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
-
-const CATEGORY_ACCENTS = [
-  "#FF7F11",
-  "#FF0000",
-  "#1565C0",
-  "#FF7F11",
-  "#FF0000",
-  "#1565C0",
-];
 
 const BADGE_COLORS = {
   NEW: "#1565C0",
@@ -21,6 +12,29 @@ const BADGE_COLORS = {
   HOT: "#FF7F11",
   LIMITED: "#1a1a1a",
 };
+
+const CATEGORY_CONFIG = [
+  {
+    key: "cakemix",
+    accent: "#FF7F11",
+    image: assets.cake,
+  },
+  {
+    key: "kent syrups",
+    accent: "#FF0000",
+    image: assets.cara,
+  },
+  {
+    key: "kent sauces",
+    accent: "#1565C0",
+    image: assets.top,
+  },
+  {
+    key: "kizembe spring water",
+    accent: "#FF7F11",
+    image: assets.kize,
+  },
+];
 
 // ─────────────────────────────────────────────────────────────
 // DATA HOOK
@@ -72,16 +86,23 @@ function buildCategories(products) {
     const cat = p.category || "Other";
     if (!seen.has(cat)) seen.set(cat, p);
   });
-  // Restrict to first 4 categories only
+
   return Array.from(seen.entries())
     .slice(0, 4)
-    .map(([title, rep], i) => ({
-      id: title,
-      title,
-      subtitle: rep.shortDescription || title,
-      image: getImage(rep),
-      accent: CATEGORY_ACCENTS[i % CATEGORY_ACCENTS.length],
-    }));
+    .map(([title]) => {
+      const config = CATEGORY_CONFIG.find(
+        (c) => c.key === title.toLowerCase().trim(),
+      );
+      return {
+        id: title,
+        title,
+        accent: config?.accent || "#FF7F11",
+        image:
+          config?.image ||
+          "https://via.placeholder.com/600x400?text=" +
+            encodeURIComponent(title),
+      };
+    });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -90,7 +111,7 @@ function buildCategories(products) {
 function CategorySkeleton() {
   return (
     <div
-      className="flex-shrink-0 w-[160px] rounded-xl bg-gray-200 animate-pulse"
+      className="flex-shrink-0 w-[160px] lg:w-auto rounded-xl bg-gray-200 animate-pulse"
       style={{ height: 200 }}
     />
   );
@@ -145,6 +166,7 @@ function ProductCard({ prod }) {
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer"
       aria-labelledby={`prod-${prodId}`}
     >
+      {/* Image */}
       <div className="relative bg-gray-50 overflow-hidden">
         <img
           src={getImage(prod)}
@@ -166,12 +188,13 @@ function ProductCard({ prod }) {
           </div>
         )}
         {discount && (
-          <div className="absolute bottom-1.5 right-1.5 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white bg-red">
+          <div className="absolute bottom-1.5 right-1.5 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white bg-red-600">
             -{discount}%
           </div>
         )}
       </div>
 
+      {/* Body */}
       <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
         <div>
           <h3
@@ -205,7 +228,10 @@ function ProductCard({ prod }) {
 
         <div className="mt-2">
           <div className="flex items-end gap-1 mb-1.5">
-            <span className="font-heading text-sm font-bold text-red">
+            <span
+              className="font-heading text-sm font-bold"
+              style={{ color: "var(--color-red)" }}
+            >
               Ksh {prod.price?.toLocaleString()}
             </span>
             {prod.oldPrice && prod.oldPrice > prod.price && (
@@ -277,6 +303,89 @@ function ProductCard({ prod }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// CATEGORY CARD
+// ─────────────────────────────────────────────────────────────
+function CategoryCard({ cat }) {
+  return (
+    <Link
+      to={`/products#cat-${encodeURIComponent(cat.id)}`}
+      className="group flex-shrink-0 w-[160px] lg:w-auto rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+      style={{ height: 200, display: "block", position: "relative" }}
+    >
+      {/* Hardcoded image — always fills the card */}
+      <img
+        src={cat.image}
+        alt={cat.title}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+        }}
+        className="group-hover:scale-105 transition-transform duration-500"
+      />
+
+      {/* Dark gradient overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)",
+        }}
+      />
+
+      {/* Accent bar top */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 3,
+          backgroundColor: cat.accent,
+        }}
+      />
+
+      {/* Label */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "12px",
+        }}
+      >
+        <p className="font-heading text-white text-sm font-bold leading-tight">
+          {cat.title}
+        </p>
+        <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="text-white text-[0.6rem] font-semibold">
+            Shop Now
+          </span>
+          <svg
+            className="w-2.5 h-2.5 text-white"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // MAIN EXPORT
 // ─────────────────────────────────────────────────────────────
 export default function Sales() {
@@ -284,9 +393,7 @@ export default function Sales() {
   const { products, loading, error, refetch } = useProducts();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read search query from URL — set by Navbar
   const searchQuery = searchParams.get("q") || "";
-
   const categories = buildCategories(products);
 
   const filteredProducts = searchQuery.trim()
@@ -320,7 +427,6 @@ export default function Sales() {
             <h2 className="text-section-title text-gray-900">Our Range</h2>
             <div className="section-rule mt-2" />
           </div>
-          {/* Scroll arrows always visible on mobile */}
           <div className="flex gap-2 lg:hidden">
             {[
               [-1, "M15 19l-7-7 7-7"],
@@ -346,7 +452,6 @@ export default function Sales() {
           </div>
         </div>
 
-        {/* Always horizontal scroll strip — 4 cards max */}
         <div
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible"
@@ -358,60 +463,17 @@ export default function Sales() {
             <div className="col-span-4 text-center py-8">
               <p className="text-sm text-gray-400">
                 Could not load categories.{" "}
-                <button onClick={refetch} className="underline text-red">
+                <button
+                  onClick={refetch}
+                  className="underline"
+                  style={{ color: "var(--color-red)" }}
+                >
                   Retry
                 </button>
               </p>
             </div>
           ) : (
-            categories.map((cat) => (
-              <Link
-                // ── KEY CHANGE: navigate to /products with the category name as a URL hash ──
-                to={`/products#cat-${encodeURIComponent(cat.id)}`}
-                key={cat.id}
-                className="group relative flex-shrink-0 w-[160px] lg:w-auto rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-400"
-                style={{ height: 200 }}
-              >
-                <img
-                  src={cat.image}
-                  alt={cat.title}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    e.target.src =
-                      "https://via.placeholder.com/300x200?text=" +
-                      encodeURIComponent(cat.title);
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-                <div
-                  className="absolute top-0 left-0 right-0 h-0.5"
-                  style={{ backgroundColor: cat.accent }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="font-heading text-white text-sm font-bold leading-tight">
-                    {cat.title}
-                  </p>
-                  <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-white text-[0.6rem] font-semibold">
-                      Shop Now
-                    </span>
-                    <svg
-                      className="w-2.5 h-2.5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            ))
+            categories.map((cat) => <CategoryCard key={cat.id} cat={cat} />)
           )}
         </div>
       </section>
@@ -432,7 +494,8 @@ export default function Sales() {
                 {" — "}
                 <button
                   onClick={() => setSearchParams({})}
-                  className="text-red font-bold underline"
+                  className="font-bold underline"
+                  style={{ color: "var(--color-red)" }}
                 >
                   Clear search
                 </button>
@@ -484,7 +547,8 @@ export default function Sales() {
             </p>
             <button
               onClick={() => setSearchParams({})}
-              className="mt-3 text-red text-xs font-body font-bold underline"
+              className="mt-3 text-xs font-body font-bold underline"
+              style={{ color: "var(--color-red)" }}
             >
               Clear search
             </button>
@@ -507,7 +571,7 @@ export default function Sales() {
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-7 sm:p-10">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <MapPin size={14} className="text-orange" />
+                <MapPin size={14} style={{ color: "var(--color-orange)" }} />
                 <p className="text-eyebrow">Available Countrywide</p>
               </div>
               <h3 className="font-heading text-white text-xl sm:text-2xl font-bold leading-tight mb-1">

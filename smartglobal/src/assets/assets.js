@@ -22,6 +22,7 @@ import water from "./images/water.jpeg";
 import hazelnut from "./images/hazelnut.jpeg";
 import spuds from "./images/spuds.jpeg";
 import cara from "./cara.jpeg";
+import cake from "./cake.png";
 
 export const assets = {
   crepes,
@@ -29,6 +30,7 @@ export const assets = {
   kizembe,
   noodle,
   kize,
+  cake,
   kent,
   hazelnut,
   top,
@@ -45,5 +47,5 @@ export const assets = {
   logo,
   recipe,
   cara,
-  water
+  water,
 };

@@ -17,14 +17,16 @@ import spuds5 from "./spuds-5.png";
 import logo from "./logo.png";
 import recipe from "./recipe.jpg";
 import kizembe from "./kizembe.jpg";
-import kize from "./kize.jpg";
+import kize from "./kize.png";
 import water from "./images/water.jpeg";
 import hazelnut from "./images/hazelnut.jpeg";
 import spuds from "./images/spuds.jpeg";
 import cara from "./cara.jpeg";
 import cake from "./cake.png";
+import sauces from "./sauces.png";
 
 export const assets = {
+  sauces,
   crepes,
   hazelnut,
   kizembe,

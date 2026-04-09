@@ -21,6 +21,7 @@ import DashboardRecipes from "../components/Dashboardrecipes";
 import DashboardBlogs from "../components/Dashboardblogs";
 import DashboardSettings from "../components/Dashboardsettings";
 import ZoneManager from "../components/ZoneManager";
+import Promos from "../components/Promos";
 
 const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/auth";
 
@@ -35,6 +36,7 @@ function Sidebar({
   const navItems = [
     { id: "main", label: "Dashboard", icon: LayoutDashboard },
     { id: "products", label: "Products", icon: Package },
+    { id: "promos", label: "Promos", icon: BookOpen },
     { id: "recipes", label: "Recipes", icon: BookOpen },
     { id: "blogs", label: "Blogs", icon: FileText },
     { id: "zones", label: "Zones", icon: FileText },
@@ -273,6 +275,8 @@ export default function Dashboard() {
         return <DashboardProducts />;
       case "recipes":
         return <DashboardRecipes />;
+      case "promos":
+        return <Promos />;
       case "zones":
         return <ZoneManager />;
       case "blogs":

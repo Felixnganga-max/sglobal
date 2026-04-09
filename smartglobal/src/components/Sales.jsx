@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 
 const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+const PROMOS_URL = "https://sglobal-plf6.vercel.app/smartglobal/promos";
 
 const BADGE_COLORS = {
   NEW: "#1565C0",
@@ -22,12 +23,12 @@ const CATEGORY_CONFIG = [
   {
     key: "kent syrups",
     accent: "#FF0000",
-    image: assets.cara,
+    image: assets.top,
   },
   {
     key: "kent sauces",
     accent: "#1565C0",
-    image: assets.top,
+    image: assets.sauces,
   },
   {
     key: "kizembe spring water",
@@ -37,7 +38,7 @@ const CATEGORY_CONFIG = [
 ];
 
 // ─────────────────────────────────────────────────────────────
-// DATA HOOK
+// DATA HOOKS
 // ─────────────────────────────────────────────────────────────
 function useProducts() {
   const [products, setProducts] = useState([]);
@@ -70,13 +71,35 @@ function useProducts() {
   return { products, loading, error, refetch: fetch_ };
 }
 
+function usePromoVideo() {
+  const [promoVideo, setPromoVideo] = useState(null);
+
+  useEffect(() => {
+    fetch(`${PROMOS_URL}?limit=10`)
+      .then((r) => r.json())
+      .then((data) => {
+        const list = data.success ? data.data : Array.isArray(data) ? data : [];
+        const featured =
+          list.find((v) => v.isFeatured && v.isActive) ||
+          list.find((v) => v.isActive);
+        if (featured) setPromoVideo(featured);
+      })
+      .catch(() => {});
+  }, []);
+
+  return promoVideo;
+}
+
+const FALLBACK_IMG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 function getImage(product) {
   return (
     product.image?.url ||
     product.imageUrl ||
     product.img ||
     product.photo ||
-    "https://via.placeholder.com/300?text=No+Image"
+    FALLBACK_IMG
   );
 }
 
@@ -173,7 +196,8 @@ function ProductCard({ prod }) {
           alt={prod.title}
           className="w-full h-32 sm:h-36 object-contain p-2 group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {
-            e.target.src = "https://via.placeholder.com/300?text=No+Image";
+            e.target.onerror = null;
+            e.target.src = FALLBACK_IMG;
           }}
         />
         <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
@@ -312,7 +336,6 @@ function CategoryCard({ cat }) {
       className="group flex-shrink-0 w-[160px] lg:w-auto rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
       style={{ height: 200, display: "block", position: "relative" }}
     >
-      {/* Hardcoded image — always fills the card */}
       <img
         src={cat.image}
         alt={cat.title}
@@ -386,11 +409,274 @@ function CategoryCard({ cat }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// PROMO VIDEO SECTION
+// ─────────────────────────────────────────────────────────────
+function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
+  const videoRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setPlaying(false);
+    }
+  };
+
+  const fmtDuration = (s) => {
+    if (!s) return null;
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  // Minimized view
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 w-72 shadow-2xl rounded-xl overflow-hidden bg-black border border-gray-700">
+        <div className="relative">
+          {/* Video thumbnail */}
+          <div
+            className="relative cursor-pointer"
+            onClick={() => onMinimize(false)}
+          >
+            <video
+              ref={videoRef}
+              src={video.videoUrl}
+              poster={video.thumbnailUrl}
+              className="w-full h-40 object-cover"
+              style={{ display: "block" }}
+              playsInline
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white/90">
+                <svg
+                  width="16"
+                  height="20"
+                  viewBox="0 0 22 26"
+                  fill="none"
+                  style={{ marginLeft: 2 }}
+                >
+                  <path d="M1 1l20 12L1 25V1z" fill="#1a1a1a" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Control bar */}
+          <div className="flex items-center justify-between p-2 bg-black/90 backdrop-blur-sm">
+            <span className="text-white text-xs font-medium truncate flex-1">
+              {video.title}
+            </span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => onMinimize(false)}
+                className="text-white text-xs px-2 py-1 rounded hover:bg-white/10"
+                aria-label="Expand video"
+              >
+                □
+              </button>
+              <button
+                onClick={onDismiss}
+                className="text-white text-xs px-2 py-1 rounded hover:bg-white/10"
+                aria-label="Close video"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full view
+  return (
+    <section className="page-x pb-8">
+      <div
+        className="relative rounded-2xl overflow-hidden bg-black shadow-xl"
+        style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+      >
+        {/* Control buttons */}
+        <div className="absolute top-3 right-3 z-20 flex gap-2">
+          <button
+            onClick={() => onMinimize(true)}
+            aria-label="Minimize video"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-white text-xl leading-none transition-all duration-200 hover:scale-110"
+            style={{
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(6px)",
+              border: "1px solid rgba(255,255,255,0.15)",
+            }}
+          >
+            _
+          </button>
+          <button
+            onClick={onDismiss}
+            aria-label="Close promo video"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-white text-xl leading-none transition-all duration-200 hover:scale-110"
+            style={{
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(6px)",
+              border: "1px solid rgba(255,255,255,0.15)",
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Featured badge */}
+        {video.isFeatured && (
+          <div
+            className="absolute top-3 left-3 z-20 rounded-full px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-widest"
+            style={{ background: "var(--color-orange)", color: "#fff" }}
+          >
+            ★ Featured
+          </div>
+        )}
+
+        {/* Video element */}
+        <div
+          className="relative cursor-pointer"
+          style={{ aspectRatio: "16/9" }}
+          onClick={togglePlay}
+        >
+          <video
+            ref={videoRef}
+            src={video.videoUrl}
+            poster={video.thumbnailUrl}
+            className="w-full h-full object-cover"
+            style={{ display: "block" }}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onEnded={() => setPlaying(false)}
+            playsInline
+          />
+
+          {/* Play/Pause overlay — only shown when paused */}
+          {!playing && (
+            <div
+              className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
+              style={{ background: "rgba(0,0,0,0.35)" }}
+            >
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-transform duration-200 hover:scale-105"
+                style={{
+                  background: "rgba(255,255,255,0.92)",
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                <svg
+                  width="22"
+                  height="26"
+                  viewBox="0 0 22 26"
+                  fill="none"
+                  style={{ marginLeft: 3 }}
+                >
+                  <path d="M1 1l20 12L1 25V1z" fill="#1a1a1a" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom meta bar */}
+        <div
+          className="flex items-center justify-between px-4 py-3 flex-wrap gap-2"
+          style={{ background: "#111" }}
+        >
+          <div className="flex flex-col min-w-0">
+            <span
+              className="font-bold uppercase truncate"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.78rem",
+                letterSpacing: "0.06em",
+                color: "#fff",
+              }}
+            >
+              {video.title}
+            </span>
+            {video.description && (
+              <span
+                className="truncate mt-0.5"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.65rem",
+                  color: "rgba(255,255,255,0.45)",
+                }}
+              >
+                {video.description}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-4 flex-shrink-0 flex-wrap">
+            {video.duration && (
+              <span
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.62rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.45)",
+                }}
+              >
+                ⏱ {fmtDuration(video.duration)}
+              </span>
+            )}
+            {video.format && (
+              <span
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.62rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.45)",
+                }}
+              >
+                🎞 {video.format.toUpperCase()}
+              </span>
+            )}
+            {video.tags?.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap">
+                {video.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full px-2 py-0.5"
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.62rem",
+                      fontWeight: 600,
+                      background: "rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // MAIN EXPORT
 // ─────────────────────────────────────────────────────────────
 export default function Sales() {
   const scrollRef = useRef(null);
   const { products, loading, error, refetch } = useProducts();
+  const promoVideo = usePromoVideo();
+  const [promoDismissed, setPromoDismissed] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const searchQuery = searchParams.get("q") || "";
@@ -408,9 +694,10 @@ export default function Sales() {
       })
     : products;
 
+  // ── No more random shuffle — products are stable on every render ──
   const displayProducts = searchQuery.trim()
     ? filteredProducts
-    : [...products].sort(() => Math.random() - 0.5).slice(0, 8);
+    : products.slice(0, 8);
 
   const scroll = (dir) => {
     if (scrollRef.current)
@@ -477,6 +764,14 @@ export default function Sales() {
           )}
         </div>
       </section>
+
+      {/* ── Promo Video (after Our Range, before Featured Products) ── */}
+      {promoVideo && !promoDismissed && (
+        <PromoVideoSection
+          video={promoVideo}
+          onDismiss={() => setPromoDismissed(true)}
+        />
+      )}
 
       {/* ── Featured / Search Results ── */}
       <section className="section-y page-x bg-soft">

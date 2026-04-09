@@ -1,4 +1,4 @@
-const PromoVideo = require("../models/PromoVideo");
+const PromoVideo = require("../models/Promovideo");
 const { deleteVideo, deleteImage, cloudinary } = require("../db/claudinary");
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

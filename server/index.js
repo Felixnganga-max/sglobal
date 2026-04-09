@@ -19,7 +19,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://smartglobal-w1ni.vercel.app",
+      "https://sglobal-dsy3.vercel.app",
       "https://www.smartglobal.co.ke",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],

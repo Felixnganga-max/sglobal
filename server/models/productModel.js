@@ -86,7 +86,7 @@ const productSchema = new mongoose.Schema(
     },
     badge: {
       type: String,
-      enum: ["NEW", "SALE", "HOT", "LIMITED", ""],
+      enum: ["SPECIAL OFFER", "HOT DEALS", "LIMITED OFFER", ""],
       default: "",
     },
     isHalal: {

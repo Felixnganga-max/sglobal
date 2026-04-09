@@ -3,7 +3,7 @@ import crepes from "./crepes.jpg";
 import ice from "./ice.jpeg";
 import kent from "./kent.jpg";
 import noodle from "./noodle.png";
-import top from "./top.jpg";
+import top from "./top.jfif";
 import top2 from "./top2.jpg";
 import topping from "./topping.jpg";
 import top3 from "./top3.jpg";

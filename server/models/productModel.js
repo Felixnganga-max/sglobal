@@ -62,16 +62,31 @@ const productSchema = new mongoose.Schema(
         "Kizembe spring water",
       ],
     },
+
+    // Unit price — price per single item
     price: {
       type: Number,
       required: [true, "Price is required"],
       min: [0, "Price cannot be negative"],
     },
-    oldPrice: {
+
+    // Minimum Order Quantity — orders must be multiples of this value
+    // e.g. 6 means you can order 6, 12, 18 ... but never 1, 2, 7, etc.
+    minimumOrderQuantity: {
       type: Number,
-      min: [0, "Old price cannot be negative"],
+      required: [true, "Minimum order quantity is required"],
+      min: [1, "Minimum order quantity must be at least 1"],
+      default: 1,
+    },
+
+    // totalPrice — computed as price × minimumOrderQuantity (set by pre-save hook)
+    // This is what the customer pays for one "set / pack"
+    totalPrice: {
+      type: Number,
+      min: [0, "Total price cannot be negative"],
       default: null,
     },
+
     discount: {
       type: Number,
       min: 0,
@@ -153,39 +168,58 @@ const productSchema = new mongoose.Schema(
   },
 );
 
-// Virtual — calculated discount percentage
-productSchema.virtual("calculatedDiscount").get(function () {
-  if (this.price && this.oldPrice && this.oldPrice > this.price) {
-    return Math.round(((this.oldPrice - this.price) / this.oldPrice) * 100);
-  }
-  return null;
+// ─────────────────────────────────────────────
+// Virtual — next valid order quantity above a requested amount
+// e.g. MOQ=6, requested=8 → nextValidQuantity = 12
+// ─────────────────────────────────────────────
+productSchema.virtual("nextValidQuantity").get(function () {
+  return this.minimumOrderQuantity; // base pack size (the minimum valid order)
 });
 
-// Pre-save — sync inStock and discount
+// ─────────────────────────────────────────────
+// Pre-save — sync inStock, totalPrice, and discount
+// ─────────────────────────────────────────────
 productSchema.pre("save", function (next) {
+  // Sync inStock from stock
   this.inStock = this.stock > 0;
 
-  if (this.oldPrice && this.oldPrice > this.price) {
-    this.discount = Math.round(
-      ((this.oldPrice - this.price) / this.oldPrice) * 100,
-    );
-  } else {
-    this.discount = null;
-  }
+  // Always recompute totalPrice = unit price × MOQ
+  const moq = this.minimumOrderQuantity || 1;
+  this.totalPrice = parseFloat((this.price * moq).toFixed(2));
+
+  // No oldPrice anymore — discount field left for manual promotional discounts
+  // You can still set discount manually if running a promo
 
   next();
 });
 
-// Pre-findOneAndUpdate — sync inStock when updating via findByIdAndUpdate
+// ─────────────────────────────────────────────
+// Pre-findOneAndUpdate — sync inStock & totalPrice when updating via findByIdAndUpdate
+// ─────────────────────────────────────────────
 productSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate();
+
   if (update.stock !== undefined) {
     update.inStock = update.stock > 0;
   }
+
+  // Recompute totalPrice if price or MOQ changed
+  if (update.price !== undefined || update.minimumOrderQuantity !== undefined) {
+    // We need both values — pull from existing update or fall back to undefined
+    // Note: full recompute happens in pre-save; here we do a best-effort sync
+    const price = update.price;
+    const moq = update.minimumOrderQuantity;
+    if (price !== undefined && moq !== undefined) {
+      update.totalPrice = parseFloat((price * moq).toFixed(2));
+    }
+  }
+
   next();
 });
 
+// ─────────────────────────────────────────────
 // Indexes
+// ─────────────────────────────────────────────
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ inStock: 1 });

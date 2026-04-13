@@ -29,6 +29,21 @@ const safeDeleteImages = async (images = []) => {
   );
 };
 
+/**
+ * Given a desired quantity and a product's MOQ, returns the smallest
+ * valid order quantity that is >= desiredQty and a multiple of MOQ.
+ *
+ * Examples (MOQ = 6):
+ *   resolveOrderQuantity(6,  6) → 6
+ *   resolveOrderQuantity(8,  6) → 12
+ *   resolveOrderQuantity(12, 6) → 12
+ *   resolveOrderQuantity(1,  6) → 6
+ */
+const resolveOrderQuantity = (desiredQty, moq) => {
+  if (desiredQty <= moq) return moq;
+  return Math.ceil(desiredQty / moq) * moq;
+};
+
 // ─────────────────────────────────────────────
 // @desc    Get all products
 // @route   GET /api/products
@@ -131,7 +146,7 @@ exports.createProduct = async (req, res) => {
       title,
       category,
       price,
-      oldPrice,
+      minimumOrderQuantity, // NEW — required field
       stock,
       badge,
       isHalal,
@@ -141,6 +156,7 @@ exports.createProduct = async (req, res) => {
       descriptionBlocks,
       features,
       specifications,
+      discount,
     } = req.body;
 
     if (
@@ -148,21 +164,33 @@ exports.createProduct = async (req, res) => {
       !category ||
       !price ||
       stock === undefined ||
-      !shortDescription
+      !shortDescription ||
+      !minimumOrderQuantity
     ) {
       return res.status(400).json({
         success: false,
-        message: "Required: title, category, price, stock, shortDescription",
+        message:
+          "Required: title, category, price, minimumOrderQuantity, stock, shortDescription",
+      });
+    }
+
+    const moq = parseInt(minimumOrderQuantity);
+    if (moq < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "minimumOrderQuantity must be at least 1",
       });
     }
 
     uploadedImages = await resolveImages(req);
 
+    // totalPrice is auto-computed by the pre-save hook (price × MOQ)
     const product = await Product.create({
       title,
       category,
       price: parseFloat(price),
-      oldPrice: oldPrice ? parseFloat(oldPrice) : null,
+      minimumOrderQuantity: moq,
+      // totalPrice computed by hook — no need to pass it
       stock: parseInt(stock),
       badge: badge || "",
       isHalal: isHalal !== undefined ? isHalal : true,
@@ -172,18 +200,17 @@ exports.createProduct = async (req, res) => {
       descriptionBlocks: descriptionBlocks || [],
       features: features || [],
       specifications: specifications || [],
-      images: uploadedImages, // [] is fine — images are optional
+      images: uploadedImages,
+      discount: discount ? parseFloat(discount) : null,
     });
 
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Product created successfully",
-        data: product,
-      });
+    res.status(201).json({
+      success: true,
+      message: "Product created successfully",
+      data: product,
+    });
   } catch (error) {
-    await safeDeleteImages(uploadedImages); // rollback on failure
+    await safeDeleteImages(uploadedImages);
     res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
@@ -194,9 +221,6 @@ exports.createProduct = async (req, res) => {
 // @desc    Update product — APPENDS images, never replaces
 // @route   PUT /api/products/:id
 // @access  Private/Admin
-//
-// To REMOVE specific images, use DELETE /api/products/:id/images
-// To REPLACE all images, use PUT /api/products/:id/images/replace
 // ─────────────────────────────────────────────
 exports.updateProduct = async (req, res) => {
   try {
@@ -211,7 +235,7 @@ exports.updateProduct = async (req, res) => {
       title,
       category,
       price,
-      oldPrice,
+      minimumOrderQuantity,
       stock,
       badge,
       isHalal,
@@ -221,7 +245,19 @@ exports.updateProduct = async (req, res) => {
       descriptionBlocks,
       features,
       specifications,
+      discount,
     } = req.body;
+
+    // Validate MOQ if provided
+    if (minimumOrderQuantity !== undefined) {
+      const moq = parseInt(minimumOrderQuantity);
+      if (moq < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "minimumOrderQuantity must be at least 1",
+        });
+      }
+    }
 
     // Resolve any newly uploaded images
     const newImages = await resolveImages(req);
@@ -229,9 +265,7 @@ exports.updateProduct = async (req, res) => {
     // APPEND new images to existing ones — never replace
     const mergedImages = [...product.images, ...newImages];
 
-    // Guard: max 10 images total
     if (mergedImages.length > 10) {
-      // Delete the newly uploaded ones since we can't use them
       await safeDeleteImages(newImages);
       return res.status(400).json({
         success: false,
@@ -239,18 +273,26 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
+    const updatedPrice =
+      price !== undefined ? parseFloat(price) : product.price;
+    const updatedMoq =
+      minimumOrderQuantity !== undefined
+        ? parseInt(minimumOrderQuantity)
+        : product.minimumOrderQuantity;
+
+    // Recompute totalPrice whenever price or MOQ changes
+    const updatedTotalPrice = parseFloat(
+      (updatedPrice * updatedMoq).toFixed(2),
+    );
+
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
       {
         title: title ?? product.title,
         category: category ?? product.category,
-        price: price !== undefined ? parseFloat(price) : product.price,
-        oldPrice:
-          oldPrice !== undefined
-            ? oldPrice
-              ? parseFloat(oldPrice)
-              : null
-            : product.oldPrice,
+        price: updatedPrice,
+        minimumOrderQuantity: updatedMoq,
+        totalPrice: updatedTotalPrice,
         stock: stock !== undefined ? parseInt(stock) : product.stock,
         badge: badge !== undefined ? badge : product.badge,
         isHalal: isHalal !== undefined ? isHalal : product.isHalal,
@@ -261,17 +303,73 @@ exports.updateProduct = async (req, res) => {
         features: features ?? product.features,
         specifications: specifications ?? product.specifications,
         images: mergedImages,
+        discount:
+          discount !== undefined
+            ? discount
+              ? parseFloat(discount)
+              : null
+            : product.discount,
       },
       { new: true, runValidators: true },
     );
 
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: updated,
+    });
+  } catch (error) {
     res
-      .status(200)
-      .json({
-        success: true,
-        message: "Product updated successfully",
-        data: updated,
-      });
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// @desc    Validate and resolve a requested quantity to a valid MOQ multiple
+// @route   POST /api/products/:id/resolve-quantity
+// @body    { requestedQty: Number }
+// @access  Public
+//
+// Use this on the frontend before adding to cart.
+// Returns the adjusted quantity and the price for that quantity.
+// ─────────────────────────────────────────────
+exports.resolveQuantity = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    const { requestedQty } = req.body;
+    const qty = parseInt(requestedQty);
+
+    if (!qty || qty < 1) {
+      return res
+        .status(400)
+        .json({ success: false, message: "requestedQty must be at least 1" });
+    }
+
+    const resolvedQty = resolveOrderQuantity(qty, product.minimumOrderQuantity);
+    const resolvedPrice = parseFloat((resolvedQty * product.price).toFixed(2));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        requestedQty: qty,
+        resolvedQty,
+        minimumOrderQuantity: product.minimumOrderQuantity,
+        unitPrice: product.price,
+        totalPrice: resolvedPrice,
+        wasAdjusted: resolvedQty !== qty,
+        adjustmentMessage:
+          resolvedQty !== qty
+            ? `Quantity adjusted from ${qty} to ${resolvedQty} (must be a multiple of ${product.minimumOrderQuantity})`
+            : null,
+      },
+    });
   } catch (error) {
     res
       .status(500)
@@ -301,7 +399,6 @@ exports.removeProductImages = async (req, res) => {
         .json({ success: false, message: "publicIds array is required" });
     }
 
-    // Find images to remove
     const toRemove = product.images.filter((img) =>
       publicIds.includes(img.publicId),
     );
@@ -309,10 +406,8 @@ exports.removeProductImages = async (req, res) => {
       (img) => !publicIds.includes(img.publicId),
     );
 
-    // Delete from Cloudinary
     await safeDeleteImages(toRemove);
 
-    // Save remaining images
     product.images = remaining;
     await product.save();
 
@@ -350,7 +445,6 @@ exports.replaceProductImages = async (req, res) => {
         .json({ success: false, message: "No images provided" });
     }
 
-    // Delete old images from Cloudinary
     await safeDeleteImages(product.images);
 
     product.images = newImages;
@@ -382,13 +476,11 @@ exports.deleteProduct = async (req, res) => {
     }
     await safeDeleteImages(product.images);
     await Product.findByIdAndDelete(req.params.id);
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Product deleted successfully",
-        data: {},
-      });
+    res.status(200).json({
+      success: true,
+      message: "Product deleted successfully",
+      data: {},
+    });
   } catch (error) {
     res
       .status(500)
@@ -523,13 +615,11 @@ exports.bulkUpdateStock = async (req, res) => {
       },
     }));
     const result = await Product.bulkWrite(bulkOps);
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Stock updated",
-        data: { modifiedCount: result.modifiedCount },
-      });
+    res.status(200).json({
+      success: true,
+      message: "Stock updated",
+      data: { modifiedCount: result.modifiedCount },
+    });
   } catch (error) {
     res
       .status(500)

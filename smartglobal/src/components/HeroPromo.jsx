@@ -485,28 +485,6 @@ export default function HeroPromo() {
               </>
             )}
           </div>
-
-          {/* Stats strip */}
-          {!loading && (
-            <div className="hero-stats">
-              {[
-                { num: 500, suffix: "+", label: "Products" },
-                { num: 50, suffix: "+", label: "Brands" },
-                { num: 10000, suffix: "+", label: "Customers" },
-              ].map(({ num, suffix, label }) => (
-                <div key={label} className="hero-stat">
-                  {/* font-heading = Ubuntu from globals */}
-                  <span
-                    className="font-heading hero-stat-num"
-                    style={{ fontSize: "1.05rem", fontWeight: 700 }}
-                  >
-                    <Counter target={num} suffix={suffix} />
-                  </span>
-                  <span className="text-label hero-stat-label">{label}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* ══ Side cards ══ */}

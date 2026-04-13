@@ -421,14 +421,14 @@ export default function HeroPromo() {
                 </div>
 
                 {/* Title — uses .text-hero (Ubuntu 700) from globals */}
-                <h2
+                <h6
                   className="text-hero"
                   style={{ color: "#fff", marginBottom: "0.75rem" }}
                 >
                   Premium Food
                   <br />
                   <span style={{ color: "var(--color-orange)" }}>Products</span>
-                </h2>
+                </h6>
 
                 {/* Subtitle — uses .text-body (Poppins 400) from globals */}
                 <p

@@ -168,6 +168,7 @@ function ProductCard({ product }) {
 
   const getImage = () =>
     product.image?.url ||
+    product.images?.[0]?.url || // ← add this line
     product.imageUrl ||
     product.img ||
     product.photo ||

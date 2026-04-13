@@ -195,7 +195,8 @@ function ToppingsSlide() {
 
         {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
-          <div className="absolute right-0 top-0 h-full w-[75%] lg:w-full">
+          <div className="absolute right-0 top-0 h-full w-full">
+            {" "}
             <img
               src={assets.cara}
               alt="Kent Toppings"
@@ -264,7 +265,8 @@ function SpudsSlide() {
 
         {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
-          <div className="absolute right-0 top-0 h-full w-[80%] lg:w-full">
+          <div className="absolute right-0 top-0 h-full w-full">
+            {" "}
             <img
               src={assets.spuds}
               alt="SPUDS Crisps"
@@ -335,7 +337,8 @@ function WaterSlide() {
 
         {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
-          <div className="absolute right-0 top-0 h-full w-[75%] lg:w-full">
+          <div className="absolute right-0 top-0 h-full w-full">
+            {" "}
             <img
               src={assets.water}
               alt="Kizembe Water"
@@ -406,7 +409,8 @@ function HazelnutSlide() {
 
         {/* Right — Single Image */}
         <div className="relative order-1 lg:order-2 h-[45vw] sm:h-[55vw] lg:h-auto overflow-hidden">
-          <div className="absolute right-0 top-0 h-full w-[75%] lg:w-full">
+          <div className="absolute right-0 top-0 h-full w-full">
+            {" "}
             <img
               src={assets.hazelnut}
               alt="Kent Hazelnut Cream"

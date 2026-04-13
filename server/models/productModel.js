@@ -59,7 +59,7 @@ const productSchema = new mongoose.Schema(
         "Kent syrups",
         "Kent sauces",
         "Kent spreads",
-        "Kizembe spring water",
+        "Water",
       ],
     },
 

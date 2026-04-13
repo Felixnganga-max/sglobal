@@ -422,7 +422,7 @@ export default function HeroPromo() {
 
                 {/* Title — uses .text-hero (Ubuntu 700) from globals */}
                 <h6
-                  className="text-hero"
+                  className="text-section-title"
                   style={{ color: "#fff", marginBottom: "0.75rem" }}
                 >
                   Premium Food

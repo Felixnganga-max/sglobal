@@ -917,7 +917,7 @@ export default function PlaceOrder() {
                     </div>
                     <div className="po-cart-right">
                       <div className="po-subtotal">
-                        KSh {((item.price || 0) * qty).toLocaleString()}
+                        KSh {((item.totalPrice || 0) * qty).toLocaleString()}
                       </div>
                       <button
                         className="po-remove-btn"

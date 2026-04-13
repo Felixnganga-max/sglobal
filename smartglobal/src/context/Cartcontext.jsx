@@ -81,15 +81,26 @@ export function CartProvider({ children }) {
   /** Wipe the entire cart */
   const clearCart = () => setCartItems([]);
 
-  /** Total number of items (sum of quantities) */
+  /** Total number of packs in cart (sum of cartQty across all items) */
   const totalItems = cartItems.reduce(
     (sum, item) => sum + (item.cartQty || 1),
     0,
   );
 
-  /** Total price */
+  /**
+   * Grand total price.
+   *
+   * Each product from the API has:
+   *   price          — unit price per single piece  (e.g. 62.64)
+   *   totalPrice     — pack price = price × minimumOrderQuantity  (e.g. 375.84)
+   *   cartQty        — how many packs the customer wants
+   *
+   * So the line total = totalPrice × cartQty.
+   * Falls back to item.price for products without MOQ bundling.
+   */
   const totalPrice = cartItems.reduce(
-    (sum, item) => sum + (item.price || 0) * (item.cartQty || 1),
+    (sum, item) =>
+      sum + (item.totalPrice ?? item.price ?? 0) * (item.cartQty || 1),
     0,
   );
 
@@ -103,12 +114,12 @@ export function CartProvider({ children }) {
   /**
    * submitOrder
    * @param {object} params
-   * @param {object} params.customer       - { name, phone, location, notes }
-   * @param {array}  params.items          - cart items array (defaults to cartItems)
-   * @param {number} params.totalPrice     - defaults to cart totalPrice
+   * @param {object} params.customer        — { name, phone, location, notes }
+   * @param {array}  params.items           — cart items (defaults to cartItems)
+   * @param {number} params.totalPrice      — defaults to cart totalPrice
    * @param {"whatsapp"|"email"} params.channel
-   * @param {string} [params.customerEmail] - optional, for confirmation email
-   * @param {string} [params.token]         - JWT if user is logged in
+   * @param {string} [params.customerEmail] — optional, for confirmation email
+   * @param {string} [params.token]         — JWT if user is logged in
    */
   const submitOrder = useCallback(
     async ({
@@ -136,9 +147,15 @@ export function CartProvider({ children }) {
             items: orderItems.map((item) => ({
               productId: item._id || item.id,
               title: item.title || item.name,
-              price: item.price,
+              // Send the pack price so the backend records the correct billable amount
+              price: item.totalPrice ?? item.price,
               quantity: item.cartQty || item.quantity || 1,
-              image: item.image?.url || item.imageUrl || item.img || "",
+              image:
+                item.images?.[0]?.url ||
+                item.image?.url ||
+                item.imageUrl ||
+                item.img ||
+                "",
               category: item.category || "",
             })),
             totalPrice: orderTotal,

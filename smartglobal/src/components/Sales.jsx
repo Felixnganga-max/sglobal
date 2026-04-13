@@ -24,6 +24,17 @@ const CATEGORY_CONFIG = [
   { key: "kizembe spring water", accent: "#FF7F11", image: assets.kize },
 ];
 
+// Static categories — built once from CATEGORY_CONFIG, never from the DB
+const STATIC_CATEGORIES = CATEGORY_CONFIG.map((c) => ({
+  id: c.key,
+  title: c.key
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" "),
+  accent: c.accent,
+  image: c.image,
+}));
+
 // ─────────────────────────────────────────────────────────────
 // DATA HOOKS
 // ─────────────────────────────────────────────────────────────
@@ -91,31 +102,6 @@ function getImage(product) {
   );
 }
 
-function buildCategories(products) {
-  const seen = new Map();
-  products.forEach((p) => {
-    const cat = p.category || "Other";
-    if (!seen.has(cat)) seen.set(cat, p);
-  });
-
-  return Array.from(seen.entries())
-    .slice(0, 4)
-    .map(([title]) => {
-      const config = CATEGORY_CONFIG.find(
-        (c) => c.key === title.toLowerCase().trim(),
-      );
-      return {
-        id: title,
-        title,
-        accent: config?.accent || "#FF7F11",
-        image:
-          config?.image ||
-          "https://via.placeholder.com/600x400?text=" +
-            encodeURIComponent(title),
-      };
-    });
-}
-
 // ─────────────────────────────────────────────────────────────
 // SKELETONS
 // ─────────────────────────────────────────────────────────────
@@ -157,11 +143,6 @@ function ProductCard({ prod }) {
   const prodId = prod._id || prod.id;
   const isInCart = cartItems.some((item) => (item._id || item.id) === prodId);
 
-  // ── MOQ / pricing ────────────────────────────────────────────────────────
-  // moq       — pack size, e.g. 6 means customer buys 6, 12, 18 …
-  // unitPrice — price per single piece
-  // packPrice — what they pay for one pack (stored as totalPrice on the product,
-  //             or computed as fallback)
   const moq = prod.minimumOrderQuantity || 1;
   const unitPrice = prod.price || 0;
   const packPrice =
@@ -169,7 +150,6 @@ function ProductCard({ prod }) {
       ? prod.totalPrice
       : parseFloat((unitPrice * moq).toFixed(2));
 
-  // ── Add to cart — always add MOQ units at once ───────────────────────────
   const handleAddToCart = (e) => {
     e.stopPropagation();
     if (!inStock) return;
@@ -184,7 +164,6 @@ function ProductCard({ prod }) {
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer"
       aria-labelledby={`prod-${prodId}`}
     >
-      {/* ── Image ── */}
       <div className="relative bg-gray-50 overflow-hidden">
         <img
           src={getImage(prod)}
@@ -196,12 +175,10 @@ function ProductCard({ prod }) {
           }}
         />
 
-        {/* Category chip — top-left */}
         <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
           {prod.category}
         </div>
 
-        {/* MOQ badge — top-right orange circle (×6 style) */}
         {moq > 1 && (
           <div
             className="absolute top-1.5 right-1.5 flex items-center justify-center rounded-full text-white font-black shadow-md"
@@ -219,7 +196,6 @@ function ProductCard({ prod }) {
           </div>
         )}
 
-        {/* Promo badge — shown only when no MOQ badge, or below it */}
         {prod.badge && (
           <div
             className={`absolute ${moq > 1 ? "top-9 right-1.5" : "top-1.5 right-1.5"} text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-wide`}
@@ -230,7 +206,6 @@ function ProductCard({ prod }) {
         )}
       </div>
 
-      {/* ── Body ── */}
       <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
         <div>
           <h3
@@ -264,9 +239,7 @@ function ProductCard({ prod }) {
         </div>
 
         <div className="mt-2">
-          {/* ── Price block ── */}
           <div className="mb-1.5 space-y-0.5">
-            {/* Pack total — big, bold, red */}
             <div className="flex items-baseline gap-1 flex-wrap">
               <span
                 className="font-heading font-bold"
@@ -281,7 +254,6 @@ function ProductCard({ prod }) {
               )}
             </div>
 
-            {/* Per-piece price — green */}
             {moq > 1 && (
               <p
                 className="text-[0.6rem] font-semibold"
@@ -292,7 +264,6 @@ function ProductCard({ prod }) {
             )}
           </div>
 
-          {/* Stock indicator */}
           <p
             className="text-[0.55rem] font-semibold mb-1.5"
             style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
@@ -300,9 +271,7 @@ function ProductCard({ prod }) {
             {inStock ? "● In Stock" : "● Out of Stock"}
           </p>
 
-          {/* ── Actions ── */}
           <div className="flex items-center gap-1">
-            {/* Wishlist */}
             <button
               type="button"
               aria-label={`Save ${prod.title}`}
@@ -321,7 +290,6 @@ function ProductCard({ prod }) {
               />
             </button>
 
-            {/* Add to cart */}
             <button
               type="button"
               disabled={!inStock}
@@ -438,7 +406,7 @@ function CategoryCard({ cat }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PROMO VIDEO SECTION  (unchanged)
+// PROMO VIDEO SECTION
 // ─────────────────────────────────────────────────────────────
 function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
   const videoRef = useRef(null);
@@ -691,10 +659,10 @@ export default function Sales() {
   const { products, loading, error, refetch } = useProducts();
   const promoVideo = usePromoVideo();
   const [promoDismissed, setPromoDismissed] = useState(false);
+  const [promoMinimized, setPromoMinimized] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const searchQuery = searchParams.get("q") || "";
-  const categories = buildCategories(products);
 
   const filteredProducts = searchQuery.trim()
     ? products.filter((p) => {
@@ -757,24 +725,9 @@ export default function Sales() {
           className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {loading ? (
-            [...Array(4)].map((_, i) => <CategorySkeleton key={i} />)
-          ) : error ? (
-            <div className="col-span-4 text-center py-8">
-              <p className="text-sm text-gray-400">
-                Could not load categories.{" "}
-                <button
-                  onClick={refetch}
-                  className="underline"
-                  style={{ color: "var(--color-red)" }}
-                >
-                  Retry
-                </button>
-              </p>
-            </div>
-          ) : (
-            categories.map((cat) => <CategoryCard key={cat.id} cat={cat} />)
-          )}
+          {STATIC_CATEGORIES.map((cat) => (
+            <CategoryCard key={cat.id} cat={cat} />
+          ))}
         </div>
       </section>
 
@@ -783,6 +736,8 @@ export default function Sales() {
         <PromoVideoSection
           video={promoVideo}
           onDismiss={() => setPromoDismissed(true)}
+          onMinimize={setPromoMinimized}
+          isMinimized={promoMinimized}
         />
       )}
 

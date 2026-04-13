@@ -319,14 +319,6 @@ function ProductCard({ product }) {
             >
               KSh {packPrice.toLocaleString()}
             </span>
-            {moq > 1 && (
-              <span
-                className="font-body font-semibold"
-                style={{ fontSize: "0.58rem", color: "#6b7280" }}
-              >
-                pack of {moq}
-              </span>
-            )}
           </div>
 
           {/* Per-piece price — green, smaller — "KSh 145.5 per piece" */}

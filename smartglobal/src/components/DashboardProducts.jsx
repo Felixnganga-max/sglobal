@@ -51,7 +51,7 @@ const CATEGORIES = [
   "Kent sauces",
   "Kent syrups",
   "Kent spreads",
-  "Kizembe spring water",
+  "Water",
 ];
 
 const BADGES = ["SPECIAL OFFER", "HOT DEALS", "LIMITED OFFER"];

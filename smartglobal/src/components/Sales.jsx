@@ -247,11 +247,6 @@ function ProductCard({ prod }) {
               >
                 KSh {packPrice.toLocaleString()}
               </span>
-              {moq > 1 && (
-                <span className="text-[0.55rem] text-gray-400 font-semibold">
-                  pack of {moq}
-                </span>
-              )}
             </div>
 
             {moq > 1 && (

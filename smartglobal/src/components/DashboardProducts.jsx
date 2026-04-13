@@ -21,6 +21,7 @@ import {
   Loader2,
   AlertCircle,
   ImagePlus,
+  Layers,
 } from "lucide-react";
 import { productService } from "../api/productService";
 
@@ -32,31 +33,26 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
-  const [formData, setFormData] = useState(
-    editProduct || {
-      title: "",
-      category: "",
-      price: "",
-      oldPrice: "",
-      stock: "",
-      badge: "",
-      isHalal: true,
-      rating: 0,
-      reviews: 0,
-      shortDescription: "",
-    },
-  );
+  const emptyForm = {
+    title: "",
+    category: "",
+    price: "",
+    minimumOrderQuantity: "",
+    stock: "",
+    badge: "",
+    isHalal: true,
+    rating: 0,
+    reviews: 0,
+    shortDescription: "",
+  };
+
+  const [formData, setFormData] = useState(emptyForm);
 
   // Each entry: { preview: string, base64: string | null, isExisting: boolean, url?: string }
   const [images, setImages] = useState([]);
-
-  const [descriptionBlocks, setDescriptionBlocks] = useState(
-    editProduct?.descriptionBlocks || [],
-  );
-  const [features, setFeatures] = useState(editProduct?.features || []);
-  const [specifications, setSpecifications] = useState(
-    editProduct?.specifications || [],
-  );
+  const [descriptionBlocks, setDescriptionBlocks] = useState([]);
+  const [features, setFeatures] = useState([]);
+  const [specifications, setSpecifications] = useState([]);
 
   // Update form when editProduct changes
   useEffect(() => {
@@ -65,7 +61,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
         title: editProduct.title,
         category: editProduct.category,
         price: editProduct.price,
-        oldPrice: editProduct.oldPrice || "",
+        minimumOrderQuantity: editProduct.minimumOrderQuantity || 1,
         stock: editProduct.stock,
         badge: editProduct.badge || "",
         isHalal: editProduct.isHalal,
@@ -74,7 +70,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
         shortDescription: editProduct.shortDescription,
       });
 
-      // Populate existing images from the product
       if (editProduct.images && editProduct.images.length > 0) {
         setImages(
           editProduct.images.map((img) => ({
@@ -92,19 +87,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
       setFeatures(editProduct.features || []);
       setSpecifications(editProduct.specifications || []);
     } else {
-      // Reset for new product
-      setFormData({
-        title: "",
-        category: "",
-        price: "",
-        oldPrice: "",
-        stock: "",
-        badge: "",
-        isHalal: true,
-        rating: 0,
-        reviews: 0,
-        shortDescription: "",
-      });
+      setFormData(emptyForm);
       setImages([]);
       setDescriptionBlocks([]);
       setFeatures([]);
@@ -130,8 +113,15 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
 
   const badges = ["SPECIAL OFFER", "HOT DEALS", "LIMITED OFFER"];
 
-  // ── Image handlers ────────────────────────────────────────────────────────
+  // ── Derived: computed total price preview ────────────────────────────────
+  const computedTotalPrice =
+    formData.price && formData.minimumOrderQuantity
+      ? (
+          parseFloat(formData.price) * parseInt(formData.minimumOrderQuantity)
+        ).toFixed(2)
+      : null;
 
+  // ── Image handlers ────────────────────────────────────────────────────────
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -164,13 +154,11 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
       reader.readAsDataURL(file);
     });
 
-    // Reset input so the same file can be re-selected if needed
     e.target.value = "";
   };
 
-  const removeImage = (index) => {
+  const removeImage = (index) =>
     setImages((prev) => prev.filter((_, i) => i !== index));
-  };
 
   const moveImage = (index, direction) => {
     setImages((prev) => {
@@ -183,7 +171,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
   };
 
   // ── Description blocks ────────────────────────────────────────────────────
-
   const addDescriptionBlock = (type) => {
     const newBlock = {
       id: Date.now(),
@@ -193,17 +180,13 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
     setDescriptionBlocks([...descriptionBlocks, newBlock]);
   };
 
-  const updateDescriptionBlock = (id, content) => {
+  const updateDescriptionBlock = (id, content) =>
     setDescriptionBlocks(
-      descriptionBlocks.map((block) =>
-        block.id === id ? { ...block, content } : block,
-      ),
+      descriptionBlocks.map((b) => (b.id === id ? { ...b, content } : b)),
     );
-  };
 
-  const removeDescriptionBlock = (id) => {
-    setDescriptionBlocks(descriptionBlocks.filter((block) => block.id !== id));
-  };
+  const removeDescriptionBlock = (id) =>
+    setDescriptionBlocks(descriptionBlocks.filter((b) => b.id !== id));
 
   const moveBlock = (index, direction) => {
     const newBlocks = [...descriptionBlocks];
@@ -217,46 +200,37 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
     }
   };
 
-  const addListItem = (blockId) => {
+  const addListItem = (blockId) =>
     setDescriptionBlocks(
-      descriptionBlocks.map((block) =>
-        block.id === blockId
-          ? { ...block, content: [...block.content, ""] }
-          : block,
+      descriptionBlocks.map((b) =>
+        b.id === blockId ? { ...b, content: [...b.content, ""] } : b,
       ),
     );
-  };
 
-  const updateListItem = (blockId, itemIndex, value) => {
+  const updateListItem = (blockId, itemIndex, value) =>
     setDescriptionBlocks(
-      descriptionBlocks.map((block) =>
-        block.id === blockId
+      descriptionBlocks.map((b) =>
+        b.id === blockId
           ? {
-              ...block,
-              content: block.content.map((item, i) =>
+              ...b,
+              content: b.content.map((item, i) =>
                 i === itemIndex ? value : item,
               ),
             }
-          : block,
+          : b,
       ),
     );
-  };
 
-  const removeListItem = (blockId, itemIndex) => {
+  const removeListItem = (blockId, itemIndex) =>
     setDescriptionBlocks(
-      descriptionBlocks.map((block) =>
-        block.id === blockId
-          ? {
-              ...block,
-              content: block.content.filter((_, i) => i !== itemIndex),
-            }
-          : block,
+      descriptionBlocks.map((b) =>
+        b.id === blockId
+          ? { ...b, content: b.content.filter((_, i) => i !== itemIndex) }
+          : b,
       ),
     );
-  };
 
   // ── Features & specs ──────────────────────────────────────────────────────
-
   const addFeature = () => setFeatures([...features, ""]);
   const updateFeature = (i, v) =>
     setFeatures(features.map((f, idx) => (idx === i ? v : f)));
@@ -272,22 +246,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
   const removeSpecification = (i) =>
     setSpecifications(specifications.filter((_, idx) => idx !== i));
 
-  // ── Discount ──────────────────────────────────────────────────────────────
-
-  const calculateDiscount = () => {
-    if (formData.price && formData.oldPrice) {
-      const d = Math.round(
-        ((parseFloat(formData.oldPrice) - parseFloat(formData.price)) /
-          parseFloat(formData.oldPrice)) *
-          100,
-      );
-      return d > 0 ? d : null;
-    }
-    return null;
-  };
-
   // ── Validation ────────────────────────────────────────────────────────────
-
   const validateForm = () => {
     if (!formData.title.trim()) {
       alert("Please enter a product title");
@@ -299,6 +258,13 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
     }
     if (!formData.price || parseFloat(formData.price) <= 0) {
       alert("Please enter a valid price");
+      return false;
+    }
+    if (
+      !formData.minimumOrderQuantity ||
+      parseInt(formData.minimumOrderQuantity) < 1
+    ) {
+      alert("Please enter a minimum order quantity (at least 1)");
       return false;
     }
     if (!formData.stock || parseInt(formData.stock) < 0) {
@@ -317,7 +283,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
-
   const handleSubmit = async () => {
     if (!validateForm()) return;
     setIsSubmitting(true);
@@ -327,7 +292,8 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
         title: formData.title,
         category: formData.category,
         price: parseFloat(formData.price),
-        oldPrice: formData.oldPrice ? parseFloat(formData.oldPrice) : null,
+        minimumOrderQuantity: parseInt(formData.minimumOrderQuantity),
+        // totalPrice is computed server-side by the pre-save hook
         stock: parseInt(formData.stock),
         badge: formData.badge || "",
         isHalal: formData.isHalal,
@@ -344,13 +310,12 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
         ),
       };
 
-      // Only send base64 strings for NEW images (not existing ones)
       const newBase64Images = images
         .filter((img) => !img.isExisting && img.base64)
         .map((img) => img.base64);
 
       if (newBase64Images.length > 0) {
-        productData.imageData = newBase64Images; // array of base64 strings
+        productData.imageData = newBase64Images;
       }
 
       await onSave(productData);
@@ -427,7 +392,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  placeholder="e.g., Kent Vegetable Soup"
+                  placeholder="e.g., Curry Powder 100g Jar"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
                 />
               </div>
@@ -474,15 +439,15 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                 </div>
               </div>
 
-              {/* Price / Old Price / Stock */}
+              {/* Price / MOQ / Stock */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Price *
+                    Unit Price (per piece) *
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">
-                      $
+                      Ksh
                     </span>
                     <input
                       type="number"
@@ -492,30 +457,37 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
-                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                      className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
                     />
                   </div>
                 </div>
+
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Old Price (Optional)
+                    Min. Order Qty (MOQ) *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">
-                      $
-                    </span>
+                    <Layers className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="number"
-                      step="0.01"
-                      value={formData.oldPrice}
-                      placeholder="0.00"
+                      min="1"
+                      step="1"
+                      value={formData.minimumOrderQuantity}
+                      placeholder="e.g. 6"
                       onChange={(e) =>
-                        setFormData({ ...formData, oldPrice: e.target.value })
+                        setFormData({
+                          ...formData,
+                          minimumOrderQuantity: e.target.value,
+                        })
                       }
-                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Orders must be multiples of this number
+                  </p>
                 </div>
+
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     Stock Quantity *
@@ -532,11 +504,22 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                 </div>
               </div>
 
-              {calculateDiscount() && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-green-700 font-bold">
-                    ✓ Discount: {calculateDiscount()}% off
-                  </p>
+              {/* Total price preview banner */}
+              {computedTotalPrice && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-black text-sm flex-shrink-0">
+                    ×{formData.minimumOrderQuantity}
+                  </div>
+                  <div>
+                    <p className="text-orange-900 font-black text-lg">
+                      Pack Price: Ksh {computedTotalPrice}
+                    </p>
+                    <p className="text-orange-700 text-sm">
+                      {formData.minimumOrderQuantity} pieces × Ksh{" "}
+                      {parseFloat(formData.price || 0).toFixed(2)} per piece —
+                      computed automatically
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -544,7 +527,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Rating (0-5)
+                    Rating (0–5)
                   </label>
                   <input
                     type="number"
@@ -619,7 +602,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-bold text-gray-700">
-                    Product Images * &nbsp;
+                    Product Images *&nbsp;
                     <span className="font-normal text-gray-500">
                       ({images.length}/10) — first image is the cover
                     </span>
@@ -646,7 +629,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                 />
 
                 {images.length === 0 ? (
-                  /* Empty drop zone */
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-2 border-dashed border-gray-300 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-[#BF1A1A] transition-colors"
@@ -660,7 +642,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                     </span>
                   </div>
                 ) : (
-                  /* Image grid */
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {images.map((img, index) => (
                       <div key={index} className="relative group aspect-square">
@@ -673,22 +654,17 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                               : "border-gray-200"
                           }`}
                         />
-
-                        {/* Cover badge */}
                         {index === 0 && (
                           <span className="absolute bottom-1 left-1 px-2 py-0.5 bg-[#BF1A1A] text-white text-xs font-black rounded-md">
                             Cover
                           </span>
                         )}
-
-                        {/* Overlay controls */}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-xl transition-all flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                           <button
                             type="button"
                             onClick={() => moveImage(index, "left")}
                             disabled={index === 0}
                             className="p-1.5 bg-white rounded-lg disabled:opacity-30 hover:bg-gray-100 transition-colors"
-                            title="Move left"
                           >
                             <ChevronLeft className="h-3 w-3" />
                           </button>
@@ -696,7 +672,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                             type="button"
                             onClick={() => removeImage(index)}
                             className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                            title="Remove"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -705,15 +680,12 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                             onClick={() => moveImage(index, "right")}
                             disabled={index === images.length - 1}
                             className="p-1.5 bg-white rounded-lg disabled:opacity-30 hover:bg-gray-100 transition-colors"
-                            title="Move right"
                           >
                             <ChevronRight className="h-3 w-3" />
                           </button>
                         </div>
                       </div>
                     ))}
-
-                    {/* Add more tile */}
                     {images.length < 10 && (
                       <div
                         onClick={() => fileInputRef.current?.click()}
@@ -899,7 +871,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
           {/* ── FEATURES & SPECS TAB ──────────────────────────────────────── */}
           {currentTab === "details" && (
             <div className="space-y-6">
-              {/* Features */}
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-900">
@@ -939,7 +910,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                 </div>
               </div>
 
-              {/* Specifications */}
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-900">
@@ -1031,7 +1001,6 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
 function ProductCard({ product, onEdit, onDelete, onView }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Support both `images` array (new) and legacy `image` object
   const imageList =
     product.images && product.images.length > 0
       ? product.images
@@ -1042,6 +1011,11 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
   const imageUrl =
     imageList[activeIndex]?.url ||
     "https://via.placeholder.com/300x300?text=No+Image";
+
+  const moq = product.minimumOrderQuantity || 1;
+  // totalPrice is stored on the product (price × MOQ), fall back to computing it
+  const packPrice = product.totalPrice ?? product.price * moq;
+  const unitPrice = product.price;
 
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 group">
@@ -1055,6 +1029,46 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
               "https://via.placeholder.com/300x300?text=Image+Error";
           }}
         />
+
+        {/* MOQ badge — mimics the X6 circle in your screenshot */}
+        {moq > 1 && (
+          <div className="absolute top-2 right-2 w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg">
+            <span className="font-black text-xs leading-none text-center">
+              ×{moq}
+            </span>
+          </div>
+        )}
+
+        {/* Stock badge — moved to bottom-right when MOQ badge is present */}
+        <div
+          className={`absolute ${moq > 1 ? "bottom-2 right-2" : "top-2 right-2"}`}
+        >
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-bold ${
+              product.inStock
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {product.inStock ? "In Stock" : "Out of Stock"}
+          </span>
+        </div>
+
+        {product.badge && (
+          <div className="absolute top-2 left-2">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-black ${
+                product.badge === "SPECIAL OFFER"
+                  ? "bg-[#4CAF50] text-white"
+                  : product.badge === "HOT DEALS"
+                    ? "bg-[#FFD41D] text-[#7B4019]"
+                    : "bg-[#BF1A1A] text-white"
+              }`}
+            >
+              {product.badge}
+            </span>
+          </div>
+        )}
 
         {/* Multi-image dot indicators */}
         {imageList.length > 1 && (
@@ -1073,7 +1087,6 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
           </div>
         )}
 
-        {/* Prev / Next arrows (only shown on hover when multiple images) */}
         {imageList.length > 1 && (
           <>
             <button
@@ -1094,31 +1107,6 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
             </button>
           </>
         )}
-
-        <div className="absolute top-2 right-2">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-bold ${product.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-          >
-            {product.inStock ? "In Stock" : "Out of Stock"}
-          </span>
-        </div>
-        {product.badge && (
-          <div className="absolute top-2 left-2">
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-black ${
-                product.badge === "NEW"
-                  ? "bg-[#4CAF50] text-white"
-                  : product.badge === "SALE"
-                    ? "bg-[#BF1A1A] text-white"
-                    : product.badge === "HOT"
-                      ? "bg-[#FFD41D] text-[#7B4019]"
-                      : "bg-gray-800 text-white"
-              }`}
-            >
-              {product.badge}
-            </span>
-          </div>
-        )}
       </div>
 
       <div className="space-y-2">
@@ -1126,14 +1114,36 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
           {product.title}
         </h3>
         <p className="text-sm text-gray-500">{product.category}</p>
-        <div className="flex items-center justify-between">
-          <span
-            className="text-2xl font-black text-[#BF1A1A]"
-            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-          >
-            ${product.price.toFixed(2)}
-          </span>
-          <span className="text-sm text-gray-500">Stock: {product.stock}</span>
+
+        {/* Price block — mirrors the image: big pack price + smaller per-piece */}
+        <div className="mt-1">
+          <div className="flex items-baseline gap-2">
+            <span
+              className="text-xl font-black text-[#BF1A1A]"
+              style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+            >
+              Ksh {packPrice.toFixed(2)}
+            </span>
+            {moq > 1 && (
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                pack of {moq}
+              </span>
+            )}
+          </div>
+          {moq > 1 && (
+            <p className="text-xs text-green-700 font-semibold">
+              Ksh {unitPrice.toFixed(2)} per piece
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <span>Stock: {product.stock}</span>
+          {product.isHalal && (
+            <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-bold">
+              Halal ✓
+            </span>
+          )}
         </div>
       </div>
 
@@ -1181,12 +1191,19 @@ export default function DashboardProducts() {
 
   const categories = [
     "All Products",
-    "Soups",
-    "Pancake Mixes",
-    "Stock Cubes",
-    "Syrups & Sauces",
-    "Craft Cooked Crisps",
-    "Baby Pouches",
+    "Craft cooked potato chips",
+    "Just fruits",
+    "Hum Hum",
+    "Cakemix",
+    "Brownie & Pancake",
+    "Whipped creams",
+    "Boringer topping sauces",
+    "Kent soups",
+    "Kent stocks",
+    "Kent sauces",
+    "Kent syrups",
+    "Kent spreads",
+    "Kizembe spring water",
   ];
 
   useEffect(() => {
@@ -1327,24 +1344,23 @@ export default function DashboardProducts() {
               className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() =>
-                  setSelectedCategory(category.toLowerCase().replace(/ /g, "-"))
-                }
-                className={`px-4 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all duration-300 ${
-                  selectedCategory ===
-                    category.toLowerCase().replace(/ /g, "-") ||
-                  (category === "All Products" && selectedCategory === "all")
-                    ? "bg-[#BF1A1A] text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {categories.map((category) => {
+              const val = category === "All Products" ? "all" : category;
+              return (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(val)}
+                  className={`px-4 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all duration-300 ${
+                    selectedCategory === val
+                      ? "bg-[#BF1A1A] text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {category}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

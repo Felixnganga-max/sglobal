@@ -15,17 +15,11 @@ export default function FeaturedProductsGrid() {
     fetchProducts();
   }, []);
 
-  // ── Auto-scroll to category section once products have loaded ──
-  // Runs whenever loading flips to false OR the hash changes.
-  // We wait a tick (100ms) so the DOM has painted the sections before scrolling.
   useEffect(() => {
-    if (loading) return; // products not ready yet — wait
-    if (!location.hash) return; // no hash in URL — nothing to scroll to
+    if (loading) return;
+    if (!location.hash) return;
 
-    const categoryName = decodeURIComponent(
-      location.hash.replace(/^#/, ""), // strip the leading "#"
-    );
-
+    const categoryName = decodeURIComponent(location.hash.replace(/^#/, ""));
     const el = document.getElementById(categoryName);
     if (!el) return;
 
@@ -135,11 +129,7 @@ export default function FeaturedProductsGrid() {
       {categories.map((category) => (
         <section
           key={category}
-          // ── KEY CHANGE: ID matches the hash we set in Sales.jsx ──
-          // Sales.jsx sets hash as: #cat-${encodeURIComponent(cat.id)}
-          // So the ID here must be: cat-${category}
           id={`cat-${category}`}
-          // Small scroll-margin so the sticky navbar doesn't overlap the section heading
           style={{ scrollMarginTop: "80px" }}
         >
           <div className="mb-5">
@@ -158,7 +148,7 @@ export default function FeaturedProductsGrid() {
 }
 
 /* ─────────────────────────────────────────
-   PRODUCT CARD — wired to CartContext
+   PRODUCT CARD — with MOQ / pack pricing
 ───────────────────────────────────────── */
 function ProductCard({ product }) {
   const navigate = useNavigate();
@@ -168,7 +158,7 @@ function ProductCard({ product }) {
 
   const getImage = () =>
     product.image?.url ||
-    product.images?.[0]?.url || // ← add this line
+    product.images?.[0]?.url ||
     product.imageUrl ||
     product.img ||
     product.photo ||
@@ -179,10 +169,24 @@ function ProductCard({ product }) {
   const isInCart = cartItems.some((item) => (item._id || item.id) === prodId);
   const name = product.title || product.name || "Product";
 
+  // ── MOQ / pricing logic ──────────────────────────────────────────────────
+  // moq: minimum order quantity (pack size), e.g. 6
+  // unitPrice: price per single piece
+  // packPrice: what the customer pays for one pack (totalPrice stored on product,
+  //            or computed as unitPrice × moq as a fallback)
+  const moq = product.minimumOrderQuantity || 1;
+  const unitPrice = product.price || 0;
+  const packPrice =
+    product.totalPrice != null
+      ? product.totalPrice
+      : parseFloat((unitPrice * moq).toFixed(2));
+
+  // ── Add to cart — always adds MOQ units at once ──────────────────────────
   const handleAddToCart = (e) => {
     e.stopPropagation();
     if (!inStock) return;
-    addToCart(product);
+    // Pass quantity = moq so the cart context knows how many units to add
+    addToCart({ ...product, quantity: moq });
     setAddedFeedback(true);
     setTimeout(() => setAddedFeedback(false), 1500);
   };
@@ -194,10 +198,12 @@ function ProductCard({ product }) {
 
   const badgeLabel = product.badge || (product.onSale ? "SALE" : null);
   const badgeColors = {
+    "SPECIAL OFFER": "var(--color-red)",
+    "HOT DEALS": "#d97706",
+    "LIMITED OFFER": "#1a1a1a",
     SALE: "var(--color-red)",
     NEW: "var(--color-orange)",
     HOT: "var(--color-blue)",
-    LIMITED: "#1a1a1a",
   };
 
   return (
@@ -216,6 +222,24 @@ function ProductCard({ product }) {
           }}
         />
 
+        {/* ── MOQ badge — top-right orange circle (×6 style) ── */}
+        {moq > 1 && (
+          <div
+            className="absolute top-2 right-2 flex items-center justify-center rounded-full text-white font-bold shadow-md"
+            style={{
+              width: "2rem",
+              height: "2rem",
+              fontSize: "0.6rem",
+              backgroundColor: "#f97316",
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            ×{moq}
+          </div>
+        )}
+
+        {/* ── Promo badge — top-left ── */}
         {badgeLabel && (
           <span
             className="absolute top-2 left-2 text-[10px] font-body font-bold px-2 py-0.5 rounded text-white"
@@ -225,10 +249,11 @@ function ProductCard({ product }) {
           </span>
         )}
 
+        {/* ── Wishlist button ── */}
         <button
           onClick={toggleWishlist}
           aria-label="Wishlist"
-          className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110"
+          className="absolute bottom-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110"
         >
           <Heart
             className="w-3.5 h-3.5"
@@ -275,33 +300,58 @@ function ProductCard({ product }) {
           </div>
         )}
 
-        <div className="flex items-end justify-between gap-1 flex-wrap">
-          <div>
+        {/* ── Price block ── */}
+        <div className="space-y-0.5">
+          {/* Pack total — big, bold, red — "Now Ksh 873/-" */}
+          <div className="flex items-baseline gap-1 flex-wrap">
             <span
               className="font-heading font-bold"
-              style={{ fontSize: "0.9rem", color: "var(--color-red)" }}
+              style={{ fontSize: "0.95rem", color: "var(--color-red)" }}
             >
-              KSh {product.price?.toLocaleString()}
+              KSh {packPrice.toLocaleString()}
             </span>
-            {product.oldPrice && product.oldPrice > product.price && (
+            {moq > 1 && (
               <span
-                className="block line-through"
-                style={{ fontSize: "0.6rem", color: "var(--color-muted)" }}
+                className="font-body font-semibold"
+                style={{ fontSize: "0.58rem", color: "#6b7280" }}
               >
-                KSh {product.oldPrice.toLocaleString()}
+                pack of {moq}
               </span>
             )}
           </div>
 
-          {/* Add to cart button */}
+          {/* Per-piece price — green, smaller — "KSh 145.5 per piece" */}
+          {moq > 1 && (
+            <p
+              className="font-body font-semibold"
+              style={{ fontSize: "0.62rem", color: "#16a34a" }}
+            >
+              KSh {unitPrice.toLocaleString()} per piece
+            </p>
+          )}
+        </div>
+
+        {/* ── Add to cart ── */}
+        <div className="flex items-center justify-between gap-1 pt-0.5">
+          <p
+            className="font-body"
+            style={{
+              fontSize: "0.58rem",
+              color: inStock ? "#16a34a" : "var(--color-red)",
+              fontWeight: 600,
+            }}
+          >
+            {inStock ? "● In Stock" : "● Out of Stock"}
+          </p>
+
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
             aria-label="Add to cart"
-            className="flex items-center gap-1 rounded-full font-body font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 text-white"
+            className="flex items-center gap-1 rounded-full font-body font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 text-white flex-shrink-0"
             style={{
               fontSize: "0.6rem",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.08em",
               padding: "0.3rem 0.65rem",
               backgroundColor: addedFeedback
                 ? "#16a34a"
@@ -317,11 +367,15 @@ function ProductCard({ product }) {
           >
             {addedFeedback ? (
               <>
-                <Check className="w-3 h-3" /> Done
+                <Check className="w-3 h-3" /> Added
               </>
             ) : isInCart ? (
               <>
                 <ShoppingCart className="w-3 h-3" /> In Cart
+              </>
+            ) : moq > 1 ? (
+              <>
+                <ShoppingCart className="w-3 h-3" /> Add ×{moq}
               </>
             ) : (
               <>
@@ -330,17 +384,6 @@ function ProductCard({ product }) {
             )}
           </button>
         </div>
-
-        <p
-          className="font-body"
-          style={{
-            fontSize: "0.6rem",
-            color: inStock ? "#16a34a" : "var(--color-red)",
-            fontWeight: 600,
-          }}
-        >
-          {inStock ? "● In Stock" : "● Out of Stock"}
-        </p>
       </div>
     </div>
   );

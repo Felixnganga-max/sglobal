@@ -8,6 +8,9 @@ const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
 const PROMOS_URL = "https://sglobal-plf6.vercel.app/smartglobal/promos";
 
 const BADGE_COLORS = {
+  "SPECIAL OFFER": "#16a34a",
+  "HOT DEALS": "#d97706",
+  "LIMITED OFFER": "#1a1a1a",
   NEW: "#1565C0",
   SALE: "#FF0000",
   HOT: "#FF7F11",
@@ -15,26 +18,10 @@ const BADGE_COLORS = {
 };
 
 const CATEGORY_CONFIG = [
-  {
-    key: "cakemix",
-    accent: "#FF7F11",
-    image: assets.cake,
-  },
-  {
-    key: "kent syrups",
-    accent: "#FF0000",
-    image: assets.top,
-  },
-  {
-    key: "kent sauces",
-    accent: "#1565C0",
-    image: assets.sauces,
-  },
-  {
-    key: "kizembe spring water",
-    accent: "#FF7F11",
-    image: assets.kize,
-  },
+  { key: "cakemix", accent: "#FF7F11", image: assets.cake },
+  { key: "kent syrups", accent: "#FF0000", image: assets.top },
+  { key: "kent sauces", accent: "#1565C0", image: assets.sauces },
+  { key: "kizembe spring water", accent: "#FF7F11", image: assets.kize },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -95,6 +82,7 @@ const FALLBACK_IMG =
 
 function getImage(product) {
   return (
+    product.images?.[0]?.url ||
     product.image?.url ||
     product.imageUrl ||
     product.img ||
@@ -157,7 +145,7 @@ function ProductSkeleton() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PRODUCT CARD
+// PRODUCT CARD — MOQ / pack pricing
 // ─────────────────────────────────────────────────────────────
 function ProductCard({ prod }) {
   const navigate = useNavigate();
@@ -169,16 +157,23 @@ function ProductCard({ prod }) {
   const prodId = prod._id || prod.id;
   const isInCart = cartItems.some((item) => (item._id || item.id) === prodId);
 
-  const discount =
-    prod.discount ||
-    (prod.oldPrice && prod.oldPrice > prod.price
-      ? Math.round(((prod.oldPrice - prod.price) / prod.oldPrice) * 100)
-      : null);
+  // ── MOQ / pricing ────────────────────────────────────────────────────────
+  // moq       — pack size, e.g. 6 means customer buys 6, 12, 18 …
+  // unitPrice — price per single piece
+  // packPrice — what they pay for one pack (stored as totalPrice on the product,
+  //             or computed as fallback)
+  const moq = prod.minimumOrderQuantity || 1;
+  const unitPrice = prod.price || 0;
+  const packPrice =
+    prod.totalPrice != null
+      ? prod.totalPrice
+      : parseFloat((unitPrice * moq).toFixed(2));
 
+  // ── Add to cart — always add MOQ units at once ───────────────────────────
   const handleAddToCart = (e) => {
     e.stopPropagation();
     if (!inStock) return;
-    addToCart(prod);
+    addToCart({ ...prod, quantity: moq });
     setAddedFeedback(true);
     setTimeout(() => setAddedFeedback(false), 1500);
   };
@@ -189,7 +184,7 @@ function ProductCard({ prod }) {
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer"
       aria-labelledby={`prod-${prodId}`}
     >
-      {/* Image */}
+      {/* ── Image ── */}
       <div className="relative bg-gray-50 overflow-hidden">
         <img
           src={getImage(prod)}
@@ -200,25 +195,42 @@ function ProductCard({ prod }) {
             e.target.src = FALLBACK_IMG;
           }}
         />
+
+        {/* Category chip — top-left */}
         <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
           {prod.category}
         </div>
+
+        {/* MOQ badge — top-right orange circle (×6 style) */}
+        {moq > 1 && (
+          <div
+            className="absolute top-1.5 right-1.5 flex items-center justify-center rounded-full text-white font-black shadow-md"
+            style={{
+              width: "1.75rem",
+              height: "1.75rem",
+              fontSize: "0.55rem",
+              backgroundColor: "#f97316",
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
+              flexShrink: 0,
+            }}
+          >
+            ×{moq}
+          </div>
+        )}
+
+        {/* Promo badge — shown only when no MOQ badge, or below it */}
         {prod.badge && (
           <div
-            className="absolute top-1.5 right-1.5 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-wide"
+            className={`absolute ${moq > 1 ? "top-9 right-1.5" : "top-1.5 right-1.5"} text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-wide`}
             style={{ backgroundColor: BADGE_COLORS[prod.badge] || "#1a1a1a" }}
           >
             {prod.badge}
           </div>
         )}
-        {discount && (
-          <div className="absolute bottom-1.5 right-1.5 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white bg-red-600">
-            -{discount}%
-          </div>
-        )}
       </div>
 
-      {/* Body */}
+      {/* ── Body ── */}
       <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
         <div>
           <h3
@@ -227,6 +239,7 @@ function ProductCard({ prod }) {
           >
             {prod.title}
           </h3>
+
           {prod.rating > 0 && (
             <div className="flex items-center gap-1 mt-1.5">
               <div className="flex">
@@ -251,20 +264,35 @@ function ProductCard({ prod }) {
         </div>
 
         <div className="mt-2">
-          <div className="flex items-end gap-1 mb-1.5">
-            <span
-              className="font-heading text-sm font-bold"
-              style={{ color: "var(--color-red)" }}
-            >
-              Ksh {prod.price?.toLocaleString()}
-            </span>
-            {prod.oldPrice && prod.oldPrice > prod.price && (
-              <span className="text-[0.6rem] text-gray-400 line-through pb-0.5">
-                Ksh {prod.oldPrice.toLocaleString()}
+          {/* ── Price block ── */}
+          <div className="mb-1.5 space-y-0.5">
+            {/* Pack total — big, bold, red */}
+            <div className="flex items-baseline gap-1 flex-wrap">
+              <span
+                className="font-heading font-bold"
+                style={{ fontSize: "0.9rem", color: "var(--color-red)" }}
+              >
+                KSh {packPrice.toLocaleString()}
               </span>
+              {moq > 1 && (
+                <span className="text-[0.55rem] text-gray-400 font-semibold">
+                  pack of {moq}
+                </span>
+              )}
+            </div>
+
+            {/* Per-piece price — green */}
+            {moq > 1 && (
+              <p
+                className="text-[0.6rem] font-semibold"
+                style={{ color: "#16a34a" }}
+              >
+                KSh {unitPrice.toLocaleString()} per piece
+              </p>
             )}
           </div>
 
+          {/* Stock indicator */}
           <p
             className="text-[0.55rem] font-semibold mb-1.5"
             style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
@@ -272,7 +300,9 @@ function ProductCard({ prod }) {
             {inStock ? "● In Stock" : "● Out of Stock"}
           </p>
 
+          {/* ── Actions ── */}
           <div className="flex items-center gap-1">
+            {/* Wishlist */}
             <button
               type="button"
               aria-label={`Save ${prod.title}`}
@@ -291,6 +321,7 @@ function ProductCard({ prod }) {
               />
             </button>
 
+            {/* Add to cart */}
             <button
               type="button"
               disabled={!inStock}
@@ -312,6 +343,10 @@ function ProductCard({ prod }) {
               ) : isInCart ? (
                 <>
                   <ShoppingCart size={10} /> In Cart
+                </>
+              ) : moq > 1 ? (
+                <>
+                  <ShoppingCart size={10} /> Add ×{moq}
                 </>
               ) : (
                 <>
@@ -349,8 +384,6 @@ function CategoryCard({ cat }) {
         }}
         className="group-hover:scale-105 transition-transform duration-500"
       />
-
-      {/* Dark gradient overlay */}
       <div
         style={{
           position: "absolute",
@@ -359,8 +392,6 @@ function CategoryCard({ cat }) {
             "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)",
         }}
       />
-
-      {/* Accent bar top */}
       <div
         style={{
           position: "absolute",
@@ -371,8 +402,6 @@ function CategoryCard({ cat }) {
           backgroundColor: cat.accent,
         }}
       />
-
-      {/* Label */}
       <div
         style={{
           position: "absolute",
@@ -409,7 +438,7 @@ function CategoryCard({ cat }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PROMO VIDEO SECTION
+// PROMO VIDEO SECTION  (unchanged)
 // ─────────────────────────────────────────────────────────────
 function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
   const videoRef = useRef(null);
@@ -433,12 +462,10 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  // Minimized view
   if (isMinimized) {
     return (
       <div className="fixed bottom-4 right-4 z-50 w-72 shadow-2xl rounded-xl overflow-hidden bg-black border border-gray-700">
         <div className="relative">
-          {/* Video thumbnail */}
           <div
             className="relative cursor-pointer"
             onClick={() => onMinimize(false)}
@@ -465,8 +492,6 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
               </div>
             </div>
           </div>
-
-          {/* Control bar */}
           <div className="flex items-center justify-between p-2 bg-black/90 backdrop-blur-sm">
             <span className="text-white text-xs font-medium truncate flex-1">
               {video.title}
@@ -493,14 +518,12 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
     );
   }
 
-  // Full view
   return (
     <section className="page-x pb-8">
       <div
         className="relative rounded-2xl overflow-hidden bg-black shadow-xl"
         style={{ border: "1px solid rgba(255,255,255,0.07)" }}
       >
-        {/* Control buttons */}
         <div className="absolute top-3 right-3 z-20 flex gap-2">
           <button
             onClick={() => onMinimize(true)}
@@ -527,8 +550,6 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
             ×
           </button>
         </div>
-
-        {/* Featured badge */}
         {video.isFeatured && (
           <div
             className="absolute top-3 left-3 z-20 rounded-full px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-widest"
@@ -537,8 +558,6 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
             ★ Featured
           </div>
         )}
-
-        {/* Video element */}
         <div
           className="relative cursor-pointer"
           style={{ aspectRatio: "16/9" }}
@@ -555,8 +574,6 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
             onEnded={() => setPlaying(false)}
             playsInline
           />
-
-          {/* Play/Pause overlay — only shown when paused */}
           {!playing && (
             <div
               className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
@@ -582,8 +599,6 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
             </div>
           )}
         </div>
-
-        {/* Bottom meta bar */}
         <div
           className="flex items-center justify-between px-4 py-3 flex-wrap gap-2"
           style={{ background: "#111" }}
@@ -613,7 +628,6 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
               </span>
             )}
           </div>
-
           <div className="flex items-center gap-4 flex-shrink-0 flex-wrap">
             {video.duration && (
               <span
@@ -694,7 +708,6 @@ export default function Sales() {
       })
     : products;
 
-  // ── No more random shuffle — products are stable on every render ──
   const displayProducts = searchQuery.trim()
     ? filteredProducts
     : products.slice(0, 8);
@@ -765,7 +778,7 @@ export default function Sales() {
         </div>
       </section>
 
-      {/* ── Promo Video (after Our Range, before Featured Products) ── */}
+      {/* ── Promo Video ── */}
       {promoVideo && !promoDismissed && (
         <PromoVideoSection
           video={promoVideo}

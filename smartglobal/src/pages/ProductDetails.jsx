@@ -699,7 +699,14 @@ function RelatedProductCard({ product, onClick }) {
       const first = p.images[0];
       return typeof first === "string" ? first : first?.url;
     }
-    return p.image?.url || p.imageUrl || p.img || p.photo || null;
+    return (
+      p.image?.url ||
+      p.imageUrl ||
+      p.img ||
+      p.photo ||
+      product.images?.[0]?.url ||
+      null
+    );
   };
 
   const imageUrl =

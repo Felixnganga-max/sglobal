@@ -397,22 +397,6 @@ export default function ProductDetails() {
               <p className="text-body">{product.shortDescription}</p>
             )}
 
-            {/* Stock indicator */}
-            <div className="flex items-center gap-2 py-3 px-4 bg-white rounded-xl border border-border">
-              <Package
-                className="w-4 h-4"
-                style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
-              />
-              <span
-                className="font-body text-sm font-semibold"
-                style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
-              >
-                {inStock
-                  ? `In Stock (${product.stock} available)`
-                  : "Out of Stock"}
-              </span>
-            </div>
-
             {/* Quantity selector */}
             {inStock && (
               <div>

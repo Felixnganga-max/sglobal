@@ -59,6 +59,15 @@ export default function FeaturedProductsGrid() {
       }
 
       const groups = allProducts.reduce((acc, product) => {
+        // Add this line:
+        console.log(
+          "Product:",
+          product.title,
+          "| _id:",
+          product._id,
+          "| id:",
+          product.id,
+        );
         const cat = product.category || "Other";
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push(product);

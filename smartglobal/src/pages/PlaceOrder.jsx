@@ -944,10 +944,9 @@ export default function PlaceOrder() {
                   <div key={id} className="po-summary-line">
                     <span className="po-summary-name">
                       {item.title || item.name}{" "}
-                      <span style={{ color: "#bbb" }}>×{qty}</span>
                     </span>
                     <span className="po-summary-val">
-                      KSh {((item.price || 0) * qty).toLocaleString()}
+                      KSh {((item.totalPrice || 0) * qty).toLocaleString()}
                     </span>
                   </div>
                 );

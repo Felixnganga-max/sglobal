@@ -17,6 +17,38 @@ import { useCart } from "../context/Cartcontext";
 
 const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
 
+// ── Shared image resolver — mirrors FeaturedProductsGrid exactly ──────────────
+// Tries every known field in priority order, deduplicates, returns a clean URL[]
+function resolveImages(product) {
+  if (!product) return [];
+  const seen = new Set();
+  const urls = [];
+
+  const push = (url) => {
+    if (url && typeof url === "string" && !seen.has(url)) {
+      seen.add(url);
+      urls.push(url);
+    }
+  };
+
+  // 1. Single image object  { image: { url: "..." } }
+  push(product.image?.url);
+
+  // 2. Images array — handles both string[] and { url }[]
+  if (Array.isArray(product.images)) {
+    product.images.forEach((img) =>
+      push(typeof img === "string" ? img : img?.url),
+    );
+  }
+
+  // 3. Flat string fields
+  push(product.imageUrl);
+  push(product.img);
+  push(product.photo);
+
+  return urls;
+}
+
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -45,10 +77,12 @@ export default function ProductDetails() {
   const fetchProductDetails = async () => {
     try {
       setLoading(true);
+      setSelectedImage(0); // reset thumbnail selection on new product
       const response = await fetch(`${API_URL}/${id}`);
       if (!response.ok) throw new Error("Product not found");
       const data = await response.json();
-      setProduct(data.success ? data.data : data);
+      const prod = data.success ? data.data : data;
+      setProduct(prod);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -150,12 +184,25 @@ export default function ProductDetails() {
     );
   }
 
-  // ── Derived cart state ──
+  // ── Derived values ──
   const prodId = product._id || product.id;
   const cartItem = cartItems.find((item) => (item._id || item.id) === prodId);
   const cartQty = cartItem?.cartQty || 0;
-  const inStock = product.stock > 0; // ← fixed: use stock not inStock
+  const inStock = product.stock > 0;
   const maxQty = product.stock || 99;
+
+  // ── Images — use shared resolver ──
+  const images = resolveImages(product);
+  const PLACEHOLDER = "https://via.placeholder.com/600?text=No+Image";
+  const currentImage = images[selectedImage] || images[0] || PLACEHOLDER;
+
+  const discount =
+    product.discount ||
+    (product.oldPrice && product.oldPrice > product.price
+      ? Math.round(
+          ((product.oldPrice - product.price) / product.oldPrice) * 100,
+        )
+      : null);
 
   // ── Cart actions ──
   const handleAddToCart = () => {
@@ -166,44 +213,14 @@ export default function ProductDetails() {
   };
 
   const handleIncrement = () => {
-    if (cartQty === 0) {
-      addToCart(product, 1);
-    } else if (cartQty < maxQty) {
-      updateQty(prodId, cartQty + 1);
-    }
+    if (cartQty === 0) addToCart(product, 1);
+    else if (cartQty < maxQty) updateQty(prodId, cartQty + 1);
   };
 
   const handleDecrement = () => {
-    if (cartQty <= 1) {
-      removeFromCart(prodId);
-    } else {
-      updateQty(prodId, cartQty - 1);
-    }
+    if (cartQty <= 1) removeFromCart(prodId);
+    else updateQty(prodId, cartQty - 1);
   };
-
-  const getProductImages = () => {
-    if (product.images && Array.isArray(product.images)) {
-      return product.images
-        .map((img) => (typeof img === "string" ? img : img?.url))
-        .filter(Boolean);
-    }
-    const url =
-      product.image?.url || product.imageUrl || product.img || product.photo;
-    return url ? [url] : [];
-  };
-
-  const images = getProductImages();
-  const currentImage =
-    images[selectedImage] ||
-    images[0] ||
-    "https://via.placeholder.com/600?text=No+Image";
-  const discount =
-    product.discount ||
-    (product.oldPrice && product.oldPrice > product.price
-      ? Math.round(
-          ((product.oldPrice - product.price) / product.oldPrice) * 100,
-        )
-      : null);
 
   // ── Button state ──
   const cartBtnColor = addedFeedback
@@ -211,19 +228,6 @@ export default function ProductDetails() {
     : cartQty > 0
       ? "#8B1414"
       : "var(--color-red)";
-  const cartBtnLabel = addedFeedback ? (
-    <>
-      <Check className="w-4 h-4" /> Added!
-    </>
-  ) : cartQty > 0 ? (
-    <>
-      <ShoppingCart className="w-4 h-4" /> In Cart ({cartQty})
-    </>
-  ) : (
-    <>
-      <ShoppingCart className="w-4 h-4" /> Add to Cart
-    </>
-  );
 
   return (
     <div className="min-h-screen bg-soft">
@@ -251,7 +255,7 @@ export default function ProductDetails() {
       {/* Main */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Images */}
+          {/* ── Images ── */}
           <div className="space-y-4">
             <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border-2 border-border group">
               <img
@@ -259,8 +263,7 @@ export default function ProductDetails() {
                 alt={product.title}
                 className="w-full h-full object-contain p-6"
                 onError={(e) => {
-                  e.target.src =
-                    "https://via.placeholder.com/600?text=No+Image";
+                  e.target.src = PLACEHOLDER;
                 }}
               />
               <div className="absolute top-4 left-4 flex flex-col gap-2">
@@ -304,6 +307,7 @@ export default function ProductDetails() {
               </button>
             </div>
 
+            {/* Thumbnails — only show if more than one image resolved */}
             {images.length > 1 && (
               <div className="grid grid-cols-4 gap-3">
                 {images.map((img, index) => (
@@ -333,7 +337,7 @@ export default function ProductDetails() {
             )}
           </div>
 
-          {/* Info */}
+          {/* ── Info ── */}
           <div className="space-y-5">
             {product.category && (
               <span className="text-eyebrow inline-block">
@@ -377,7 +381,7 @@ export default function ProductDetails() {
               </span>
             )}
 
-            {/* Price — reflects cart quantity */}
+            {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="font-heading font-bold text-3xl text-red">
                 Ksh {(product.price * (cartQty || 1)).toLocaleString()}
@@ -409,7 +413,7 @@ export default function ProductDetails() {
               </span>
             </div>
 
-            {/* ── Quantity selector — wired to cart ── */}
+            {/* Quantity selector */}
             {inStock && (
               <div>
                 <label className="text-label block mb-2 text-gray-700">
@@ -417,7 +421,6 @@ export default function ProductDetails() {
                 </label>
                 <div className="flex items-center gap-4">
                   {cartQty === 0 ? (
-                    /* Not in cart yet — show Add to Cart button */
                     <button
                       onClick={handleAddToCart}
                       className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-body font-bold text-sm text-white transition-all duration-300 hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
@@ -426,7 +429,6 @@ export default function ProductDetails() {
                       <ShoppingCart className="w-4 h-4" /> Add to Cart
                     </button>
                   ) : (
-                    /* In cart — show stepper */
                     <div
                       className="flex items-center border-2 rounded-xl overflow-hidden transition-all"
                       style={{ borderColor: "var(--color-red)" }}
@@ -460,8 +462,6 @@ export default function ProductDetails() {
                       </button>
                     </div>
                   )}
-
-                  {/* Cart count badge when in cart */}
                   {cartQty > 0 && (
                     <span className="font-body text-xs text-muted">
                       Ksh {(product.price * cartQty).toLocaleString()} total
@@ -690,27 +690,10 @@ export default function ProductDetails() {
   );
 }
 
-// Replace the RelatedProductCard function at the bottom of ProductDetails.jsx with this:
-
 function RelatedProductCard({ product, onClick }) {
-  // Match the same resolver used for the main product
-  const getImage = (p) => {
-    if (p.images && Array.isArray(p.images) && p.images.length > 0) {
-      const first = p.images[0];
-      return typeof first === "string" ? first : first?.url;
-    }
-    return (
-      p.image?.url ||
-      p.imageUrl ||
-      p.img ||
-      p.photo ||
-      product.images?.[0]?.url ||
-      null
-    );
-  };
-
-  const imageUrl =
-    getImage(product) || "https://via.placeholder.com/300?text=No+Image";
+  // Uses the same shared resolver
+  const images = resolveImages(product);
+  const imageUrl = images[0] || "https://via.placeholder.com/300?text=No+Image";
 
   return (
     <div

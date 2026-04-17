@@ -1,8 +1,6 @@
-// src/api/productService.js
 import api from "./axios";
 
 export const productService = {
-  // Get all products with filters
   getAllProducts: async (params = {}) => {
     try {
       const response = await api.get("/products", { params });
@@ -12,7 +10,6 @@ export const productService = {
     }
   },
 
-  // Get single product
   getProductById: async (id) => {
     try {
       const response = await api.get(`/products/${id}`);
@@ -22,7 +19,6 @@ export const productService = {
     }
   },
 
-  // Get products by category
   getProductsByCategory: async (category, params = {}) => {
     try {
       const response = await api.get(`/products/category/${category}`, {
@@ -34,7 +30,6 @@ export const productService = {
     }
   },
 
-  // Get product stats
   getProductStats: async () => {
     try {
       const response = await api.get("/products/stats");
@@ -44,7 +39,6 @@ export const productService = {
     }
   },
 
-  // Create product
   createProduct: async (productData) => {
     try {
       const response = await api.post("/products", productData);
@@ -54,7 +48,6 @@ export const productService = {
     }
   },
 
-  // Update product
   updateProduct: async (id, productData) => {
     try {
       const response = await api.put(`/products/${id}`, productData);
@@ -64,7 +57,6 @@ export const productService = {
     }
   },
 
-  // Delete product
   deleteProduct: async (id) => {
     try {
       const response = await api.delete(`/products/${id}`);
@@ -74,7 +66,6 @@ export const productService = {
     }
   },
 
-  // Deactivate product
   deactivateProduct: async (id) => {
     try {
       const response = await api.patch(`/products/${id}/deactivate`);
@@ -84,7 +75,6 @@ export const productService = {
     }
   },
 
-  // Activate product
   activateProduct: async (id) => {
     try {
       const response = await api.patch(`/products/${id}/activate`);
@@ -94,10 +84,24 @@ export const productService = {
     }
   },
 
-  // Bulk update stock
   bulkUpdateStock: async (updates) => {
     try {
       const response = await api.patch("/products/bulk-stock", { updates });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // FIXED: now uses the axios instance instead of raw fetch
+  // - correct baseURL from axios config
+  // - auth token attached automatically by axios interceptor
+  // - axios DELETE body passed via `data:` not `body:`
+  deleteProductImages: async (productId, publicIds) => {
+    try {
+      const response = await api.delete(`/products/${productId}/images`, {
+        data: { publicIds },
+      });
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

@@ -114,181 +114,177 @@ export default function HeroPromo() {
         .hero-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 0.75rem;
+          gap: 0.625rem;
         }
         @media (min-width: 1024px) {
           .hero-grid {
-            grid-template-columns: 1fr 380px;
-            grid-template-rows: auto auto;
-            gap: 1rem;
+            grid-template-columns: 1fr 340px;
+            gap: 0.875rem;
           }
-          .hero-panel { grid-row: 1 / 2; }
-          .side-stack { grid-row: 1 / 2; }
         }
 
-        /* ── Hero panel ── */
+        /* ── Hero panel — flat, no gradient ── */
         .hero-panel {
           position: relative;
-          border-radius: 20px;
+          border-radius: 16px;
           overflow: hidden;
-          min-height: 380px;
-          background: linear-gradient(135deg, #1a0a0a 0%, #8B1414 45%, #c0392b 100%);
+          min-height: 300px;
+          background-color: #8B1414;
           display: flex;
           align-items: flex-end;
-          box-shadow: 0 20px 60px rgba(139,20,20,0.35);
+          box-shadow: 0 8px 32px rgba(139,20,20,0.22);
         }
-        @media (min-width: 1024px) { .hero-panel { min-height: 440px; } }
-        @media (max-width: 640px)  { .hero-panel { min-height: 320px; } }
+        @media (min-width: 1024px) { .hero-panel { min-height: 380px; } }
+        @media (max-width: 640px)  { .hero-panel { min-height: 240px; } }
 
-        .hero-noise {
-          position: absolute; inset: 0; opacity: 0.04; pointer-events: none;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          background-size: 200px;
-        }
-        .hero-grid-lines {
+        /* subtle dot-grid texture instead of gradient */
+        .hero-dots-bg {
           position: absolute; inset: 0; pointer-events: none;
-          background-image:
-            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-        .hero-glow {
-          position: absolute; width: 400px; height: 400px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,127,17,0.25) 0%, transparent 70%);
-          top: -100px; right: -80px; pointer-events: none;
+          background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+          background-size: 22px 22px;
         }
 
         /* ── Product image ── */
         .hero-img-wrap {
-          position: absolute; right: 0; top: 0; bottom: 0; width: 55%;
+          position: absolute; right: 0; top: 0; bottom: 0; width: 52%;
           display: flex; align-items: center; justify-content: flex-end;
           pointer-events: none;
+          padding-right: 1rem;
         }
-        @media (max-width: 640px) { .hero-img-wrap { width: 45%; } }
+        @media (max-width: 640px) { .hero-img-wrap { width: 44%; padding-right: 0.5rem; } }
 
         .hero-img {
-          height: 85%; width: auto; object-fit: contain;
-          filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+          height: 82%; width: auto; max-width: 100%; object-fit: contain;
+          filter: drop-shadow(0 12px 28px rgba(0,0,0,0.4));
           transition: opacity 0.35s ease, transform 0.35s ease;
         }
         .hero-img.fade-out { opacity: 0; transform: scale(0.95) translateX(10px); }
         .hero-img-skeleton {
-          width: 200px; height: 200px; border-radius: 16px;
+          width: 160px; height: 160px; border-radius: 12px;
           background: rgba(255,255,255,0.08);
-          animation: pulse 1.5s ease-in-out infinite;
-          margin-right: 2rem;
+          animation: hp-pulse 1.5s ease-in-out infinite;
+          margin-right: 1rem;
         }
 
         /* ── Hero content ── */
         .hero-content {
           position: relative; z-index: 2;
-          padding: clamp(1.5rem, 4vw, 2.5rem);
-          max-width: 360px;
+          padding: clamp(1rem, 3vw, 1.75rem);
+          max-width: 300px;
         }
+        @media (max-width: 640px) { .hero-content { max-width: 55%; padding: 1rem; } }
 
-        /* Eyebrow pill — wraps the .text-eyebrow span */
+        /* Eyebrow pill */
         .hero-eyebrow-pill {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(255,127,17,0.2);
-          border: 1px solid rgba(255,127,17,0.4);
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255,127,17,0.18);
+          border: 1px solid rgba(255,127,17,0.35);
           border-radius: 100px;
-          padding: 4px 12px;
-          margin-bottom: 14px;
+          padding: 3px 10px;
+          margin-bottom: 10px;
         }
         .hero-eyebrow-dot {
-          width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+          width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
           background: var(--color-orange);
-          animation: blink 1.2s ease-in-out infinite;
+          animation: hp-blink 1.2s ease-in-out infinite;
         }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+        @keyframes hp-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-        .hero-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        /* Flat accent bar — replaces gradient text spans */
+        .hero-accent-bar {
+          display: inline-block;
+          width: 2.5rem; height: 3px;
+          background-color: var(--color-orange);
+          border-radius: 2px;
+          margin-bottom: 8px;
+        }
 
-        /* Ghost button — sits on the dark hero background */
-        .btn-hero-ghost {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.3);
-          color: rgba(255,255,255,0.85);
+        .hero-title {
+          font-family: var(--font-heading);
+          font-size: clamp(0.95rem, 2.2vw, 1.3rem);
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: #fff;
+          line-height: 1.2;
+          margin-bottom: 6px;
+        }
+        .hero-title span { color: var(--color-orange); }
+
+        .hero-sub {
           font-family: var(--font-body);
-          font-size: 0.72rem; font-weight: 600;
-          letter-spacing: 0.14em; text-transform: uppercase;
-          padding: 0.55rem 1.2rem; border-radius: 9999px;
+          font-size: clamp(0.6rem, 1.2vw, 0.72rem);
+          font-weight: 400;
+          line-height: 1.6;
+          color: rgba(255,255,255,0.58);
+          margin-bottom: 14px;
+        }
+        @media (max-width: 480px) { .hero-sub { display: none; } }
+
+        .hero-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .btn-hero-ghost {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.28);
+          color: rgba(255,255,255,0.82);
+          font-family: var(--font-body);
+          font-size: 0.62rem; font-weight: 600;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          padding: 0.45rem 1rem; border-radius: 9999px;
           cursor: pointer; text-decoration: none;
-          transition: background 0.2s ease, border-color 0.2s ease;
+          transition: background 0.2s, border-color 0.2s;
         }
         .btn-hero-ghost:hover {
           background: rgba(255,255,255,0.08);
           border-color: rgba(255,255,255,0.5);
         }
 
-        /* ── Dot nav ── */
-        .hero-dots { display: flex; gap: 6px; margin-top: 24px; }
+        /* Dot nav */
+        .hero-dots { display: flex; gap: 5px; margin-top: 16px; }
         .hero-dot {
-          height: 4px; border-radius: 2px; width: 16px;
-          background: rgba(255,255,255,0.25);
+          height: 3px; border-radius: 2px; width: 12px;
+          background: rgba(255,255,255,0.22);
           border: none; cursor: pointer; padding: 0;
           transition: all 0.3s ease;
         }
-        .hero-dot.active { background: var(--color-orange); width: 32px; }
-
-        /* ── Stats strip ── */
-        .hero-stats {
-          position: absolute; bottom: 0; left: 0; right: 0;
-          display: flex;
-          border-top: 1px solid rgba(255,255,255,0.08);
-        }
-        .hero-stat {
-          flex: 1; padding: 10px 0 12px; text-align: center;
-          border-right: 1px solid rgba(255,255,255,0.08);
-        }
-        .hero-stat:last-child { border-right: none; }
-        .hero-stat-num { display: block; color: var(--color-orange); }
-        .hero-stat-label { color: rgba(255,255,255,0.45) !important; }
+        .hero-dot.active { background: var(--color-orange); width: 26px; }
 
         /* ── Side stack ── */
-        .side-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+        .side-stack { display: flex; flex-direction: column; gap: 0.625rem; }
 
         .side-card-skel {
-          flex: 1; border-radius: 16px; padding: 14px;
-          display: flex; align-items: center; gap: 14px;
+          flex: 1; border-radius: 12px; padding: 12px;
+          display: flex; align-items: center; gap: 12px;
           background: var(--color-bg-soft);
           border: 1px solid var(--color-border);
         }
 
         .side-card {
-          border-radius: 16px; padding: 14px;
-          display: flex; align-items: center; gap: 14px;
-          text-decoration: none; transition: all 0.25s ease;
-          border: 1px solid transparent;
+          border-radius: 12px; padding: 11px 12px;
+          display: flex; align-items: center; gap: 11px;
+          text-decoration: none; transition: all 0.2s ease;
+          border: 1px solid var(--color-border);
+          background: #fff;
           position: relative; overflow: hidden; flex: 1;
         }
-        .side-card::before {
-          content: ''; position: absolute; inset: 0; opacity: 0;
-          transition: opacity 0.25s ease;
-          background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 100%);
+        .side-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.09);
+          border-color: var(--color-orange);
         }
-        .side-card:hover { transform: translateY(-3px); }
-        .side-card:hover::before { opacity: 1; }
-
-        .side-card-0 { background: rgba(255,127,17,0.07); border-color: rgba(255,127,17,0.2); }
-        .side-card-0:hover { box-shadow: 0 8px 24px rgba(255,127,17,0.18); border-color: rgba(255,127,17,0.4); }
-        .side-card-1 { background: rgba(139,20,20,0.07); border-color: rgba(139,20,20,0.18); }
-        .side-card-1:hover { box-shadow: 0 8px 24px rgba(139,20,20,0.16); border-color: rgba(139,20,20,0.35); }
-        .side-card-2 { background: rgba(21,101,192,0.07); border-color: rgba(21,101,192,0.18); }
-        .side-card-2:hover { box-shadow: 0 8px 24px rgba(21,101,192,0.16); border-color: rgba(21,101,192,0.35); }
 
         .side-img-wrap {
-          width: 64px; height: 64px; border-radius: 12px;
-          background: #fff; flex-shrink: 0;
+          width: 52px; height: 52px; border-radius: 10px;
+          background: var(--color-bg-soft); flex-shrink: 0;
           display: flex; align-items: center; justify-content: center;
-          overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          overflow: hidden; border: 1px solid var(--color-border);
         }
         .side-img-wrap img {
-          width: 100%; height: 100%; object-fit: contain; padding: 6px;
+          width: 100%; height: 100%; object-fit: contain; padding: 5px;
           transition: transform 0.3s ease;
         }
-        .side-card:hover .side-img-wrap img { transform: scale(1.08); }
+        .side-card:hover .side-img-wrap img { transform: scale(1.06); }
 
         .side-card-body { flex: 1; min-width: 0; }
         .side-card-name {
@@ -296,33 +292,42 @@ export default function HeroPromo() {
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
-          margin-bottom: 4px;
+          margin-bottom: 3px;
+          font-size: 0.7rem;
+          font-family: var(--font-body);
+          font-weight: 600;
+          color: var(--color-text);
         }
         .side-card-arrow {
-          width: 28px; height: 28px; border-radius: 50%;
-          background: rgba(0,0,0,0.06);
+          width: 24px; height: 24px; border-radius: 50%;
+          background: var(--color-bg-soft);
+          border: 1px solid var(--color-border);
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0; transition: all 0.2s ease;
+          color: var(--color-muted);
         }
-        .side-card:hover .side-card-arrow { background: var(--color-orange); color: #fff; }
+        .side-card:hover .side-card-arrow {
+          background: var(--color-orange);
+          border-color: var(--color-orange);
+          color: #fff;
+        }
 
-        /* ── Explore CTA ── */
+        /* ── Explore CTA — flat orange ── */
         .explore-cta {
-          border-radius: 16px; padding: 14px 18px;
+          border-radius: 12px; padding: 12px 16px;
           display: flex; align-items: center; justify-content: space-between;
           background: var(--color-orange);
           border: none; cursor: pointer;
-          box-shadow: 0 4px 20px rgba(255,127,17,0.35);
-          transition: all 0.25s ease;
+          transition: all 0.2s ease;
         }
         .explore-cta:hover {
           background: var(--color-orange-dark);
-          transform: translateY(-3px);
-          box-shadow: 0 10px 32px rgba(255,127,17,0.45);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(255,127,17,0.3);
         }
         .explore-cta-arrow {
-          width: 36px; height: 36px; border-radius: 50%;
-          background: rgba(255,255,255,0.2);
+          width: 32px; height: 32px; border-radius: 50%;
+          background: rgba(255,255,255,0.18);
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         }
@@ -330,36 +335,36 @@ export default function HeroPromo() {
         /* ── Trust bar ── */
         .trust-bar {
           grid-column: 1 / -1;
-          display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.625rem;
         }
-        @media (max-width: 640px) {
+        @media (max-width: 480px) {
           .trust-bar { grid-template-columns: 1fr; }
-          .trust-item { padding: 10px; }
+        }
+        @media (min-width: 481px) and (max-width: 767px) {
+          .trust-bar { grid-template-columns: repeat(3, 1fr); }
         }
         .trust-item {
           background: #fff;
           border: 1px solid var(--color-border);
-          border-radius: 14px; padding: 14px 12px;
-          display: flex; align-items: center; gap: 12px;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+          border-radius: 12px; padding: 10px 12px;
+          display: flex; align-items: center; gap: 10px;
         }
         .trust-icon-wrap {
-          width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
+          width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;
           display: flex; align-items: center; justify-content: center;
           background: rgba(255,127,17,0.1);
         }
 
         /* ── Skeleton ── */
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .skel { background: var(--color-border); border-radius: 8px; animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes hp-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .hp-skel { background: rgba(255,255,255,0.12); border-radius: 6px; animation: hp-pulse 1.5s ease-in-out infinite; }
+        .skel { background: var(--color-border); border-radius: 6px; animation: hp-pulse 1.5s ease-in-out infinite; }
       `}</style>
 
       <div className="hero-grid">
         {/* ══ Hero panel ══ */}
         <div className="hero-panel">
-          <div className="hero-noise" aria-hidden="true" />
-          <div className="hero-grid-lines" aria-hidden="true" />
-          <div className="hero-glow" aria-hidden="true" />
+          <div className="hero-dots-bg" aria-hidden="true" />
 
           {/* Product image */}
           <div className="hero-img-wrap">
@@ -383,67 +388,65 @@ export default function HeroPromo() {
             {loading ? (
               <>
                 <div
-                  className="skel"
+                  className="hp-skel"
                   style={{
-                    height: 20,
-                    width: 100,
+                    height: 16,
+                    width: 80,
                     borderRadius: 100,
-                    marginBottom: 14,
+                    marginBottom: 10,
                   }}
                 />
                 <div
-                  className="skel"
-                  style={{ height: 40, width: "80%", marginBottom: 8 }}
+                  className="hp-skel"
+                  style={{ height: 28, width: "80%", marginBottom: 6 }}
                 />
                 <div
-                  className="skel"
-                  style={{ height: 40, width: "60%", marginBottom: 20 }}
+                  className="hp-skel"
+                  style={{ height: 28, width: "55%", marginBottom: 14 }}
                 />
-                <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ display: "flex", gap: 8 }}>
                   <div
-                    className="skel"
-                    style={{ height: 36, width: 110, borderRadius: 100 }}
+                    className="hp-skel"
+                    style={{ height: 30, width: 90, borderRadius: 100 }}
                   />
                   <div
-                    className="skel"
-                    style={{ height: 36, width: 90, borderRadius: 100 }}
+                    className="hp-skel"
+                    style={{ height: 30, width: 78, borderRadius: 100 }}
                   />
                 </div>
               </>
             ) : (
               <>
-                {/* Eyebrow */}
                 <div className="hero-eyebrow-pill">
                   <span className="hero-eyebrow-dot" />
-                  <span className="text-eyebrow" style={{ color: "#ffa040" }}>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.58rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.22em",
+                      textTransform: "uppercase",
+                      color: "#ffa040",
+                    }}
+                  >
                     {hero?.category || "Featured"}
                   </span>
                 </div>
 
-                {/* Title — uses .text-hero (Ubuntu 700) from globals */}
-                <h6
-                  className="text-section-title"
-                  style={{ color: "#fff", marginBottom: "0.75rem" }}
-                >
+                <div className="hero-accent-bar" />
+
+                <h2 className="hero-title">
                   Premium Food
                   <br />
-                  <span style={{ color: "var(--color-orange)" }}>Products</span>
-                </h6>
+                  <span>Products</span>
+                </h2>
 
-                {/* Subtitle — uses .text-body (Poppins 400) from globals */}
-                <p
-                  className="text-body"
-                  style={{
-                    color: "rgba(255,255,255,0.6)",
-                    marginBottom: "1.25rem",
-                  }}
-                >
+                <p className="hero-sub">
                   Quality ingredients. Authentic flavours.
                   <br />
                   Delivered countrywide.
                 </p>
 
-                {/* CTAs */}
                 <div className="hero-actions">
                   <button
                     onClick={scrollToProducts}
@@ -451,10 +454,12 @@ export default function HeroPromo() {
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: 8,
+                      gap: 6,
+                      fontSize: "0.62rem",
+                      padding: "0.45rem 1.1rem",
                     }}
                   >
-                    Shop Now <ArrowRight size={13} />
+                    Shop Now <ArrowRight size={12} />
                   </button>
                   {hero && (
                     <Link
@@ -466,7 +471,6 @@ export default function HeroPromo() {
                   )}
                 </div>
 
-                {/* Dot nav */}
                 {heroProducts.length > 1 && (
                   <div className="hero-dots">
                     {heroProducts.map((_, i) => (
@@ -495,24 +499,24 @@ export default function HeroPromo() {
                   <div
                     className="skel"
                     style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 12,
+                      width: 52,
+                      height: 52,
+                      borderRadius: 10,
                       flexShrink: 0,
                     }}
                   />
                   <div style={{ flex: 1 }}>
                     <div
                       className="skel"
-                      style={{ height: 10, width: "40%", marginBottom: 8 }}
+                      style={{ height: 9, width: "40%", marginBottom: 7 }}
                     />
                     <div
                       className="skel"
-                      style={{ height: 14, width: "80%", marginBottom: 6 }}
+                      style={{ height: 12, width: "80%", marginBottom: 5 }}
                     />
                     <div
                       className="skel"
-                      style={{ height: 12, width: "35%" }}
+                      style={{ height: 10, width: "30%" }}
                     />
                   </div>
                 </div>
@@ -523,7 +527,7 @@ export default function HeroPromo() {
                   <Link
                     key={product._id || product.id}
                     to={`/product/${product._id || product.id}`}
-                    className={`side-card side-card-${i}`}
+                    className="side-card"
                   >
                     <div className="side-img-wrap">
                       {imgSrc ? (
@@ -535,61 +539,75 @@ export default function HeroPromo() {
                           }}
                         />
                       ) : (
-                        <div style={{ fontSize: "1.5rem" }}>🛍️</div>
+                        <div style={{ fontSize: "1.25rem" }}>🛍️</div>
                       )}
                     </div>
                     <div className="side-card-body">
-                      {/* Category — .text-eyebrow (Poppins 700, orange) from globals */}
                       <span
-                        className="text-eyebrow"
-                        style={{ display: "block", marginBottom: 3 }}
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontSize: "0.58rem",
+                          fontWeight: 700,
+                          letterSpacing: "0.2em",
+                          textTransform: "uppercase",
+                          color: "var(--color-orange)",
+                          display: "block",
+                          marginBottom: 2,
+                        }}
                       >
                         {product.category || "Product"}
                       </span>
-                      {/* Name — .text-card-title (Poppins 700 uppercase) from globals */}
-                      <div className="text-card-title side-card-name">
+                      <div className="side-card-name">
                         {product.title || "Product"}
                       </div>
-                      {/* Price — .text-label .text-red from globals */}
                       {product.price > 0 && (
-                        <span className="text-label text-red">
+                        <span
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            color: "var(--color-red)",
+                          }}
+                        >
                           Ksh {product.price?.toLocaleString()}
                         </span>
                       )}
                     </div>
                     <div className="side-card-arrow">
-                      <ArrowRight size={13} />
+                      <ArrowRight size={11} />
                     </div>
                   </Link>
                 );
               })}
 
-          {/* Explore CTA */}
           {!loading && (
             <button onClick={scrollToProducts} className="explore-cta">
               <div style={{ textAlign: "left" }}>
-                {/* .text-card-title (Poppins 700) from globals */}
                 <div
-                  className="text-card-title"
-                  style={{ color: "#fff", marginBottom: 2 }}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: "#fff",
+                    marginBottom: 2,
+                    letterSpacing: "0.04em",
+                  }}
                 >
                   Explore All Products
                 </div>
-                {/* .text-label (Poppins 600) from globals, overrides transform/spacing for prose feel */}
                 <div
-                  className="text-label"
                   style={{
-                    color: "rgba(255,255,255,0.75)",
-                    fontWeight: 500,
-                    textTransform: "none",
-                    letterSpacing: 0,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.62rem",
+                    fontWeight: 400,
+                    color: "rgba(255,255,255,0.72)",
                   }}
                 >
                   Browse our full catalogue →
                 </div>
               </div>
               <div className="explore-cta-arrow">
-                <ArrowRight size={16} color="#fff" />
+                <ArrowRight size={14} color="#fff" />
               </div>
             </button>
           )}
@@ -600,23 +618,27 @@ export default function HeroPromo() {
           {TRUST_BADGES.map(({ icon: Icon, label, sub }) => (
             <div key={label} className="trust-item">
               <div className="trust-icon-wrap">
-                <Icon size={16} color="var(--color-orange)" />
+                <Icon size={14} color="var(--color-orange)" />
               </div>
               <div>
-                {/* .text-card-title (Poppins 700) from globals */}
                 <span
-                  className="text-card-title"
-                  style={{ display: "block", lineHeight: 1.2 }}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.7rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    display: "block",
+                    lineHeight: 1.2,
+                  }}
                 >
                   {label}
                 </span>
-                {/* .text-label .text-muted from globals */}
                 <span
-                  className="text-label text-muted"
                   style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.6rem",
                     fontWeight: 400,
-                    textTransform: "none",
-                    letterSpacing: 0,
+                    color: "var(--color-muted)",
                   }}
                 >
                   {sub}

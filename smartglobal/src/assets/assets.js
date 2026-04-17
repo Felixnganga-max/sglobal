@@ -24,6 +24,9 @@ import spuds from "./images/spuds.jpeg";
 import cara from "./cara.jpeg";
 import cake from "./cake.png";
 import sauces from "./sauces.png";
+import logo3 from "./logo3.jfif";
+import logo2 from "./logo2.jfif";
+import logo1 from "./logo1.png";
 
 export const assets = {
   sauces,
@@ -35,6 +38,9 @@ export const assets = {
   cake,
   kent,
   hazelnut,
+  logo1,
+  logo2,
+  logo3,
   top,
   top2,
   topping,

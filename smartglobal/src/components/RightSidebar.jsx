@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+import { assets } from "../assets/assets";
 
 const CATEGORY_ICONS = {
   "Craft cooked potato chips": "🥔",
@@ -19,22 +20,22 @@ const CATEGORY_ICONS = {
 
 const BRANDS = [
   {
-    name: "Kent Boringer",
+    name: assets.logo3,
     desc: "Soups, stocks & sauces",
     color: "var(--color-red)",
     letter: "K",
   },
   {
-    name: "Food Trip",
+    name: assets.logo2,
     desc: "Craft cooked crisps",
     color: "var(--color-orange)",
     letter: "F",
   },
   {
-    name: "Kizembe",
+    name: assets.logo1,
     desc: "Natural spring water",
     color: "var(--color-blue)",
-    letter: "K",
+    letter: assets.logo1,
   },
 ];
 
@@ -377,8 +378,8 @@ export default function ShopByCategory() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "8px",
-                padding: "10px 8px",
+                gap: "0px",
+                padding: "8px",
                 borderRadius: "10px",
                 border: "1px solid var(--color-border)",
                 backgroundColor: "var(--color-bg-soft)",
@@ -396,48 +397,15 @@ export default function ShopByCategory() {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <div
+              <img
+                src={brand.name}
+                alt={brand.desc}
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                  fontFamily: "var(--font-heading)",
-                  fontWeight: 700,
-                  fontSize: "0.8rem",
-                  backgroundColor: brand.color,
-                  flexShrink: 0,
+                  width: "200%",
+                  height: "150px",
+                  objectFit: "cover",
                 }}
-              >
-                {brand.letter}
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <p
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    fontWeight: 700,
-                    fontSize: "0.68rem",
-                    color: "var(--color-text)",
-                    margin: 0,
-                  }}
-                >
-                  {brand.name}
-                </p>
-                <p
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "0.58rem",
-                    lineHeight: 1.3,
-                    marginTop: 2,
-                    color: "var(--color-muted)",
-                  }}
-                >
-                  {brand.desc}
-                </p>
-              </div>
+              />
             </button>
           ))}
         </div>

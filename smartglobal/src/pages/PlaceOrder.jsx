@@ -40,6 +40,7 @@ const FALLBACK_IMG =
 function getImage(product) {
   return (
     product.image?.url ||
+    product.images?.[0]?.url ||
     product.imageUrl ||
     product.img ||
     product.photo ||

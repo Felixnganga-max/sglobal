@@ -256,6 +256,49 @@ exports.markComplete = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
+//  GET /orders/stats  — admin: dashboard overview
+// ─────────────────────────────────────────────
+exports.getOrderStats = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Admin only." });
+    }
+
+    const [totalOrders, pendingOrders, completeOrders, revenueAgg, recentOrders] =
+      await Promise.all([
+        Order.countDocuments(),
+        Order.countDocuments({ status: "pending" }),
+        Order.countDocuments({ status: "complete" }),
+        Order.aggregate([
+          { $match: { status: "complete" } },
+          { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+        ]),
+        Order.find()
+          .populate("user", "name email")
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .lean(),
+      ]);
+
+    res.json({
+      success: true,
+      data: {
+        overview: {
+          totalOrders,
+          pendingOrders,
+          completeOrders,
+          totalRevenue: revenueAgg[0]?.total || 0,
+        },
+        recentOrders,
+      },
+    });
+  } catch (err) {
+    console.error("getOrderStats error:", err);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+
+// ─────────────────────────────────────────────
 //  GET /orders  — admin: all orders with pagination
 // ─────────────────────────────────────────────
 exports.getAllOrders = async (req, res) => {

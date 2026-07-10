@@ -49,6 +49,7 @@ const productSchema = new mongoose.Schema(
       enum: [
         "Craft cooked potato chips",
         "Just fruits",
+        "Hazelnuts",
         "Hum Hum",
         "Cakemix",
         "Brownie & Pancake",
@@ -103,6 +104,13 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: ["SPECIAL OFFER", "HOT DEALS", "LIMITED OFFER", ""],
       default: "",
+    },
+    // Marks the product as the site's headline top-seller — featured on
+    // hero banners and spotlighted at the top of the catalog. Only one
+    // product should carry this at a time.
+    isBestSeller: {
+      type: Boolean,
+      default: false,
     },
     isHalal: {
       type: Boolean,

@@ -1,19 +1,5 @@
 const mongoose = require("mongoose");
 
-const contentBlockSchema = new mongoose.Schema(
-  {
-    type: {
-      type: String,
-      enum: ["heading", "subheading", "paragraph", "image"],
-      required: true,
-    },
-    text: { type: String },
-    src: { type: String },
-    alt: { type: String },
-  },
-  { _id: false },
-);
-
 const blogSchema = new mongoose.Schema(
   {
     title: {
@@ -46,12 +32,14 @@ const blogSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, "Excerpt cannot exceed 500 characters"],
     },
+    // Rich HTML authored in the dashboard editor (headings, bold/italic,
+    // lists, links, inline images — rendered as-is on the public blog page).
     content: {
-      type: [contentBlockSchema],
-      required: [true, "At least one content block is required"],
+      type: String,
+      required: [true, "Blog content is required"],
       validate: {
-        validator: (v) => v && v.length > 0,
-        message: "Blog must have content",
+        validator: (v) => v && v.replace(/<[^>]*>/g, "").trim().length > 0,
+        message: "Blog content cannot be empty",
       },
     },
     featuredImage: {
@@ -85,6 +73,10 @@ const blogSchema = new mongoose.Schema(
       default: 0,
     },
     likes: {
+      type: Number,
+      default: 0,
+    },
+    dislikes: {
       type: Number,
       default: 0,
     },

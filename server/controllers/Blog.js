@@ -6,6 +6,8 @@ const parseArrayField = (value) => {
   return Array.isArray(value) ? value : JSON.parse(value);
 };
 
+const isBlankHtml = (html) => !html || !html.replace(/<[^>]*>/g, "").trim();
+
 // @desc    Get all blogs with filtering, search, and pagination
 // @route   GET /smartglobal/blogs
 // @access  Public
@@ -123,8 +125,7 @@ exports.createBlog = async (req, res) => {
       });
     }
 
-    const contentBlocks = parseArrayField(content);
-    if (!contentBlocks.length) {
+    if (isBlankHtml(content)) {
       return res.status(400).json({
         success: false,
         message: "Blog content cannot be empty",
@@ -153,7 +154,7 @@ exports.createBlog = async (req, res) => {
           .replace(/^-|-$/g, ""),
       category,
       excerpt,
-      content: contentBlocks,
+      content,
       tags: parseArrayField(tags),
       readTime: readTime || "5 min read",
       author: authorName ? { name: authorName } : undefined,
@@ -210,6 +211,13 @@ exports.updateBlog = async (req, res) => {
       published,
     } = req.body;
 
+    if (content !== undefined && isBlankHtml(content)) {
+      return res.status(400).json({
+        success: false,
+        message: "Blog content cannot be empty",
+      });
+    }
+
     let imageInfo = blog.featuredImage;
     if (req.file) {
       await deleteImage(blog.featuredImage.publicId);
@@ -224,7 +232,7 @@ exports.updateBlog = async (req, res) => {
       slug: slug || blog.slug,
       category: category || blog.category,
       excerpt: excerpt || blog.excerpt,
-      content: content ? parseArrayField(content) : blog.content,
+      content: content !== undefined ? content : blog.content,
       tags: tags !== undefined ? parseArrayField(tags) : blog.tags,
       readTime: readTime || blog.readTime,
       author: authorName ? { name: authorName } : blog.author,
@@ -242,6 +250,52 @@ exports.updateBlog = async (req, res) => {
       message: "Blog updated successfully",
       data: updated,
     });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Like a blog post
+// @route   PATCH /smartglobal/blogs/:id/like
+// @access  Public
+exports.likeBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true },
+    );
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+    res.status(200).json({ success: true, data: blog });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Dislike a blog post
+// @route   PATCH /smartglobal/blogs/:id/dislike
+// @access  Public
+exports.dislikeBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { dislikes: 1 } },
+      { new: true },
+    );
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+    res.status(200).json({ success: true, data: blog });
   } catch (error) {
     res.status(500).json({
       success: false,

@@ -30,6 +30,22 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    company: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    notificationPreferences: {
+      emailNotifications: { type: Boolean, default: true },
+      orderUpdates: { type: Boolean, default: true },
+      marketingEmails: { type: Boolean, default: false },
+      weeklyReports: { type: Boolean, default: true },
+    },
     isActive: {
       type: Boolean,
       default: true,

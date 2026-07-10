@@ -1,0 +1,92 @@
+const Comment = require("../models/Comment");
+const Blog = require("../models/Blog");
+
+// @desc    Get all comments for a blog
+// @route   GET /smartglobal/blogs/:blogId/comments
+// @access  Public
+exports.getComments = async (req, res) => {
+  try {
+    const comments = await Comment.find({ blog: req.params.blogId })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.status(200).json({
+      success: true,
+      count: comments.length,
+      data: comments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Add a comment to a blog
+// @route   POST /smartglobal/blogs/:blogId/comments
+// @access  Public
+exports.createComment = async (req, res) => {
+  try {
+    const { name, message } = req.body;
+
+    if (!name?.trim() || !message?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and comment message are required",
+      });
+    }
+
+    const blog = await Blog.findById(req.params.blogId);
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    const comment = await Comment.create({
+      blog: req.params.blogId,
+      name: name.trim(),
+      message: message.trim(),
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Comment posted",
+      data: comment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Delete a comment (moderation)
+// @route   DELETE /smartglobal/blogs/comments/:commentId
+// @access  Private/Admin
+exports.deleteComment = async (req, res) => {
+  try {
+    const comment = await Comment.findByIdAndDelete(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Comment deleted",
+      data: {},
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};

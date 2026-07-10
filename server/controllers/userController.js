@@ -131,10 +131,15 @@ exports.logout = async (req, res) => {
 // @access  Private
 exports.updateDetails = async (req, res) => {
   try {
-    const fieldsToUpdate = {
-      name: req.body.name,
-      email: req.body.email,
-    };
+    const fieldsToUpdate = {};
+    if (req.body.name !== undefined) fieldsToUpdate.name = req.body.name;
+    if (req.body.email !== undefined) fieldsToUpdate.email = req.body.email;
+    if (req.body.phone !== undefined) fieldsToUpdate.phone = req.body.phone;
+    if (req.body.company !== undefined)
+      fieldsToUpdate.company = req.body.company;
+    if (req.body.notificationPreferences !== undefined) {
+      fieldsToUpdate.notificationPreferences = req.body.notificationPreferences;
+    }
 
     const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
       new: true,
@@ -144,6 +149,31 @@ exports.updateDetails = async (req, res) => {
     res.status(200).json({
       success: true,
       data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Deactivate the logged-in user's own account
+// @route   PUT /api/auth/deactivate
+// @access  Private
+exports.deactivateAccount = async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { isActive: false });
+
+    res.cookie("token", "none", {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Account deactivated",
     });
   } catch (error) {
     res.status(500).json({

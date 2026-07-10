@@ -7,6 +7,7 @@ const {
   getSingleOrder,
   markComplete,
   getAllOrders,
+  getOrderStats,
 } = require("../controllers/Order");
 
 const { protect, optionalAuth } = require("../middleware/authMiddleware");
@@ -21,10 +22,12 @@ router.get("/session/:sessionId", getOrdersBySession);
 
 // ── Authenticated ─────────────────────────────────────────────────────────
 router.get("/my", protect, getMyOrders);
-router.get("/:id", protect, getSingleOrder);
 
-// ── Admin ─────────────────────────────────────────────────────────────────
+// ── Admin (registered before "/:id" so "stats" isn't swallowed as an id) ───
+router.get("/stats", protect, getOrderStats);
 router.get("/", protect, getAllOrders);
 router.patch("/:id/complete", protect, markComplete);
+
+router.get("/:id", protect, getSingleOrder);
 
 module.exports = router;

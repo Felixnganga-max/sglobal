@@ -11,7 +11,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/auth";
+import { API_BASE_URL } from "../api/config";
+const API_URL = `${API_BASE_URL}/auth`;
 
 export default function Login() {
   const navigate = useNavigate();

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ShoppingCart, Heart, Check } from "lucide-react";
 import { useCart } from "../context/Cartcontext";
+import { withTransform } from "../lib/cloudinary";
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+import { API_BASE_URL } from "../api/config";
+const API_URL = `${API_BASE_URL}/products`;
 
 export default function FeaturedProductsGrid() {
   const [grouped, setGrouped] = useState({});
@@ -241,12 +243,15 @@ function ProductCard({ product }) {
   const [addedFeedback, setAddedFeedback] = useState(false);
 
   const getImage = () =>
-    product.image?.url ||
-    product.images?.[0]?.url ||
-    product.imageUrl ||
-    product.img ||
-    product.photo ||
-    "https://via.placeholder.com/300?text=No+Image";
+    withTransform(
+      product.image?.url ||
+        product.images?.[0]?.url ||
+        product.imageUrl ||
+        product.img ||
+        product.photo ||
+        "https://via.placeholder.com/300?text=No+Image",
+      { w: 500 },
+    );
 
   const prodId = product._id || product.id;
   const inStock = product.stock > 0;
@@ -315,6 +320,8 @@ function ProductCard({ product }) {
         }}
       >
         <img
+          loading="lazy"
+          decoding="async"
           src={getImage()}
           alt={name}
           style={{

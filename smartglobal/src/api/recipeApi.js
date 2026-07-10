@@ -2,9 +2,10 @@
  * Recipe API Service - Backend Integration Only
  * No mock data - 100% API-driven
  */
+import { API_BASE_URL as BASE_URL } from "./config";
 
-const API_BASE_URL = "https://sglobal-plf6.vercel.app/smartglobal/recipes";
-const PRODUCTS_API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+const API_BASE_URL = `${BASE_URL}/recipes`;
+const PRODUCTS_API_URL = `${BASE_URL}/products`;
 
 const getAuthToken = () => {
   const token = localStorage.getItem("token");

@@ -19,7 +19,7 @@ function StatCard({ icon: Icon, label, value, change, color }) {
   const isPositive = change && change > 0;
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
+    <div className="bg-white rounded-none p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-semibold text-gray-500 mb-2">{label}</p>
@@ -43,7 +43,7 @@ function StatCard({ icon: Icon, label, value, change, color }) {
           )}
         </div>
         <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}
+          className={`w-12 h-12 rounded-none flex items-center justify-center ${color}`}
         >
           <Icon className="h-6 w-6 text-white" />
         </div>
@@ -54,7 +54,7 @@ function StatCard({ icon: Icon, label, value, change, color }) {
 
 function RecentActivity({ activities }) {
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+    <div className="bg-white rounded-none p-6 border border-gray-200">
       <h3
         className="text-xl font-black text-gray-900 mb-4"
         style={{ fontFamily: "'Bebas Neue', sans-serif" }}
@@ -68,7 +68,7 @@ function RecentActivity({ activities }) {
             className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
           >
             <div
-              className={`w-10 h-10 rounded-lg flex items-center justify-center ${activity.color}`}
+              className={`w-10 h-10 rounded-none flex items-center justify-center ${activity.color}`}
             >
               {activity.icon}
             </div>
@@ -118,7 +118,7 @@ function QuickActions() {
   ];
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+    <div className="bg-white rounded-none p-6 border border-gray-200">
       <h3
         className="text-xl font-black text-gray-900 mb-4"
         style={{ fontFamily: "'Bebas Neue', sans-serif" }}
@@ -131,7 +131,7 @@ function QuickActions() {
           return (
             <button
               key={action.label}
-              className={`${action.color} ${action.hoverColor} ${action.textColor || "text-white"} rounded-xl p-4 flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg`}
+              className={`${action.color} ${action.hoverColor} ${action.textColor || "text-white"} rounded-none p-4 flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg`}
             >
               <Icon className="h-6 w-6" />
               <span className="text-sm font-bold">{action.label}</span>

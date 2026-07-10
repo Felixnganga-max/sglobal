@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Heart, Clock, User, ChefHat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { recipesData, getRecipesByCategory } from "../lib/recipesData";
+import { recipesData } from "../lib/recipesData";
 import { assets } from "../assets/assets";
+import { recipeApi } from "../api/recipeApi";
+import { mergeWithLive, normalizeLiveRecipe } from "../lib/mergeLive";
 
 const categories = [
   { id: 1, name: "Breakfast", icon: "🥞" },
@@ -12,24 +14,45 @@ const categories = [
   { id: 5, name: "Main Course", icon: "🍽️" },
 ];
 
-const getImageFromAssets = (name) =>
-  ({
-    top2: assets.top2,
-    kent: assets.kent,
-    topping: assets.topping,
-    spuds: assets.spuds,
-    crepes: assets.crepes,
-    ice: assets.ice,
-  })[name] || assets.top2;
+const getImageFromAssets = (name) => {
+  if (typeof name === "string" && /^https?:\/\//.test(name)) return name;
+  return (
+    {
+      top2: assets.top2,
+      kent: assets.kent,
+      topping: assets.topping,
+      spuds: assets.spuds,
+      crepes: assets.crepes,
+      ice: assets.ice,
+    }[name] || assets.top2
+  );
+};
 
 export default function Recipes() {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [allRecipes, setAllRecipes] = useState(recipesData);
   const navigate = useNavigate();
-  const filteredRecipes = getRecipesByCategory(selectedCategory);
-  const featuredRecipe = recipesData.find((r) => r.id === 2);
+
+  const filteredRecipes =
+    selectedCategory === "All"
+      ? allRecipes
+      : allRecipes.filter((recipe) => recipe.category === selectedCategory);
+  const featuredRecipe = allRecipes.find((r) => r.id === 2) || allRecipes[0];
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    recipeApi
+      .getAllRecipes({ limit: 100 })
+      .then((response) => {
+        const live = (response.data || []).map(normalizeLiveRecipe);
+        setAllRecipes(mergeWithLive(recipesData, live));
+      })
+      .catch(() => {
+        // Keep showing the curated recipes if the live fetch fails.
+      });
   }, []);
 
   return (
@@ -40,6 +63,8 @@ export default function Recipes() {
         style={{ height: "380px" }}
       >
         <img
+          loading="lazy"
+          decoding="async"
           src={assets.recipe}
           alt={featuredRecipe.title}
           className="absolute inset-0 w-full h-full object-cover"
@@ -131,7 +156,7 @@ export default function Recipes() {
             />
             <span className="text-xs font-bold">All</span>
             <span className="text-[0.58rem] opacity-70">
-              {recipesData.length} recipes
+              {allRecipes.length} recipes
             </span>
           </button>
 
@@ -216,6 +241,8 @@ function RecipeCard({ recipe, onClick }) {
         onClick={onClick}
       >
         <img
+          loading="lazy"
+          decoding="async"
           src={getImageFromAssets(recipe.image)}
           alt={recipe.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

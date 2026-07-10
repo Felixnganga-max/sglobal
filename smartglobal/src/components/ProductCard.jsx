@@ -61,6 +61,8 @@ export default function ProductCard({ product }) {
       {/* Product Image */}
       <div className="relative h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
         <img
+          loading="lazy"
+          decoding="async"
           src={product.image}
           alt={product.title}
           className={`w-full h-full object-contain p-6 transition-all duration-700 ${

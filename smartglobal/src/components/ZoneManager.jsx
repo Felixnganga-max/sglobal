@@ -11,8 +11,9 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
+import { API_BASE_URL } from "../api/config";
 
-const API_BASE = "https://sglobal-plf6.vercel.app/smartglobal/zones";
+const API_BASE = `${API_BASE_URL}/zones`;
 
 function getToken() {
   return localStorage.getItem("token") || "";
@@ -22,6 +23,18 @@ const authHeaders = () => ({
   "Content-Type": "application/json",
   Authorization: `Bearer ${getToken()}`,
 });
+
+function IconButton({ title, onClick, hoverClass, children }) {
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      className={`w-8 h-8 flex items-center justify-center border border-gray-200 text-gray-400 bg-white transition-colors ${hoverClass}`}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function ZoneManager() {
   const [zones, setZones] = useState([]);
@@ -128,500 +141,226 @@ export default function ZoneManager() {
     }
   };
 
+  const activeCount = zones.filter((z) => z.isActive).length;
+
   return (
-    <div className="bg-soft" style={{ minHeight: "100vh", padding: "2rem 0" }}>
-      <div className="page-x" style={{ maxWidth: 860, margin: "0 auto" }}>
-        {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "0.75rem",
-            marginBottom: "1.75rem",
-          }}
-        >
-          <div
-            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
-          >
-            <div
-              className="bg-red"
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 bg-[#BF1A1A]/10 flex items-center justify-center">
+              <MapPin className="h-4 w-4 text-[#BF1A1A]" />
+            </div>
+            <h1
+              className="text-3xl font-black text-gray-900 tracking-tight"
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                fontFamily: "'Bebas Neue', sans-serif",
+                letterSpacing: "0.02em",
               }}
             >
-              <MapPin size={18} color="#fff" />
-            </div>
-            <div>
-              <div
-                className="text-section-title"
-                style={{ fontSize: "1.1rem" }}
-              >
-                Delivery Zones
-              </div>
-              <div
-                className="text-body text-muted"
-                style={{ fontSize: "0.75rem", marginTop: 2 }}
-              >
-                {zones.length} zone{zones.length !== 1 ? "s" : ""} configured
-              </div>
-            </div>
+              Delivery Zones
+            </h1>
           </div>
-          <button
-            className="btn-primary"
-            style={{ display: "flex", alignItems: "center", gap: 6 }}
-            onClick={() => {
-              resetForm();
-              setShowForm(true);
-            }}
-          >
-            <Plus size={14} /> Add Zone
-          </button>
+          <p className="text-sm text-gray-400 font-medium">
+            {loading
+              ? "Loading zones..."
+              : `${zones.length} zone${zones.length !== 1 ? "s" : ""} configured · ${activeCount} active`}
+          </p>
         </div>
+        <button
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#BF1A1A] text-white rounded-none font-bold text-sm hover:bg-[#8B1414] transition-all duration-300 shadow-sm hover:shadow-md flex-shrink-0"
+        >
+          <Plus className="h-4 w-4" /> Add Zone
+        </button>
+      </div>
 
-        {/* Error */}
-        {error && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "#fef2f2",
-              border: "1px solid #fecaca",
-              color: "#ef4444",
-              borderRadius: 10,
-              padding: "0.75rem 1rem",
-              marginBottom: "1rem",
-            }}
-          >
-            <AlertCircle size={14} />
-            <span
-              className="text-label"
-              style={{
-                textTransform: "none",
-                letterSpacing: 0,
-                fontWeight: 400,
-              }}
-            >
-              {error}
-            </span>
-          </div>
-        )}
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-100 rounded-none p-4 flex items-start gap-3">
+          <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700 flex-1">{error}</p>
+        </div>
+      )}
 
-        {/* Add / Edit Form */}
-        {showForm && (
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid var(--color-border)",
-              borderRadius: 16,
-              padding: "1.5rem",
-              marginBottom: "1.5rem",
-            }}
-          >
-            <div className="text-card-title" style={{ marginBottom: "1.1rem" }}>
-              {editingId ? "Edit Zone" : "Add New Zone"}
-            </div>
+      {/* Add / Edit Form */}
+      {showForm && (
+        <div className="bg-white rounded-none border border-gray-100 p-6">
+          <h3 className="font-black text-gray-900 mb-4">
+            {editingId ? "Edit Zone" : "Add New Zone"}
+          </h3>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 160px",
-                gap: "0.75rem",
-                marginBottom: "0.75rem",
-              }}
-            >
-              <div>
-                <label
-                  className="text-eyebrow"
-                  style={{ display: "block", marginBottom: 6 }}
-                >
-                  Zone Name *
-                </label>
-                <input
-                  style={{
-                    width: "100%",
-                    background: "var(--color-bg-soft)",
-                    border: "1.5px solid var(--color-border)",
-                    borderRadius: 10,
-                    padding: "0.6rem 0.875rem",
-                    fontFamily: "var(--font-body)",
-                    fontSize: "0.875rem",
-                    color: "var(--color-text)",
-                    outline: "none",
-                  }}
-                  placeholder="e.g. Westlands & Northern Suburbs"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, name: e.target.value }))
-                  }
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "var(--color-red)";
-                    e.target.style.background = "#fff";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "var(--color-border)";
-                    e.target.style.background = "var(--color-bg-soft)";
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  className="text-eyebrow"
-                  style={{ display: "block", marginBottom: 6 }}
-                >
-                  Delivery Fee (KSh) *
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  style={{
-                    width: "100%",
-                    background: "var(--color-bg-soft)",
-                    border: "1.5px solid var(--color-border)",
-                    borderRadius: 10,
-                    padding: "0.6rem 0.875rem",
-                    fontFamily: "var(--font-body)",
-                    fontSize: "0.875rem",
-                    color: "var(--color-text)",
-                    outline: "none",
-                  }}
-                  placeholder="e.g. 300"
-                  value={form.deliveryFee}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, deliveryFee: e.target.value }))
-                  }
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "var(--color-red)";
-                    e.target.style.background = "#fff";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "var(--color-border)";
-                    e.target.style.background = "var(--color-bg-soft)";
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: "1rem" }}>
-              <label
-                className="text-eyebrow"
-                style={{ display: "block", marginBottom: 6 }}
-              >
-                Description{" "}
-                <span
-                  style={{
-                    color: "var(--color-muted)",
-                    fontWeight: 400,
-                    textTransform: "none",
-                    letterSpacing: 0,
-                    fontSize: "0.7rem",
-                  }}
-                >
-                  — optional
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-3 mb-3">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Zone Name *
               </label>
               <input
-                style={{
-                  width: "100%",
-                  background: "var(--color-bg-soft)",
-                  border: "1.5px solid var(--color-border)",
-                  borderRadius: 10,
-                  padding: "0.6rem 0.875rem",
-                  fontFamily: "var(--font-body)",
-                  fontSize: "0.875rem",
-                  color: "var(--color-text)",
-                  outline: "none",
-                }}
-                placeholder="e.g. Gigiri, Runda, Muthaiga, Kitisuru..."
-                value={form.description}
+                placeholder="e.g. Westlands & Northern Suburbs"
+                value={form.name}
                 onChange={(e) =>
-                  setForm((p) => ({ ...p, description: e.target.value }))
+                  setForm((p) => ({ ...p, name: e.target.value }))
                 }
-                onFocus={(e) => {
-                  e.target.style.borderColor = "var(--color-red)";
-                  e.target.style.background = "#fff";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "var(--color-border)";
-                  e.target.style.background = "var(--color-bg-soft)";
-                }}
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]/30 focus:border-[#BF1A1A] focus:bg-white transition-all"
               />
             </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "0.625rem",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                onClick={resetForm}
-                style={{
-                  padding: "0.6rem 1.1rem",
-                  background: "#f0f0f0",
-                  color: "#555",
-                  border: "none",
-                  borderRadius: 10,
-                  fontFamily: "var(--font-body)",
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                <X size={13} /> Cancel
-              </button>
-              <button
-                className="btn-primary"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  opacity:
-                    saving || !form.name || form.deliveryFee === "" ? 0.5 : 1,
-                  cursor:
-                    saving || !form.name || form.deliveryFee === ""
-                      ? "not-allowed"
-                      : "pointer",
-                }}
-                onClick={handleSave}
-                disabled={saving || !form.name || form.deliveryFee === ""}
-              >
-                {saving ? (
-                  <Loader2
-                    size={13}
-                    style={{ animation: "spin 0.7s linear infinite" }}
-                  />
-                ) : (
-                  <Check size={13} />
-                )}
-                {saving ? "Saving…" : "Save Zone"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Table */}
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid var(--color-border)",
-            borderRadius: 16,
-            overflow: "hidden",
-          }}
-        >
-          {/* Table Head */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 130px 100px 110px",
-              padding: "0.75rem 1.25rem",
-              background: "var(--color-bg-soft)",
-              borderBottom: "1px solid var(--color-border)",
-            }}
-          >
-            {["Zone", "Delivery Fee", "Status", "Actions"].map((h) => (
-              <div
-                key={h}
-                className="text-eyebrow"
-                style={{ color: "var(--color-muted)" }}
-              >
-                {h}
-              </div>
-            ))}
-          </div>
-
-          {loading ? (
-            <div
-              style={{
-                padding: "3rem",
-                textAlign: "center",
-                color: "var(--color-muted)",
-              }}
-            >
-              <Loader2
-                size={20}
-                style={{ animation: "spin 0.7s linear infinite" }}
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Delivery Fee (KSh) *
+              </label>
+              <input
+                type="number"
+                min="0"
+                placeholder="e.g. 300"
+                value={form.deliveryFee}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, deliveryFee: e.target.value }))
+                }
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]/30 focus:border-[#BF1A1A] focus:bg-white transition-all"
               />
             </div>
-          ) : zones.length === 0 ? (
-            <div
-              style={{ padding: "3rem 1.25rem", textAlign: "center" }}
-              className="text-body text-muted"
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Description{" "}
+              <span className="normal-case font-normal text-gray-400">
+                — optional
+              </span>
+            </label>
+            <input
+              placeholder="e.g. Gigiri, Runda, Muthaiga, Kitisuru..."
+              value={form.description}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, description: e.target.value }))
+              }
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]/30 focus:border-[#BF1A1A] focus:bg-white transition-all"
+            />
+          </div>
+
+          <div className="flex gap-2.5 justify-end">
+            <button
+              onClick={resetForm}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-none font-bold text-sm hover:bg-gray-200 transition-colors"
             >
-              No zones yet — add your first delivery zone above.
-            </div>
-          ) : (
-            zones.map((zone) => (
-              <div
-                key={zone._id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 130px 100px 110px",
-                  padding: "0.875rem 1.25rem",
-                  borderBottom: "1px solid var(--color-bg-soft)",
-                  alignItems: "center",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "var(--color-bg-soft)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#fff")
-                }
-              >
-                <div>
-                  <div
-                    className="text-card-title"
-                    style={{ textTransform: "none", letterSpacing: 0 }}
-                  >
-                    {zone.name}
-                  </div>
-                  {zone.description && (
-                    <div
-                      className="text-body text-muted"
-                      style={{ fontSize: "0.72rem", marginTop: 2 }}
-                    >
-                      {zone.description}
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-label text-red">
-                  KSh {zone.deliveryFee.toLocaleString()}
-                </div>
-
-                <div>
-                  <span
-                    className="text-label"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "3px 10px",
-                      borderRadius: 20,
-                      fontSize: "0.68rem",
-                      background: zone.isActive ? "#f0fdf4" : "#f5f5f5",
-                      color: zone.isActive ? "#16a34a" : "var(--color-muted)",
-                      border: `1px solid ${zone.isActive ? "#bbf7d0" : "var(--color-border)"}`,
-                    }}
-                  >
-                    {zone.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {/* Edit */}
-                  <button
-                    title="Edit"
-                    onClick={() => handleEdit(zone)}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      border: "1.5px solid var(--color-border)",
-                      background: "#fff",
-                      color: "var(--color-muted)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-blue)";
-                      e.currentTarget.style.color = "var(--color-blue)";
-                      e.currentTarget.style.background = "#eff6ff";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-border)";
-                      e.currentTarget.style.color = "var(--color-muted)";
-                      e.currentTarget.style.background = "#fff";
-                    }}
-                  >
-                    <Pencil size={13} />
-                  </button>
-                  {/* Toggle */}
-                  <button
-                    title="Toggle active"
-                    onClick={() => handleToggle(zone._id)}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      border: "1.5px solid var(--color-border)",
-                      background: "#fff",
-                      color: "var(--color-muted)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#16a34a";
-                      e.currentTarget.style.color = "#16a34a";
-                      e.currentTarget.style.background = "#f0fdf4";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-border)";
-                      e.currentTarget.style.color = "var(--color-muted)";
-                      e.currentTarget.style.background = "#fff";
-                    }}
-                  >
-                    {zone.isActive ? (
-                      <ToggleRight size={13} />
-                    ) : (
-                      <ToggleLeft size={13} />
-                    )}
-                  </button>
-                  {/* Delete */}
-                  <button
-                    title="Delete"
-                    onClick={() => handleDelete(zone._id)}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      border: "1.5px solid var(--color-border)",
-                      background: "#fff",
-                      color: "var(--color-muted)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#ef4444";
-                      e.currentTarget.style.color = "#ef4444";
-                      e.currentTarget.style.background = "#fef2f2";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-border)";
-                      e.currentTarget.style.color = "var(--color-muted)";
-                      e.currentTarget.style.background = "#fff";
-                    }}
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+              <X className="h-3.5 w-3.5" /> Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !form.name || form.deliveryFee === ""}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#BF1A1A] text-white rounded-none font-bold text-sm hover:bg-[#8B1414] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+              {saving ? "Saving…" : "Save Zone"}
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* Spin keyframe (minimal, since inline styles handle everything else) */}
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      {/* Table */}
+      <div className="bg-white rounded-none border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                {["Zone", "Delivery Fee", "Status", "Actions"].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest ${
+                      i === 3 ? "text-center" : "text-left"
+                    }`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-16 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-[#BF1A1A] mx-auto" />
+                  </td>
+                </tr>
+              ) : zones.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="py-16 text-center text-sm text-gray-400"
+                  >
+                    No zones yet — add your first delivery zone above.
+                  </td>
+                </tr>
+              ) : (
+                zones.map((zone) => (
+                  <tr key={zone._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <div className="font-bold text-gray-900 text-sm">
+                        {zone.name}
+                      </div>
+                      {zone.description && (
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          {zone.description}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 text-sm font-bold text-[#BF1A1A]">
+                      KSh {zone.deliveryFee.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 text-[10px] font-bold border ${
+                          zone.isActive
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : "bg-gray-50 text-gray-400 border-gray-100"
+                        }`}
+                      >
+                        {zone.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center justify-center gap-2">
+                        <IconButton
+                          title="Edit"
+                          onClick={() => handleEdit(zone)}
+                          hoverClass="hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </IconButton>
+                        <IconButton
+                          title="Toggle active"
+                          onClick={() => handleToggle(zone._id)}
+                          hoverClass="hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50"
+                        >
+                          {zone.isActive ? (
+                            <ToggleRight className="h-3.5 w-3.5" />
+                          ) : (
+                            <ToggleLeft className="h-3.5 w-3.5" />
+                          )}
+                        </IconButton>
+                        <IconButton
+                          title="Delete"
+                          onClick={() => handleDelete(zone._id)}
+                          hoverClass="hover:border-red-300 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </IconButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

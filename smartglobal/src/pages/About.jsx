@@ -121,6 +121,8 @@ const About = () => {
           {/* Image — hidden on very small screens, shown md+ */}
           <div className="hidden md:block">
             <img
+              loading="lazy"
+              decoding="async"
               src={assets.topping}
               alt="Smart Global Products"
               className="w-full h-96 rounded-sm shadow-lg object-cover"
@@ -131,6 +133,8 @@ const About = () => {
         {/* Image shown below text on mobile */}
         <div className="block md:hidden mt-6">
           <img
+            loading="lazy"
+            decoding="async"
             src={assets.topping}
             alt="Smart Global Products"
             className="w-full h-52 rounded-sm shadow-lg object-cover"
@@ -237,6 +241,8 @@ const About = () => {
           <div>
             <div className="overflow-hidden rounded-sm mb-4 h-48 sm:h-52 md:h-56">
               <img
+                loading="lazy"
+                decoding="async"
                 src={assets.kent}
                 alt="Kent Boringer"
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -257,6 +263,8 @@ const About = () => {
           <div>
             <div className="overflow-hidden rounded-sm mb-4 h-48 sm:h-52 md:h-56">
               <img
+                loading="lazy"
+                decoding="async"
                 src={assets.spuds}
                 alt="Spuds Craft Crisps"
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"

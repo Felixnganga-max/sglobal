@@ -14,7 +14,8 @@ import React, {
  */
 
 // ── Order API ─────────────────────────────────────────────────────────────────
-const ORDER_API = "https://sglobal-plf6.vercel.app/smartglobal/orders";
+import { API_BASE_URL } from "../api/config";
+const ORDER_API = `${API_BASE_URL}/orders`;
 
 function getSessionId() {
   let id = sessionStorage.getItem("sg_session_id");

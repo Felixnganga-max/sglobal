@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -18,16 +18,22 @@ import {
 } from "lucide-react";
 import { getRecipeBySlug, getRelatedRecipes } from "../lib/recipesData";
 import { assets } from "../assets/assets";
+import { recipeApi } from "../api/recipeApi";
+import { normalizeLiveRecipe } from "../lib/mergeLive";
 
-const getImageFromAssets = (name) =>
-  ({
-    top2: assets.top2,
-    kent: assets.kent,
-    topping: assets.topping,
-    spuds: assets.spuds,
-    crepes: assets.crepes,
-    ice: assets.ice,
-  })[name] || assets.top2;
+const getImageFromAssets = (name) => {
+  if (typeof name === "string" && /^https?:\/\//.test(name)) return name;
+  return (
+    {
+      top2: assets.top2,
+      kent: assets.kent,
+      topping: assets.topping,
+      spuds: assets.spuds,
+      crepes: assets.crepes,
+      ice: assets.ice,
+    }[name] || assets.top2
+  );
+};
 
 const difficultyColor = {
   Easy: "#4CAF50",
@@ -38,11 +44,33 @@ const difficultyColor = {
 export default function RecipeDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const recipe = getRecipeBySlug(slug);
+  const dummyRecipe = getRecipeBySlug(slug);
+  const [liveRecipe, setLiveRecipe] = useState(null);
+  const [liveNotFound, setLiveNotFound] = useState(false);
   const [liked, setLiked] = useState(false);
   const [cookingMode, setCookingMode] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const printRef = useRef(null);
+
+  // The curated recipesData.js list doesn't know about recipes added later
+  // through the dashboard, so fall back to a live lookup by slug.
+  useEffect(() => {
+    if (dummyRecipe) return;
+    let cancelled = false;
+    recipeApi
+      .getRecipe(slug)
+      .then((res) => {
+        if (!cancelled) setLiveRecipe(normalizeLiveRecipe(res.data));
+      })
+      .catch(() => {
+        if (!cancelled) setLiveNotFound(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, dummyRecipe]);
+
+  const recipe = dummyRecipe || liveRecipe;
 
   if (!recipe)
     return (
@@ -52,15 +80,17 @@ export default function RecipeDetail() {
             className="font-heading font-bold text-lg mb-3"
             style={{ color: "var(--color-text)" }}
           >
-            Recipe not found
+            {liveNotFound ? "Recipe not found" : "Loading recipe…"}
           </p>
-          <button
-            onClick={() => navigate("/recipes")}
-            className="btn-secondary"
-            style={{ fontSize: "0.62rem" }}
-          >
-            Back to Recipes
-          </button>
+          {liveNotFound && (
+            <button
+              onClick={() => navigate("/recipes")}
+              className="btn-secondary"
+              style={{ fontSize: "0.62rem" }}
+            >
+              Back to Recipes
+            </button>
+          )}
         </div>
       </div>
     );
@@ -117,6 +147,8 @@ export default function RecipeDetail() {
           style={{ height: "320px" }}
         >
           <img
+            loading="lazy"
+            decoding="async"
             src={getImageFromAssets(recipe.image)}
             alt={recipe.title}
             className="absolute inset-0 w-full h-full object-cover"
@@ -619,6 +651,8 @@ export default function RecipeDetail() {
                         className="flex items-center gap-3 cursor-pointer group"
                       >
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={getImageFromAssets(r.image)}
                           alt={r.title}
                           className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-300"

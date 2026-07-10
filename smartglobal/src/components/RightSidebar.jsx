@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+import { API_BASE_URL } from "../api/config";
+const API_URL = `${API_BASE_URL}/products`;
 import { assets } from "../assets/assets";
 
 const CATEGORY_ICONS = {
@@ -398,6 +399,8 @@ export default function ShopByCategory() {
               }}
             >
               <img
+                loading="lazy"
+                decoding="async"
                 src={brand.name}
                 alt={brand.desc}
                 style={{

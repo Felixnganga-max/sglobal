@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { assets } from "../assets/assets";
 import { recipeApi, prepareRecipeData } from "../api/recipeApi";
+import { productService } from "../api/productService";
 
 const getImageFromAssets = (imageName) => {
   const imageMap = {
@@ -53,7 +54,7 @@ function LoadingSpinner() {
 
 function ErrorMessage({ message, onRetry }) {
   return (
-    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+    <div className="bg-red-50 border border-red-200 rounded-none p-4 flex items-start gap-3">
       <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
       <div className="flex-1">
         <h3 className="text-sm font-bold text-red-900 mb-1">Error</h3>
@@ -62,7 +63,7 @@ function ErrorMessage({ message, onRetry }) {
       {onRetry && (
         <button
           onClick={onRetry}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-colors"
+          className="px-4 py-2 bg-red-600 text-white rounded-none text-sm font-bold hover:bg-red-700 transition-colors"
         >
           Retry
         </button>
@@ -309,7 +310,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col my-8">
+      <div className="bg-white rounded-none w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col my-8">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2
@@ -324,7 +325,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-none transition-colors"
             disabled={isSubmitting}
           >
             <X className="h-6 w-6 text-gray-600" />
@@ -380,7 +381,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                     })
                   }
                   placeholder="e.g., Fluffy Kent Boringer Pancakes with Fresh Berries"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                 />
                 {formData.title && (
                   <p className="text-xs text-gray-500 mt-1">
@@ -398,7 +399,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                   onChange={(e) =>
                     setFormData({ ...formData, productId: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                 >
                   <option value="">Select product</option>
                   {products.map((product) => (
@@ -419,7 +420,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   >
                     <option value="">Select category</option>
                     {categories.map((cat) => (
@@ -438,7 +439,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                     onChange={(e) =>
                       setFormData({ ...formData, difficulty: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   >
                     {difficulties.map((diff) => (
                       <option key={diff} value={diff}>
@@ -461,7 +462,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                       setFormData({ ...formData, prepTime: e.target.value })
                     }
                     placeholder="15"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
                 <div>
@@ -475,7 +476,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                       setFormData({ ...formData, cookTime: e.target.value })
                     }
                     placeholder="20"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
                 <div>
@@ -489,13 +490,13 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                       setFormData({ ...formData, servings: e.target.value })
                     }
                     placeholder="4"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
               </div>
 
               {formData.prepTime && formData.cookTime && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="bg-green-50 border border-green-200 rounded-none p-4">
                   <p className="text-green-700 font-bold">
                     ✓ Total Time: {calculateTotalTime()}
                   </p>
@@ -519,7 +520,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                         rating: Math.min(5, Math.max(0, e.target.value)),
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
                 <div>
@@ -533,7 +534,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                       setFormData({ ...formData, reviews: e.target.value })
                     }
                     placeholder="0"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                 </div>
               </div>
@@ -567,7 +568,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                   }
                   rows="4"
                   placeholder="Write an engaging description of your recipe..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] resize-none"
                 />
               </div>
 
@@ -585,13 +586,15 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                         key={img.name}
                         type="button"
                         onClick={() => handleImageSelect(img.name)}
-                        className={`relative border-2 rounded-lg p-2 transition-all ${
+                        className={`relative border-2 rounded-none p-2 transition-all ${
                           formData.image === img.name
                             ? "border-[#BF1A1A] ring-2 ring-[#BF1A1A] ring-opacity-50"
                             : "border-gray-200 hover:border-[#BF1A1A]"
                         }`}
                       >
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={getImageFromAssets(img.name)}
                           alt={img.label}
                           className="w-full h-16 object-contain"
@@ -604,13 +607,15 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                   </div>
                 </div>
                 <div className="text-center text-sm text-gray-500 mb-3">OR</div>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-[#BF1A1A] transition-colors">
+                <div className="border-2 border-dashed border-gray-300 rounded-none p-6 hover:border-[#BF1A1A] transition-colors">
                   {formData.imagePreview ? (
                     <div className="relative">
                       <img
+                        loading="lazy"
+                        decoding="async"
                         src={formData.imagePreview}
                         alt="Preview"
-                        className="max-h-64 mx-auto rounded-lg"
+                        className="max-h-64 mx-auto rounded-none"
                       />
                       <button
                         type="button"
@@ -621,7 +626,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                             imagePreview: null,
                           })
                         }
-                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-none hover:bg-red-600"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -650,7 +655,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
 
           {currentTab === "ingredients" && (
             <div className="space-y-6">
-              <div className="bg-[#FFF9E6] rounded-xl p-4 border border-[#FFD41D]">
+              <div className="bg-[#FFF9E6] rounded-none p-4 border border-[#FFD41D]">
                 <p className="text-sm text-[#7B4019] font-semibold">
                   💡 List all ingredients needed for this recipe. Be specific
                   with measurements!
@@ -662,7 +667,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                 </h3>
                 <button
                   onClick={addIngredient}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#BF1A1A] text-white rounded-lg hover:bg-[#8B1414] transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#BF1A1A] text-white rounded-none hover:bg-[#8B1414] transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   Add Ingredient
@@ -672,7 +677,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                 {ingredients.map((ingredient, index) => (
                   <div
                     key={index}
-                    className="bg-white border border-gray-200 rounded-xl p-4 group hover:border-[#BF1A1A] transition-colors"
+                    className="bg-white border border-gray-200 rounded-none p-4 group hover:border-[#BF1A1A] transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <span className="w-8 h-8 bg-[#FFD41D] rounded-full flex items-center justify-center text-[#7B4019] font-bold text-sm flex-shrink-0">
@@ -685,7 +690,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                           updateIngredient(index, e.target.value)
                         }
                         placeholder="e.g., 2 cups Kent Boringer Pancake Mix"
-                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                       />
                       <div className="flex items-center gap-2">
                         <button
@@ -720,7 +725,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
 
           {currentTab === "directions" && (
             <div className="space-y-6">
-              <div className="bg-[#FFF9E6] rounded-xl p-4 border border-[#FFD41D]">
+              <div className="bg-[#FFF9E6] rounded-none p-4 border border-[#FFD41D]">
                 <p className="text-sm text-[#7B4019] font-semibold">
                   👨‍🍳 Write clear, step-by-step instructions. Each step should be
                   a complete action.
@@ -732,7 +737,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                 </h3>
                 <button
                   onClick={addDirection}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#BF1A1A] text-white rounded-lg hover:bg-[#8B1414] transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#BF1A1A] text-white rounded-none hover:bg-[#8B1414] transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   Add Step
@@ -742,7 +747,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                 {directions.map((direction, index) => (
                   <div
                     key={index}
-                    className="bg-white border border-gray-200 rounded-xl p-4 group hover:border-[#BF1A1A] transition-colors"
+                    className="bg-white border border-gray-200 rounded-none p-4 group hover:border-[#BF1A1A] transition-colors"
                   >
                     <div className="flex items-start gap-3">
                       <span className="w-8 h-8 bg-[#BF1A1A] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mt-3">
@@ -753,7 +758,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                         onChange={(e) => updateDirection(index, e.target.value)}
                         rows="3"
                         placeholder="Describe this cooking step in detail..."
-                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] resize-none"
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] resize-none"
                       />
                       <div className="flex flex-col gap-2">
                         <button
@@ -810,7 +815,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                           setNutrition({ ...nutrition, [key]: e.target.value })
                         }
                         placeholder={key === "calories" ? "320" : "8g"}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                       />
                     </div>
                   ))}
@@ -829,7 +834,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                   </div>
                   <button
                     onClick={addTip}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#BF1A1A] text-white rounded-lg hover:bg-[#8B1414] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#BF1A1A] text-white rounded-none hover:bg-[#8B1414] transition-colors"
                   >
                     <Plus className="h-4 w-4" />
                     Add Tip
@@ -839,7 +844,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                   {tips.map((tip, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-3 bg-[#FFF9E6] border border-[#FFD41D] rounded-xl p-4"
+                      className="flex items-start gap-3 bg-[#FFF9E6] border border-[#FFD41D] rounded-none p-4"
                     >
                       <span className="text-2xl">💡</span>
                       <input
@@ -847,7 +852,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                         value={tip}
                         onChange={(e) => updateTip(index, e.target.value)}
                         placeholder="Add a helpful cooking tip..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] bg-white"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] bg-white"
                       />
                       <button
                         onClick={() => removeTip(index)}
@@ -858,7 +863,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                     </div>
                   ))}
                   {tips.length === 0 && (
-                    <p className="text-center text-gray-500 py-8 bg-gray-50 rounded-xl">
+                    <p className="text-center text-gray-500 py-8 bg-gray-50 rounded-none">
                       No tips added yet
                     </p>
                   )}
@@ -879,11 +884,11 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                       }
                     }}
                     placeholder="Type a tag and press Enter"
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                   />
                   <button
                     onClick={addTag}
-                    className="px-6 py-3 bg-[#BF1A1A] text-white rounded-xl font-bold hover:bg-[#8B1414] transition-colors"
+                    className="px-6 py-3 bg-[#BF1A1A] text-white rounded-none font-bold hover:bg-[#8B1414] transition-colors"
                   >
                     Add
                   </button>
@@ -892,7 +897,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                   {tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-full text-sm font-semibold"
+                      className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-none text-sm font-semibold"
                     >
                       #{tag}
                       <button
@@ -916,7 +921,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-none font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <ArrowLeft className="h-4 w-4" />
             Cancel
@@ -924,7 +929,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
@@ -946,16 +951,18 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
 
 function RecipeCard({ recipe, onEdit, onDelete, onToggleFeatured }) {
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 group">
+    <div className="bg-white rounded-none p-4 border border-gray-200 hover:shadow-lg transition-all duration-300 group">
       <div className="relative mb-4">
         <img
+          loading="lazy"
+          decoding="async"
           src={getRecipeImage(recipe)}
           alt={recipe.title}
-          className="w-full h-48 object-cover rounded-lg"
+          className="w-full h-48 object-cover rounded-none"
         />
         <div className="absolute top-2 right-2">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-bold ${
+            className={`px-3 py-1 rounded-none text-xs font-bold ${
               recipe.difficulty === "Easy"
                 ? "bg-green-100 text-green-700"
                 : recipe.difficulty === "Medium"
@@ -967,13 +974,13 @@ function RecipeCard({ recipe, onEdit, onDelete, onToggleFeatured }) {
           </span>
         </div>
         <div className="absolute top-2 left-2">
-          <span className="bg-[#FFD41D] text-[#7B4019] px-3 py-1 rounded-full text-xs font-black">
+          <span className="bg-[#FFD41D] text-[#7B4019] px-3 py-1 rounded-none text-xs font-black">
             {recipe.category}
           </span>
         </div>
         {recipe.featured && (
           <div className="absolute bottom-2 left-2">
-            <span className="bg-[#BF1A1A] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+            <span className="bg-[#BF1A1A] text-white px-3 py-1 rounded-none text-xs font-bold flex items-center gap-1">
               <Star className="h-3 w-3 fill-white" />
               Featured
             </span>
@@ -1010,14 +1017,14 @@ function RecipeCard({ recipe, onEdit, onDelete, onToggleFeatured }) {
       <div className="mt-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(recipe)}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#BF1A1A] text-white rounded-lg hover:bg-[#8B1414] transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#BF1A1A] text-white rounded-none hover:bg-[#8B1414] transition-colors"
         >
           <Edit2 className="h-4 w-4" />
           <span className="text-sm font-bold">Edit</span>
         </button>
         <button
           onClick={() => onToggleFeatured(recipe._id)}
-          className="px-3 py-2 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+          className="px-3 py-2 bg-yellow-50 text-yellow-700 rounded-none hover:bg-yellow-100 transition-colors"
           title="Toggle Featured"
         >
           <Star
@@ -1026,7 +1033,7 @@ function RecipeCard({ recipe, onEdit, onDelete, onToggleFeatured }) {
         </button>
         <button
           onClick={() => onDelete(recipe._id)}
-          className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+          className="px-3 py-2 bg-red-50 text-red-600 rounded-none hover:bg-red-100 transition-colors"
         >
           <Trash2 className="h-4 w-4" />
         </button>
@@ -1099,24 +1106,8 @@ export default function DashboardRecipes() {
 
   const fetchProducts = async () => {
     try {
-      console.log("📦 Fetching products...");
-      const token = localStorage.getItem("token");
-      console.log("🔑 Token for products:", token ? "EXISTS" : "MISSING");
-
-      const response = await fetch(
-        "http://localhost:3000/smartglobal/products",
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        },
-      );
-      console.log("📥 Products response status:", response.status);
-
-      const data = await response.json();
-      console.log("📦 Products data:", data);
-
-      if (data.success) setProducts(data.data || data.products || []);
+      const response = await productService.getAllProducts({ limit: 100 });
+      if (response.success) setProducts(response.data || []);
     } catch (err) {
       console.error("❌ Error fetching products:", err);
     }
@@ -1209,7 +1200,7 @@ export default function DashboardRecipes() {
         </div>
         <button
           onClick={handleAddRecipe}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
           <Plus className="h-5 w-5" />
           Add Recipe
@@ -1218,7 +1209,7 @@ export default function DashboardRecipes() {
 
       {error && <ErrorMessage message={error} onRetry={fetchRecipes} />}
 
-      <div className="bg-white rounded-2xl p-6 border border-gray-200">
+      <div className="bg-white rounded-none p-6 border border-gray-200">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -1227,7 +1218,7 @@ export default function DashboardRecipes() {
               placeholder="Search recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -1237,7 +1228,7 @@ export default function DashboardRecipes() {
                 onClick={() =>
                   setSelectedCategory(category.toLowerCase().replace(/ /g, "-"))
                 }
-                className={`px-4 py-3 rounded-xl font-bold text-sm whitespace-nowrap transition-all duration-300 ${
+                className={`px-4 py-3 rounded-none font-bold text-sm whitespace-nowrap transition-all duration-300 ${
                   selectedCategory === category.toLowerCase().replace(/ /g, "-")
                     ? "bg-[#BF1A1A] text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -1274,11 +1265,11 @@ export default function DashboardRecipes() {
         ].map(({ icon: Icon, label, value, bg, iconColor }) => (
           <div
             key={label}
-            className="bg-white rounded-xl p-4 border border-gray-200"
+            className="bg-white rounded-none p-4 border border-gray-200"
           >
             <div className="flex items-center gap-3">
               <div
-                className={`w-12 h-12 rounded-lg ${bg} flex items-center justify-center`}
+                className={`w-12 h-12 rounded-none ${bg} flex items-center justify-center`}
               >
                 <Icon className={`h-6 w-6 ${iconColor || "text-white"}`} />
               </div>
@@ -1313,7 +1304,7 @@ export default function DashboardRecipes() {
       )}
 
       {!loading && filteredRecipes.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-300">
+        <div className="text-center py-16 bg-white rounded-none border-2 border-dashed border-gray-300">
           <ChefHat className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">
             No recipes found
@@ -1326,7 +1317,7 @@ export default function DashboardRecipes() {
           {!searchQuery && !error && (
             <button
               onClick={handleAddRecipe}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#BF1A1A] text-white rounded-xl font-bold hover:bg-[#8B1414] transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#BF1A1A] text-white rounded-none font-bold hover:bg-[#8B1414] transition-colors"
             >
               <Plus className="h-5 w-5" />
               Add Your First Recipe

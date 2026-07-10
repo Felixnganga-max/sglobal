@@ -31,6 +31,8 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-5">
             <div className="flex items-center gap-3">
               <img
+                loading="lazy"
+                decoding="async"
                 src={assets.logo}
                 alt="Smart Global"
                 className="h-10 w-auto brightness-0 invert"

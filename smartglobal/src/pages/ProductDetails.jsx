@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { useCart } from "../context/Cartcontext";
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+import { API_BASE_URL } from "../api/config";
+const API_URL = `${API_BASE_URL}/products`;
 
 // ── Shared image resolver — mirrors FeaturedProductsGrid exactly ──────────────
 // Tries every known field in priority order, deduplicates, returns a clean URL[]
@@ -259,6 +260,8 @@ export default function ProductDetails() {
           <div className="space-y-4">
             <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border-2 border-border group">
               <img
+                loading="lazy"
+                decoding="async"
                 src={currentImage}
                 alt={product.title}
                 className="w-full h-full object-contain p-6"
@@ -323,6 +326,8 @@ export default function ProductDetails() {
                     }}
                   >
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src={img}
                       alt={`${product.title} ${index + 1}`}
                       className="w-full h-full object-contain p-1"
@@ -686,6 +691,8 @@ function RelatedProductCard({ product, onClick }) {
     >
       <div className="aspect-square bg-soft overflow-hidden">
         <img
+          loading="lazy"
+          decoding="async"
           src={imageUrl}
           alt={product.title}
           className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"

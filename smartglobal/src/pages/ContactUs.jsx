@@ -38,6 +38,8 @@ export default function ContactUs() {
             style={{ minHeight: 400 }}
           >
             <img
+              loading="lazy"
+              decoding="async"
               src={assets.topping}
               alt="Smart Global Premium Products"
               className="absolute inset-0 w-full h-full object-cover"

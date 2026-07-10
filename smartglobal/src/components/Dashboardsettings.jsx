@@ -18,7 +18,7 @@ import {
 
 function SettingSection({ title, description, children }) {
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-200">
+    <div className="bg-white rounded-none p-6 border border-gray-200">
       <div className="mb-4">
         <h3
           className="text-xl font-black text-gray-900"
@@ -44,7 +44,7 @@ function InputField({ label, type = "text", placeholder, value, onChange }) {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
+        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A] focus:border-transparent"
       />
     </div>
   );
@@ -123,7 +123,7 @@ export default function DashboardSettings() {
               SG
             </div>
             <div>
-              <button className="px-4 py-2 bg-[#BF1A1A] text-white rounded-lg text-sm font-bold hover:bg-[#8B1414] transition-colors">
+              <button className="px-4 py-2 bg-[#BF1A1A] text-white rounded-none text-sm font-bold hover:bg-[#8B1414] transition-colors">
                 Change Avatar
               </button>
               <p className="text-xs text-gray-500 mt-2">
@@ -162,7 +162,7 @@ export default function DashboardSettings() {
             onChange={(e) => setCompany(e.target.value)}
           />
 
-          <button className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <button className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <Save className="h-5 w-5" />
             Save Changes
           </button>
@@ -222,10 +222,10 @@ export default function DashboardSettings() {
           />
 
           <div className="pt-4 space-y-3">
-            <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-colors">
+            <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-none font-bold hover:bg-gray-200 transition-colors">
               Change Password
             </button>
-            <button className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg font-bold hover:bg-red-100 transition-colors">
+            <button className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-none font-bold hover:bg-red-100 transition-colors">
               Deactivate Account
             </button>
           </div>
@@ -259,7 +259,7 @@ export default function DashboardSettings() {
                 (color) => (
                   <button
                     key={color}
-                    className="w-12 h-12 rounded-lg border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                    className="w-12 h-12 rounded-none border-2 border-gray-200 hover:border-gray-400 transition-colors"
                     style={{ backgroundColor: color }}
                   />
                 ),
@@ -270,7 +270,7 @@ export default function DashboardSettings() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+      <div className="bg-red-50 rounded-none p-6 border-2 border-red-200">
         <h3
           className="text-xl font-black text-red-900 mb-2"
           style={{ fontFamily: "'Bebas Neue', sans-serif" }}
@@ -281,10 +281,10 @@ export default function DashboardSettings() {
           These actions are irreversible. Please proceed with caution.
         </p>
         <div className="flex flex-wrap gap-3">
-          <button className="px-6 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors">
+          <button className="px-6 py-3 bg-red-600 text-white rounded-none font-bold hover:bg-red-700 transition-colors">
             Delete All Data
           </button>
-          <button className="px-6 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors">
+          <button className="px-6 py-3 bg-red-600 text-white rounded-none font-bold hover:bg-red-700 transition-colors">
             Close Account
           </button>
         </div>

@@ -4,8 +4,9 @@ import { assets } from "../assets/assets";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
-const PROMOS_URL = "https://sglobal-plf6.vercel.app/smartglobal/promos";
+import { API_BASE_URL } from "../api/config";
+const API_URL = `${API_BASE_URL}/products`;
+const PROMOS_URL = `${API_BASE_URL}/promos`;
 
 const BADGE_COLORS = {
   "SPECIAL OFFER": "#16a34a",
@@ -18,10 +19,12 @@ const BADGE_COLORS = {
 };
 
 const CATEGORY_CONFIG = [
-  { key: "cakemix", accent: "#FF7F11", image: assets.cake },
-  { key: "kent syrups", accent: "#FF0000", image: assets.top },
-  { key: "kent sauces", accent: "#1565C0", image: assets.sauces },
-  { key: "kizembe spring water", accent: "#FF7F11", image: assets.kize },
+  { key: "Kent soups", accent: "#FF0000", image: assets.kent },
+  { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.spuds },
+  { key: "Cakemix", accent: "#FF7F11", image: assets.cake },
+  { key: "Kent syrups", accent: "#FF0000", image: assets.top },
+  { key: "Kent sauces", accent: "#1565C0", image: assets.sauces },
+  { key: "Water", accent: "#1565C0", image: assets.kize },
 ];
 
 // Static categories — built once from CATEGORY_CONFIG, never from the DB
@@ -166,6 +169,8 @@ function ProductCard({ prod }) {
     >
       <div className="relative bg-gray-50 overflow-hidden">
         <img
+          loading="lazy"
+          decoding="async"
           src={getImage(prod)}
           alt={prod.title}
           className="w-full h-32 sm:h-36 object-contain p-2 group-hover:scale-105 transition-transform duration-500"
@@ -331,71 +336,27 @@ function CategoryCard({ cat }) {
   return (
     <Link
       to={`/products#cat-${encodeURIComponent(cat.id)}`}
-      className="group flex-shrink-0 w-[160px] lg:w-auto rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
-      style={{ height: 200, display: "block", position: "relative" }}
+      className="group flex-shrink-0 w-[92px] lg:w-auto flex flex-col items-center gap-2.5 text-center"
     >
-      <img
-        src={cat.image}
-        alt={cat.title}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-        }}
-        className="group-hover:scale-105 transition-transform duration-500"
-      />
       <div
+        className="rounded-full flex items-center justify-center overflow-hidden bg-white shadow-md group-hover:shadow-xl transition-all duration-300"
         style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          backgroundColor: cat.accent,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: "12px",
+          width: 84,
+          height: 84,
+          border: `2px solid ${cat.accent}`,
         }}
       >
-        <p className="font-heading text-white text-sm font-bold leading-tight">
-          {cat.title}
-        </p>
-        <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span className="text-white text-[0.6rem] font-semibold">
-            Shop Now
-          </span>
-          <svg
-            className="w-2.5 h-2.5 text-white"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </div>
+        <img
+          loading="lazy"
+          decoding="async"
+          src={cat.image}
+          alt={cat.title}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
       </div>
+      <p className="font-body text-gray-700 text-[0.68rem] font-bold leading-tight">
+        {cat.title}
+      </p>
     </Link>
   );
 }
@@ -656,6 +617,7 @@ export default function Sales() {
   const [promoDismissed, setPromoDismissed] = useState(false);
   const [promoMinimized, setPromoMinimized] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [activeCategory, setActiveCategory] = useState("all");
 
   const searchQuery = searchParams.get("q") || "";
 
@@ -671,9 +633,19 @@ export default function Sales() {
       })
     : products;
 
+  const trendingCategories = [
+    "all",
+    ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))),
+  ].slice(0, 6);
+
+  const byCategory =
+    activeCategory === "all"
+      ? products
+      : products.filter((p) => p.category === activeCategory);
+
   const displayProducts = searchQuery.trim()
     ? filteredProducts
-    : products.slice(0, 8);
+    : byCategory.slice(0, 8);
 
   const scroll = (dir) => {
     if (scrollRef.current)
@@ -687,7 +659,9 @@ export default function Sales() {
         <div className="flex items-end justify-between mb-4">
           <div>
             <p className="text-eyebrow mb-1">What We Offer</p>
-            <h2 className="text-section-title text-gray-900">Our Range</h2>
+            <h2 className="text-section-title text-gray-900">
+              Shop by Category
+            </h2>
             <div className="section-rule mt-2" />
           </div>
           <div className="flex gap-2 lg:hidden">
@@ -717,7 +691,7 @@ export default function Sales() {
 
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4 lg:overflow-visible"
+          className="flex gap-5 overflow-x-auto pb-1 lg:grid lg:grid-cols-6 lg:justify-items-center lg:overflow-visible"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {STATIC_CATEGORIES.map((cat) => (
@@ -763,7 +737,7 @@ export default function Sales() {
             <>
               <p className="text-eyebrow mb-1">Smart Global</p>
               <h2 className="text-section-title text-gray-900">
-                Featured Products
+                Trending Products
               </h2>
               <div className="section-rule-center mt-2" />
               <p className="text-sm text-gray-400 mt-3 max-w-md mx-auto">
@@ -773,6 +747,29 @@ export default function Sales() {
             </>
           )}
         </div>
+
+        {!searchQuery && trendingCategories.length > 1 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
+            {trendingCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-2 rounded-full text-xs font-body font-bold uppercase tracking-wide transition-all border ${
+                  activeCategory === cat
+                    ? "text-white border-transparent"
+                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                }`}
+                style={
+                  activeCategory === cat
+                    ? { backgroundColor: "var(--color-red)" }
+                    : undefined
+                }
+              >
+                {cat === "all" ? "All" : cat}
+              </button>
+            ))}
+          </div>
+        )}
 
         {error && !loading && (
           <div className="text-center py-8">
@@ -801,14 +798,18 @@ export default function Sales() {
           <div className="text-center py-16">
             <Search className="w-10 h-10 text-gray-200 mx-auto mb-3" />
             <p className="text-gray-400 font-body font-medium text-sm">
-              No products match "{searchQuery}"
+              {searchQuery
+                ? `No products match "${searchQuery}"`
+                : "No products in this category yet"}
             </p>
             <button
-              onClick={() => setSearchParams({})}
+              onClick={() =>
+                searchQuery ? setSearchParams({}) : setActiveCategory("all")
+              }
               className="mt-3 text-xs font-body font-bold underline"
               style={{ color: "var(--color-red)" }}
             >
-              Clear search
+              {searchQuery ? "Clear search" : "Show all products"}
             </button>
           </div>
         )}
@@ -821,6 +822,8 @@ export default function Sales() {
           style={{ minHeight: 180 }}
         >
           <img
+            loading="lazy"
+            decoding="async"
             src={assets.recipe}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"

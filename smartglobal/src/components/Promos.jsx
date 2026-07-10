@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { API_BASE_URL } from "../api/config";
 
-const API = "https://sglobal-plf6.vercel.app/smartglobal/promos";
+const API = `${API_BASE_URL}/promos`;
 
 const fmt = (bytes) => {
   if (!bytes) return "—";
@@ -22,7 +23,7 @@ function Toast({ toasts, remove }) {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`flex items-center gap-3 px-4 py-3 rounded-full text-sm font-semibold shadow-lg border ${
+          className={`flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold shadow-lg border ${
             t.type === "error"
               ? "bg-white border-red-200 text-red-600"
               : "bg-white border-green-200 text-green-700"
@@ -56,7 +57,7 @@ function Modal({ title, onClose, children }) {
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+        className="bg-white w-full max-w-lg rounded-none shadow-2xl overflow-hidden"
         style={{
           border: "1px solid var(--color-border)",
           maxHeight: "90vh",
@@ -102,7 +103,7 @@ function VideoPlayerModal({ video, onClose }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl rounded-2xl overflow-hidden"
+        className="w-full max-w-3xl rounded-none overflow-hidden"
         style={{ border: "1px solid rgba(255,255,255,0.1)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -220,7 +221,7 @@ function VideoPlayerModal({ video, onClose }) {
               {video.tags.map((t) => (
                 <span
                   key={t}
-                  className="rounded-full px-2 py-0.5"
+                  className="rounded-none px-2 py-0.5"
                   style={{
                     fontFamily: "var(--font-body)",
                     fontSize: "0.62rem",
@@ -265,7 +266,7 @@ function VideoForm({ initial, onSave, onCancel, loading }) {
   };
 
   const inputCls =
-    "w-full mt-1.5 px-3 py-2.5 text-sm rounded-lg bg-gray-50 border border-gray-200 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors";
+    "w-full mt-1.5 px-3 py-2.5 text-sm rounded-none bg-gray-50 border border-gray-200 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors";
 
   return (
     <form
@@ -377,7 +378,7 @@ function VideoForm({ initial, onSave, onCancel, loading }) {
           )}
         </label>
         <div
-          className={`mt-1.5 border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
+          className={`mt-1.5 border-2 border-dashed rounded-none p-6 text-center cursor-pointer transition-colors ${
             dragging
               ? "border-blue-400 bg-blue-50"
               : "border-gray-200 hover:border-gray-300 bg-gray-50"
@@ -456,7 +457,7 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
 
   return (
     <div
-      className="flex items-center gap-4 bg-white rounded-2xl p-3 transition-shadow hover:shadow-md"
+      className="flex items-center gap-4 bg-white rounded-none p-3 transition-shadow hover:shadow-md"
       style={{
         border: "1px solid var(--color-border)",
         fontFamily: "var(--font-body)",
@@ -478,6 +479,8 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
             }}
           >
             <img
+              loading="lazy"
+              decoding="async"
               src={video.thumbnailUrl}
               alt={video.title}
               className="w-full h-full object-cover"
@@ -486,7 +489,7 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
           </div>
         ) : (
           <div
-            className="flex items-center justify-center text-2xl bg-gray-100 rounded-xl"
+            className="flex items-center justify-center text-2xl bg-gray-100 rounded-none"
             style={{ width: 112, height: 64 }}
           >
             🎬
@@ -495,7 +498,7 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
 
         {/* Play overlay */}
         <div
-          className="absolute inset-0 flex items-center justify-center rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute inset-0 flex items-center justify-center rounded-none opacity-0 group-hover:opacity-100 transition-opacity"
           style={{ background: "rgba(0,0,0,0.45)" }}
         >
           <div
@@ -510,7 +513,7 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
 
         {/* Status badge */}
         <span
-          className="absolute bottom-1 left-1 rounded-full px-2 py-0.5"
+          className="absolute bottom-1 left-1 rounded-none px-2 py-0.5"
           style={{
             fontFamily: "var(--font-body)",
             fontSize: "0.55rem",
@@ -526,7 +529,7 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
 
         {video.isFeatured && (
           <span
-            className="absolute top-1 right-1 rounded-full px-2 py-0.5"
+            className="absolute top-1 right-1 rounded-none px-2 py-0.5"
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "0.5rem",
@@ -621,7 +624,7 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
             {video.tags.map((t) => (
               <span
                 key={t}
-                className="rounded-full px-2 py-0.5"
+                className="rounded-none px-2 py-0.5"
                 style={{
                   fontFamily: "var(--font-body)",
                   fontSize: "0.65rem",
@@ -642,21 +645,21 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
         <button
           onClick={() => onPlay(video)}
           title="Play"
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors bg-gray-100 hover:bg-blue-100"
+          className="w-8 h-8 rounded-none flex items-center justify-center text-sm transition-colors bg-gray-100 hover:bg-blue-100"
         >
           ▶
         </button>
         <button
           onClick={() => onEdit(video)}
           title="Edit"
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors bg-gray-100 hover:bg-blue-100"
+          className="w-8 h-8 rounded-none flex items-center justify-center text-sm transition-colors bg-gray-100 hover:bg-blue-100"
         >
           ✏️
         </button>
         <button
           onClick={() => onToggle(video)}
           title={video.isActive ? "Deactivate" : "Activate"}
-          className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors ${
+          className={`w-8 h-8 rounded-none flex items-center justify-center text-sm transition-colors ${
             video.isActive
               ? "bg-orange-50 hover:bg-orange-100"
               : "bg-green-50 hover:bg-green-100"
@@ -667,7 +670,7 @@ function VideoCard({ video, onEdit, onDelete, onToggle, onPlay }) {
         <button
           onClick={() => onDelete(video)}
           title="Delete"
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors bg-gray-100 hover:bg-red-100"
+          className="w-8 h-8 rounded-none flex items-center justify-center text-sm transition-colors bg-gray-100 hover:bg-red-100"
         >
           🗑
         </button>
@@ -852,7 +855,7 @@ export default function Promo() {
       {/* Stats bar */}
       {videos.length > 0 && (
         <div
-          className="flex gap-6 mb-5 px-5 py-4 bg-white rounded-2xl"
+          className="flex gap-6 mb-5 px-5 py-4 bg-white rounded-none"
           style={{ border: "1px solid var(--color-border)" }}
         >
           {[
@@ -904,7 +907,7 @@ export default function Promo() {
           </div>
         ) : videos.length === 0 ? (
           <div
-            className="text-center py-16 bg-white rounded-2xl"
+            className="text-center py-16 bg-white rounded-none"
             style={{ border: "1px solid var(--color-border)" }}
           >
             <div className="text-4xl mb-3">🎬</div>
@@ -1014,7 +1017,7 @@ export default function Promo() {
               ?
             </p>
             <label
-              className="flex items-start gap-3 cursor-pointer p-3 rounded-xl"
+              className="flex items-start gap-3 cursor-pointer p-3 rounded-none"
               style={{ background: "#fff5f5", border: "1px solid #fed7d7" }}
             >
               <input

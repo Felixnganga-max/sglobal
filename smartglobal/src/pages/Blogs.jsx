@@ -15,6 +15,8 @@ import {
   Utensils,
 } from "lucide-react";
 import blogsData from "../lib/data";
+import { blogApi } from "../api/blogApi";
+import { mergeWithLive, normalizeLiveBlog } from "../lib/mergeLive";
 
 function formatDate(iso) {
   try {
@@ -34,23 +36,36 @@ export default function Blogs() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [page, setPage] = useState(1);
   const [currentPost, setCurrentPost] = useState(null);
+  const [allBlogs, setAllBlogs] = useState(blogsData.blogs);
   const perPage = 5;
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    blogApi
+      .getAllBlogs({ limit: 100 })
+      .then((response) => {
+        const live = (response.data || []).map(normalizeLiveBlog);
+        setAllBlogs(mergeWithLive(blogsData.blogs, live));
+      })
+      .catch(() => {
+        // Keep showing the curated posts if the live fetch fails.
+      });
+  }, []);
+
   const allTags = useMemo(() => {
     const s = new Set();
-    blogsData.blogs.forEach((p) => p.tags.forEach((t) => s.add(t)));
+    allBlogs.forEach((p) => p.tags.forEach((t) => s.add(t)));
     return Array.from(s);
-  }, []);
+  }, [allBlogs]);
 
   const categories = blogsData.categories.map((cat) => cat.name);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let res = blogsData.blogs.slice();
+    let res = allBlogs.slice();
     if (selectedCategory) {
       res = res.filter(
         (p) =>
@@ -69,7 +84,7 @@ export default function Blogs() {
       );
     }
     return res;
-  }, [query, selectedCategory]);
+  }, [query, selectedCategory, allBlogs]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -104,6 +119,8 @@ export default function Blogs() {
           }}
         >
           <img
+            loading="lazy"
+            decoding="async"
             src={currentPost.featuredImage}
             alt={currentPost.title}
             className="absolute inset-0 w-full h-full object-cover opacity-20"
@@ -143,6 +160,8 @@ export default function Blogs() {
           >
             <div className="flex items-center gap-4">
               <img
+                loading="lazy"
+                decoding="async"
                 src={currentPost.author.avatar}
                 alt={currentPost.author.name}
                 className="w-10 h-10 rounded-full object-cover"
@@ -424,6 +443,8 @@ export default function Blogs() {
                       className={`overflow-hidden ${view === "list" ? "h-44 sm:h-48" : "aspect-[16/10]"}`}
                     >
                       <img
+                        loading="lazy"
+                        decoding="async"
                         src={post.featuredImage}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

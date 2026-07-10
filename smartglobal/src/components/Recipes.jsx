@@ -122,6 +122,8 @@ export default function Recipes() {
               style={{ height: "220px" }}
             >
               <img
+                loading="lazy"
+                decoding="async"
                 src={cat.image}
                 alt={cat.title}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -215,6 +217,8 @@ export default function Recipes() {
           style={{ minHeight: "160px" }}
         >
           <img
+            loading="lazy"
+            decoding="async"
             src={assets.recipe}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
@@ -263,6 +267,8 @@ function RecipeCard({ recipe }) {
       {/* Image — full bleed top half */}
       <div className="relative overflow-hidden h-44 sm:h-52 flex-shrink-0">
         <img
+          loading="lazy"
+          decoding="async"
           src={recipe.image}
           alt={recipe.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

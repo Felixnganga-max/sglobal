@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Plus,
   Save,
@@ -25,8 +25,11 @@ import {
   Clock,
   Edit3,
   Upload,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import blogsData from "../lib/data";
+import { blogApi } from "../api/blogApi";
 
 /**
  * DashboardBlogs.jsx - Smart Global Admin Blog Editor
@@ -36,7 +39,10 @@ import blogsData from "../lib/data";
 
 export default function DashboardBlogs() {
   const [view, setView] = useState("list"); // 'list' or 'edit'
-  const [blogs, setBlogs] = useState(blogsData.blogs);
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [currentBlog, setCurrentBlog] = useState(null);
   const [editorContent, setEditorContent] = useState("");
   const [blogMeta, setBlogMeta] = useState({
@@ -54,6 +60,23 @@ export default function DashboardBlogs() {
   const [imagePosition, setImagePosition] = useState(null);
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
+
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await blogApi.getAllBlogs({ limit: 100 });
+      setBlogs(response.data || []);
+    } catch (err) {
+      setError(err.message || "Failed to load blog posts");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Create new blog
   const handleNewBlog = () => {
@@ -80,8 +103,8 @@ export default function DashboardBlogs() {
       category: blog.category,
       tags: blog.tags,
       excerpt: blog.excerpt,
-      featuredImage: blog.featuredImage,
-      author: blog.author.name,
+      featuredImage: blog.featuredImage?.url || null,
+      author: blog.author?.name || "Smart Global Team",
     });
     // Convert content array to HTML-like string for editing
     const contentHtml = blog.content
@@ -97,16 +120,25 @@ export default function DashboardBlogs() {
   };
 
   // Delete blog
-  const handleDeleteBlog = (id) => {
-    if (window.confirm("Are you sure you want to delete this blog post?")) {
-      setBlogs(blogs.filter((b) => b.id !== id));
+  const handleDeleteBlog = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this blog post?"))
+      return;
+    try {
+      await blogApi.deleteBlog(id);
+      setBlogs(blogs.filter((b) => b._id !== id));
+    } catch (err) {
+      alert(err.message || "Failed to delete blog post");
     }
   };
 
   // Save blog
-  const handleSaveBlog = () => {
+  const handleSaveBlog = async () => {
     if (!blogMeta.title || !blogMeta.category || !editorContent) {
       alert("Please fill in all required fields (Title, Category, Content)");
+      return;
+    }
+    if (!currentBlog && !blogMeta.featuredImage) {
+      alert("Please upload a featured image");
       return;
     }
 
@@ -121,43 +153,41 @@ export default function DashboardBlogs() {
     // Parse editor content into content blocks
     const contentBlocks = parseContentToBlocks(editorContent);
 
-    const blogData = {
-      id: currentBlog ? currentBlog.id : blogs.length + 1,
+    const payload = {
       title: blogMeta.title,
-      slug: slug,
-      metaTitle: `${blogMeta.title} | Smart Global Kenya`,
-      metaDescription: blogMeta.excerpt,
-      keywords: blogMeta.tags,
-      author: {
-        name: blogMeta.author,
-        role: "FMCG Product Specialists",
-        avatar: "assets.logo",
-      },
-      publishDate: currentBlog
-        ? currentBlog.publishDate
-        : new Date().toISOString().split("T")[0],
-      readTime: calculateReadTime(editorContent),
+      slug,
       category: blogMeta.category,
-      tags: blogMeta.tags,
       excerpt: blogMeta.excerpt,
-      featuredImage: blogMeta.featuredImage || "assets.kent",
       content: contentBlocks,
-      views: currentBlog ? currentBlog.views : 0,
-      likes: currentBlog ? currentBlog.likes : 0,
-      comments: currentBlog ? currentBlog.comments : 0,
-      relatedProducts: [],
+      tags: blogMeta.tags,
+      readTime: calculateReadTime(editorContent),
+      authorName: blogMeta.author,
     };
-
-    if (currentBlog) {
-      // Update existing
-      setBlogs(blogs.map((b) => (b.id === currentBlog.id ? blogData : b)));
-    } else {
-      // Add new
-      setBlogs([...blogs, blogData]);
+    // Only send a new image if the user uploaded one (data URL); otherwise
+    // the backend keeps the existing image untouched on update.
+    if (blogMeta.featuredImage?.startsWith("data:")) {
+      payload.imageData = blogMeta.featuredImage;
     }
 
-    alert("Blog saved successfully!");
-    setView("list");
+    setSaving(true);
+    try {
+      const result = currentBlog
+        ? await blogApi.updateBlog(currentBlog._id, payload)
+        : await blogApi.createBlog(payload);
+
+      if (currentBlog) {
+        setBlogs(
+          blogs.map((b) => (b._id === result.data._id ? result.data : b)),
+        );
+      } else {
+        setBlogs([result.data, ...blogs]);
+      }
+      setView("list");
+    } catch (err) {
+      alert(err.message || "Failed to save blog post");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Parse HTML content to content blocks
@@ -218,7 +248,7 @@ export default function DashboardBlogs() {
     const editor = editorRef.current;
     if (!editor) return;
 
-    const imageHtml = `<img src="${imageUrl}" alt="Blog image" class="w-full rounded-xl my-6" />`;
+    const imageHtml = `<img loading="lazy" decoding="async" src="${imageUrl}" alt="Blog image" class="w-full rounded-none my-6" />`;
 
     // Insert at cursor position
     const selection = window.getSelection();
@@ -274,7 +304,7 @@ export default function DashboardBlogs() {
             </div>
             <button
               onClick={handleNewBlog}
-              className="flex items-center gap-2 bg-[#BF1A1A] hover:bg-[#8B1414] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl"
+              className="flex items-center gap-2 bg-[#BF1A1A] hover:bg-[#8B1414] text-white px-6 py-3 rounded-none font-bold transition-all shadow-lg hover:shadow-xl"
             >
               <Plus size={20} />
               New Blog Post
@@ -311,8 +341,49 @@ export default function DashboardBlogs() {
             />
           </div>
 
+          {/* Loading / Error */}
+          {loading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-[#BF1A1A]" />
+            </div>
+          )}
+          {error && !loading && (
+            <div className="bg-red-50 border border-red-200 rounded-none p-4 flex items-start gap-3 mb-6">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-red-900 mb-1">Error</h3>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+              <button
+                onClick={fetchBlogs}
+                className="px-4 py-2 bg-red-600 text-white rounded-none text-sm font-bold hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* Blog List */}
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden">
+          {!loading && !error && blogs.length === 0 && (
+            <div className="text-center py-16 bg-white rounded-none border-2 border-dashed border-gray-300">
+              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                No blog posts yet
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Get started by publishing your first post.
+              </p>
+              <button
+                onClick={handleNewBlog}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#BF1A1A] text-white rounded-none font-bold hover:bg-[#8B1414] transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                New Blog Post
+              </button>
+            </div>
+          )}
+          {!loading && !error && blogs.length > 0 && (
+          <div className="bg-white rounded-none shadow-xl border-2 border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b-2 border-gray-200">
@@ -340,15 +411,17 @@ export default function DashboardBlogs() {
                 <tbody className="divide-y divide-gray-200">
                   {blogs.map((blog) => (
                     <tr
-                      key={blog.id}
+                      key={blog._id}
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={blog.featuredImage}
+                            loading="lazy"
+                            decoding="async"
+                            src={blog.featuredImage?.url}
                             alt={blog.title}
-                            className="w-16 h-16 rounded-lg object-cover"
+                            className="w-16 h-16 rounded-none object-cover"
                           />
                           <div>
                             <div className="font-bold text-gray-900 line-clamp-1">
@@ -361,7 +434,7 @@ export default function DashboardBlogs() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-[#BF1A1A] text-white text-xs font-bold rounded-full">
+                        <span className="px-3 py-1 bg-[#BF1A1A] text-white text-xs font-bold rounded-none">
                           {blog.category}
                         </span>
                       </td>
@@ -375,7 +448,7 @@ export default function DashboardBlogs() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-none">
                           Published
                         </span>
                       </td>
@@ -383,20 +456,20 @@ export default function DashboardBlogs() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleEditBlog(blog)}
-                            className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                            className="p-2 hover:bg-blue-50 rounded-none transition-colors text-blue-600"
                             title="Edit"
                           >
                             <Edit3 size={18} />
                           </button>
                           <button
-                            className="p-2 hover:bg-green-50 rounded-lg transition-colors text-green-600"
+                            className="p-2 hover:bg-green-50 rounded-none transition-colors text-green-600"
                             title="Preview"
                           >
                             <Eye size={18} />
                           </button>
                           <button
-                            onClick={() => handleDeleteBlog(blog.id)}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                            onClick={() => handleDeleteBlog(blog._id)}
+                            className="p-2 hover:bg-red-50 rounded-none transition-colors text-red-600"
                             title="Delete"
                           >
                             <Trash2 size={18} />
@@ -409,6 +482,7 @@ export default function DashboardBlogs() {
               </table>
             </div>
           </div>
+          )}
         </div>
       </div>
     );
@@ -432,16 +506,22 @@ export default function DashboardBlogs() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setView("list")}
-              className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition-all"
+              disabled={saving}
+              className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-none font-bold transition-all disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveBlog}
-              className="flex items-center gap-2 bg-[#BF1A1A] hover:bg-[#8B1414] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl"
+              disabled={saving}
+              className="flex items-center gap-2 bg-[#BF1A1A] hover:bg-[#8B1414] text-white px-6 py-3 rounded-none font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
             >
-              <Save size={20} />
-              Save Blog
+              {saving ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <Save size={20} />
+              )}
+              {saving ? "Saving..." : "Save Blog"}
             </button>
           </div>
         </div>
@@ -450,7 +530,7 @@ export default function DashboardBlogs() {
           {/* Main Editor */}
           <div className="lg:col-span-2 space-y-6">
             {/* Title */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Blog Title *
               </label>
@@ -461,12 +541,12 @@ export default function DashboardBlogs() {
                   setBlogMeta({ ...blogMeta, title: e.target.value })
                 }
                 placeholder="Enter an engaging title..."
-                className="w-full px-4 py-3 text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-[#BF1A1A] focus:outline-none transition-all"
+                className="w-full px-4 py-3 text-2xl font-bold border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all"
               />
             </div>
 
             {/* Featured Image */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-3">
                 Featured Image
               </label>
@@ -474,9 +554,11 @@ export default function DashboardBlogs() {
                 {blogMeta.featuredImage ? (
                   <div className="relative">
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src={blogMeta.featuredImage}
                       alt="Featured"
-                      className="w-full h-64 object-cover rounded-xl"
+                      className="w-full h-64 object-cover rounded-none"
                     />
                     <button
                       onClick={() =>
@@ -490,7 +572,7 @@ export default function DashboardBlogs() {
                 ) : (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-[#BF1A1A] transition-colors"
+                    className="border-2 border-dashed border-gray-300 rounded-none p-12 text-center cursor-pointer hover:border-[#BF1A1A] transition-colors"
                   >
                     <Upload className="mx-auto text-gray-400 mb-4" size={48} />
                     <p className="text-gray-600 font-semibold mb-2">
@@ -510,7 +592,7 @@ export default function DashboardBlogs() {
             </div>
 
             {/* Rich Text Editor */}
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-none shadow-lg border-2 border-gray-100 overflow-hidden">
               {/* Toolbar */}
               <div className="bg-gray-50 border-b-2 border-gray-200 p-4">
                 <div className="flex flex-wrap items-center gap-2">
@@ -595,7 +677,7 @@ export default function DashboardBlogs() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Excerpt */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Excerpt *
               </label>
@@ -606,12 +688,12 @@ export default function DashboardBlogs() {
                 }
                 placeholder="Brief description for previews..."
                 rows={4}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#BF1A1A] focus:outline-none transition-all resize-none"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all resize-none"
               />
             </div>
 
             {/* Category */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Category *
               </label>
@@ -620,7 +702,7 @@ export default function DashboardBlogs() {
                 onChange={(e) =>
                   setBlogMeta({ ...blogMeta, category: e.target.value })
                 }
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#BF1A1A] focus:outline-none transition-all font-semibold"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all font-semibold"
               >
                 <option value="">Select category...</option>
                 {blogsData.categories.map((cat) => (
@@ -632,7 +714,7 @@ export default function DashboardBlogs() {
             </div>
 
             {/* Tags */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Tags
               </label>
@@ -643,11 +725,11 @@ export default function DashboardBlogs() {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
                   placeholder="Add tag..."
-                  className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#BF1A1A] focus:outline-none transition-all"
+                  className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all"
                 />
                 <button
                   onClick={handleAddTag}
-                  className="px-4 py-2 bg-[#BF1A1A] text-white rounded-lg font-bold hover:bg-[#8B1414] transition-colors"
+                  className="px-4 py-2 bg-[#BF1A1A] text-white rounded-none font-bold hover:bg-[#8B1414] transition-colors"
                 >
                   Add
                 </button>
@@ -656,7 +738,7 @@ export default function DashboardBlogs() {
                 {blogMeta.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold"
+                    className="flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-none text-sm font-semibold"
                   >
                     #{tag}
                     <button
@@ -671,7 +753,7 @@ export default function DashboardBlogs() {
             </div>
 
             {/* SEO Slug */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 URL Slug (Optional)
               </label>
@@ -682,7 +764,7 @@ export default function DashboardBlogs() {
                   setBlogMeta({ ...blogMeta, slug: e.target.value })
                 }
                 placeholder="auto-generated-from-title"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#BF1A1A] focus:outline-none transition-all font-mono text-sm"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all font-mono text-sm"
               />
               <p className="text-xs text-gray-500 mt-2">
                 Leave blank to auto-generate from title
@@ -690,7 +772,7 @@ export default function DashboardBlogs() {
             </div>
 
             {/* Author */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100">
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Author
               </label>
@@ -700,7 +782,7 @@ export default function DashboardBlogs() {
                 onChange={(e) =>
                   setBlogMeta({ ...blogMeta, author: e.target.value })
                 }
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#BF1A1A] focus:outline-none transition-all"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all"
               />
             </div>
           </div>
@@ -710,14 +792,14 @@ export default function DashboardBlogs() {
       {/* Image Insert Modal */}
       {showImageModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+          <div className="bg-white rounded-none p-8 max-w-lg w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-black text-gray-900">
                 Insert Image
               </h3>
               <button
                 onClick={() => setShowImageModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-none transition-colors"
               >
                 <X size={24} />
               </button>
@@ -732,15 +814,17 @@ export default function DashboardBlogs() {
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#BF1A1A] focus:outline-none transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all"
                 />
               </div>
               {imageUrl && (
-                <div className="border-2 border-gray-200 rounded-xl p-4">
+                <div className="border-2 border-gray-200 rounded-none p-4">
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src={imageUrl}
                     alt="Preview"
-                    className="w-full rounded-lg"
+                    className="w-full rounded-none"
                     onError={(e) => {
                       e.target.src = "";
                       e.target.alt = "Invalid image URL";
@@ -751,13 +835,13 @@ export default function DashboardBlogs() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowImageModal(false)}
-                  className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition-all"
+                  className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-none font-bold transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleInsertImage}
-                  className="flex-1 px-6 py-3 bg-[#BF1A1A] hover:bg-[#8B1414] text-white rounded-xl font-bold transition-all"
+                  className="flex-1 px-6 py-3 bg-[#BF1A1A] hover:bg-[#8B1414] text-white rounded-none font-bold transition-all"
                 >
                   Insert
                 </button>
@@ -781,7 +865,7 @@ function StatCard({ icon, label, value, color }) {
 
   return (
     <div
-      className={`${colorClasses[color]} border-2 rounded-2xl p-6 shadow-md`}
+      className={`${colorClasses[color]} border-2 rounded-none p-6 shadow-md`}
     >
       <div className="flex items-center justify-between mb-3">{icon}</div>
       <div className="text-3xl font-black text-gray-900 mb-1">{value}</div>
@@ -795,7 +879,7 @@ function ToolbarButton({ icon, onClick, title, primary }) {
     <button
       onClick={onClick}
       title={title}
-      className={`p-2 rounded-lg transition-all ${
+      className={`p-2 rounded-none transition-all ${
         primary
           ? "bg-[#BF1A1A] text-white hover:bg-[#8B1414]"
           : "hover:bg-gray-200 text-gray-700"

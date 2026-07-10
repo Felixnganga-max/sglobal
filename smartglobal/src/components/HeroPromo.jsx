@@ -11,7 +11,8 @@ function scrollToProducts() {
   }
 }
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+import { API_BASE_URL } from "../api/config";
+const API_URL = `${API_BASE_URL}/products`;
 
 function getImage(product) {
   if (!product) return null;
@@ -372,6 +373,8 @@ export default function HeroPromo() {
               <div className="hero-img-skeleton" />
             ) : hero && getImage(hero) ? (
               <img
+                loading="lazy"
+                decoding="async"
                 key={heroIdx}
                 src={getImage(hero)}
                 alt={hero.title || "Featured product"}
@@ -532,6 +535,8 @@ export default function HeroPromo() {
                     <div className="side-img-wrap">
                       {imgSrc ? (
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={imgSrc}
                           alt={product.title || "Product"}
                           onError={(e) => {

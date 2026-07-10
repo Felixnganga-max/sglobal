@@ -29,9 +29,10 @@ const EMAILJS_ADMIN_TEMPLATE_ID = "template_abh0rep";
 const EMAILJS_CUSTOMER_TEMPLATE_ID = "template_c2c49uz";
 const EMAILJS_PUBLIC_KEY = "zm6PlmVWX9FqeDYD0";
 const WHATSAPP_NUMBER = "254140252223";
-const ZONES_API = "https://sglobal-plf6.vercel.app/smartglobal/zones";
+import { API_BASE_URL } from "../api/config";
+const ZONES_API = `${API_BASE_URL}/zones`;
 const ORDERS_API =
-  "https://sglobal-plf6.vercel.app/smartglobal/orders/create-order";
+  `${API_BASE_URL}/orders/create-order`;
 
 // Inline SVG fallback — zero external requests, no ad-blocker issues
 const FALLBACK_IMG =
@@ -885,6 +886,8 @@ export default function PlaceOrder() {
                 return (
                   <div key={id} className="po-cart-item">
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src={getImage(item)}
                       alt={item.title || item.name}
                       className="po-cart-img"

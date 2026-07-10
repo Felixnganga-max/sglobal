@@ -14,7 +14,8 @@ import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/products";
+import { API_BASE_URL } from "../api/config";
+const API_URL = `${API_BASE_URL}/products`;
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -245,6 +246,8 @@ export default function Navbar() {
       >
         <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
           <img
+            loading="lazy"
+            decoding="async"
             src={getImage(product)}
             alt={name}
             className="w-full h-full object-contain p-1"
@@ -297,6 +300,8 @@ export default function Navbar() {
               <div className="relative">
                 <div className="absolute inset-0 blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 rounded-full scale-150 bg-red"></div>
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={assets.logo}
                   alt="Smart Global"
                   className="h-10 lg:h-12 w-auto relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { assets } from "../assets/assets";
+import { API_BASE_URL } from "../api/config";
 import {
   LayoutDashboard,
   Package,
@@ -23,7 +24,17 @@ import DashboardSettings from "../components/Dashboardsettings";
 import ZoneManager from "../components/ZoneManager";
 import Promos from "../components/Promos";
 
-const API_URL = "https://sglobal-plf6.vercel.app/smartglobal/auth";
+const API_URL = `${API_BASE_URL}/auth`;
+
+const NAV_ITEMS = [
+  { id: "main", label: "Dashboard", icon: LayoutDashboard },
+  { id: "products", label: "Products", icon: Package },
+  { id: "promos", label: "Promos", icon: BookOpen },
+  { id: "recipes", label: "Recipes", icon: BookOpen },
+  { id: "blogs", label: "Blogs", icon: FileText },
+  { id: "zones", label: "Zones", icon: FileText },
+  { id: "settings", label: "Settings", icon: Settings },
+];
 
 function Sidebar({
   activeTab,
@@ -33,15 +44,7 @@ function Sidebar({
   user,
   onLogout,
 }) {
-  const navItems = [
-    { id: "main", label: "Dashboard", icon: LayoutDashboard },
-    { id: "products", label: "Products", icon: Package },
-    { id: "promos", label: "Promos", icon: BookOpen },
-    { id: "recipes", label: "Recipes", icon: BookOpen },
-    { id: "blogs", label: "Blogs", icon: FileText },
-    { id: "zones", label: "Zones", icon: FileText },
-    { id: "settings", label: "Settings", icon: Settings },
-  ];
+  const navItems = NAV_ITEMS;
 
   // Get user initials for avatar
   const getInitials = (name) => {
@@ -76,6 +79,8 @@ function Sidebar({
               <div className="relative">
                 <div className="absolute inset-0 bg-[#BF1A1A] blur-xl opacity-20 rounded-full"></div>
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={assets.logo}
                   alt="Smart Global"
                   className="h-10 w-auto relative z-10"
@@ -97,7 +102,7 @@ function Sidebar({
             {/* Mobile close button */}
             <button
               onClick={() => setMobileOpen(false)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-none"
             >
               <X className="h-5 w-5" />
             </button>
@@ -120,7 +125,7 @@ function Sidebar({
               {user && (
                 <div className="mt-1">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    className={`inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-bold ${
                       user.role === "admin"
                         ? "bg-[#BF1A1A] text-white"
                         : "bg-gray-200 text-gray-700"
@@ -148,7 +153,7 @@ function Sidebar({
                     setActiveTab(item.id);
                     setMobileOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-none transition-all duration-300 ${
                     isActive
                       ? "bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white shadow-lg shadow-[#BF1A1A]/30"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
@@ -173,7 +178,7 @@ function Sidebar({
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-[#BF1A1A] transition-all duration-300"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-none text-gray-600 hover:bg-red-50 hover:text-[#BF1A1A] transition-all duration-300"
           >
             <LogOut className="h-5 w-5" />
             <span
@@ -320,7 +325,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setMobileOpen(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 rounded-none"
               >
                 <Menu className="h-6 w-6" />
               </button>
@@ -338,6 +343,33 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Desktop Top Bar */}
+          <div className="hidden lg:flex items-center justify-between sticky top-0 z-30 bg-white border-b border-gray-200 px-8 py-4">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-400 font-semibold">Dashboard</span>
+              <span className="text-gray-300">/</span>
+              <span className="font-bold text-gray-900">
+                {NAV_ITEMS.find((item) => item.id === activeTab)?.label ||
+                  "Overview"}
+              </span>
+            </div>
+            {user && (
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="text-sm font-bold text-gray-900 leading-tight">
+                    {user.name}
+                  </div>
+                  <div className="text-[11px] text-gray-400 leading-tight">
+                    {user.role === "admin" ? "Administrator" : user.role}
+                  </div>
+                </div>
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#BF1A1A] to-[#7B4019] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                  {user.name.substring(0, 2).toUpperCase()}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Content Area */}

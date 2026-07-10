@@ -18,7 +18,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-const API_BASE = "https://sglobal-plf6.vercel.app/smartglobal/orders";
+import { API_BASE_URL } from "../api/config";
+const API_BASE = `${API_BASE_URL}/orders`;
 
 function getToken() {
   return localStorage.getItem("token") || null;

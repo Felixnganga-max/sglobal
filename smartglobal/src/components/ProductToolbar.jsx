@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, X, SlidersHorizontal } from "lucide-react";
+import { PRODUCT_CATEGORIES } from "../lib/categories";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
@@ -80,11 +81,28 @@ export default function ProductToolbar() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <SlidersHorizontal
             className="h-4 w-4 hidden sm:block"
             style={{ color: "var(--color-muted)" }}
           />
+          <select
+            value={category}
+            onChange={(e) => updateParam("category", e.target.value === "all" ? undefined : e.target.value)}
+            className="px-3 py-2.5 rounded-xl text-sm font-semibold focus:outline-none max-w-[9.5rem] sm:max-w-none"
+            style={{
+              border: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-bg-soft)",
+              color: "var(--color-text)",
+            }}
+          >
+            <option value="all">All Categories</option>
+            {PRODUCT_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
           <select
             value={sort}
             onChange={(e) => updateParam("sort", e.target.value)}

@@ -109,6 +109,11 @@ function ProductCard({ product, onEdit, onDelete, onView }) {
 
         {/* Overlays */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          {product.isBestSeller && (
+            <span className="px-2.5 py-1 rounded-none text-[10px] font-black tracking-wide bg-amber-400 text-amber-900">
+              ⭐ TOP SELLER
+            </span>
+          )}
           {product.badge && (
             <span
               className={`px-2.5 py-1 rounded-none text-[10px] font-black tracking-wide ${BADGE_STYLES[product.badge] || "bg-gray-700 text-white"}`}

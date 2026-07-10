@@ -73,7 +73,7 @@ export default function Recipes() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
+              "linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.18) 50%, transparent 100%)",
           }}
         />
 

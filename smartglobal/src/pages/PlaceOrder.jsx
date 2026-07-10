@@ -611,9 +611,106 @@ export default function PlaceOrder() {
         <div className="po-layout">
           {/* LEFT */}
           <div>
+            {/* Cart Review */}
             <div className="po-card">
               <div className="po-section-head">
                 <div className="po-step-dot">1</div>
+                <span className="po-step-title">Review Your Cart</span>
+              </div>
+              {cartItems.map((item) => {
+                const id = item._id || item.id;
+                const qty = item.cartQty || 1;
+                const moq = item.minimumOrderQuantity || 1;
+                return (
+                  <div key={id} className="po-cart-item">
+                    <img
+                      loading="lazy"
+                      decoding="async"
+                      src={getImage(item)}
+                      alt={item.title || item.name}
+                      className="po-cart-img"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = FALLBACK_IMG;
+                      }}
+                    />
+                    <div className="po-cart-info">
+                      <div
+                        className="po-cart-name"
+                        style={{ display: "flex", alignItems: "center", gap: 6 }}
+                      >
+                        <span
+                          style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {item.title || item.name}
+                        </span>
+                        {moq > 1 && (
+                          <span
+                            style={{
+                              flexShrink: 0,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minWidth: 22,
+                              height: 18,
+                              padding: "0 5px",
+                              borderRadius: 999,
+                              background: "#f97316",
+                              color: "#fff",
+                              fontSize: 10,
+                              fontWeight: 800,
+                            }}
+                            title={`Sold in packs of ${moq}`}
+                          >
+                            ×{moq}
+                          </span>
+                        )}
+                      </div>
+                      <div className="po-cart-price">
+                        KSh {(item.price || 0).toLocaleString()} each
+                        {moq > 1 &&
+                          ` · pack of ${moq} pcs · ${(qty * moq).toLocaleString()} pcs total`}
+                      </div>
+                      <div className="po-qty-ctrl">
+                        <button
+                          className="po-qty-btn"
+                          onClick={() => updateQty(id, qty - 1)}
+                        >
+                          <Minus size={10} />
+                        </button>
+                        <span className="po-qty-num">{qty}</span>
+                        <button
+                          className="po-qty-btn"
+                          onClick={() => updateQty(id, qty + 1)}
+                        >
+                          <Plus size={10} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="po-cart-right">
+                      <div className="po-subtotal">
+                        KSh {((item.totalPrice || 0) * qty).toLocaleString()}
+                      </div>
+                      <button
+                        className="po-remove-btn"
+                        onClick={() => removeFromCart(id)}
+                        title="Remove item"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="po-card" style={{ marginTop: 16 }}>
+              <div className="po-section-head">
+                <div className="po-step-dot">2</div>
                 <span className="po-step-title">Your Details</span>
               </div>
 
@@ -872,68 +969,6 @@ export default function PlaceOrder() {
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Cart Review */}
-            <div className="po-card" style={{ marginTop: 16 }}>
-              <div className="po-section-head">
-                <div className="po-step-dot">2</div>
-                <span className="po-step-title">Review Your Cart</span>
-              </div>
-              {cartItems.map((item) => {
-                const id = item._id || item.id;
-                const qty = item.cartQty || 1;
-                return (
-                  <div key={id} className="po-cart-item">
-                    <img
-                      loading="lazy"
-                      decoding="async"
-                      src={getImage(item)}
-                      alt={item.title || item.name}
-                      className="po-cart-img"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = FALLBACK_IMG;
-                      }}
-                    />
-                    <div className="po-cart-info">
-                      <div className="po-cart-name">
-                        {item.title || item.name}
-                      </div>
-                      <div className="po-cart-price">
-                        KSh {(item.price || 0).toLocaleString()} each
-                      </div>
-                      <div className="po-qty-ctrl">
-                        <button
-                          className="po-qty-btn"
-                          onClick={() => updateQty(id, qty - 1)}
-                        >
-                          <Minus size={10} />
-                        </button>
-                        <span className="po-qty-num">{qty}</span>
-                        <button
-                          className="po-qty-btn"
-                          onClick={() => updateQty(id, qty + 1)}
-                        >
-                          <Plus size={10} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="po-cart-right">
-                      <div className="po-subtotal">
-                        KSh {((item.totalPrice || 0) * qty).toLocaleString()}
-                      </div>
-                      <button
-                        className="po-remove-btn"
-                        onClick={() => removeFromCart(id)}
-                        title="Remove item"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </div>
 

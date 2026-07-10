@@ -8,6 +8,7 @@ import { assets } from "../assets/assets";
 const CATEGORY_ICONS = {
   "Craft cooked potato chips": "🥔",
   "Just fruits": "🍓",
+  Hazelnuts: "🌰",
   "Hum Hum": "🌶️",
   Cakemix: "🎂",
   "Brownie & Pancake": "🥞",

@@ -61,8 +61,15 @@ export default function ProductTile({ product }) {
           }}
         />
 
-        <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
-          {product.category}
+        <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start">
+          <span className="bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
+            {product.category}
+          </span>
+          {product.isBestSeller && (
+            <span className="bg-amber-400 text-amber-900 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
+              ⭐ Best Seller
+            </span>
+          )}
         </div>
 
         {moq > 1 && (

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { useSearchParams, useLocation, Link } from "react-router-dom";
+import { Search, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import ProductTile from "./ProductTile";
+import { PRODUCT_CATEGORIES, categoryAnchor } from "../lib/categories";
 
 import { API_BASE_URL } from "../api/config";
 const API_URL = `${API_BASE_URL}/products`;
 
 const PAGE_SIZE = 12;
+const SECTION_PREVIEW_SIZE = 8;
 
 const SORT_MAP = {
   newest: { sortBy: "createdAt", order: "desc" },
@@ -16,19 +18,43 @@ const SORT_MAP = {
   name: { sortBy: "title", order: "asc" },
 };
 
+const SORTERS = {
+  newest: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+  "price-asc": (a, b) => (a.price || 0) - (b.price || 0),
+  "price-desc": (a, b) => (b.price || 0) - (a.price || 0),
+  rating: (a, b) => (b.rating || 0) - (a.rating || 0),
+  name: (a, b) => (a.title || "").localeCompare(b.title || ""),
+};
+
+const FALLBACK_IMG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+function getImage(product) {
+  return (
+    product.images?.[0]?.url ||
+    product.image?.url ||
+    product.imageUrl ||
+    product.img ||
+    product.photo ||
+    FALLBACK_IMG
+  );
+}
+
 /**
  * Live, filtered, sorted, paginated product grid for the Products page.
- * Reads its filters straight from the URL (?q=&category=&sort=&inStock=&page=)
- * so the search box, sidebar category list, and pagination controls all stay
- * in sync without prop drilling.
+ * Reads its filters straight from the URL (?q=&category=&sort=&inStock=&page=).
+ *
+ * Two modes:
+ *  - Browse (no q, no category): products are grouped into per-category
+ *    sections so a hero/category link can deep-link straight to a section
+ *    via /products#cat-<slug>. The site's flagged top-seller is spotlighted
+ *    once at the top and excluded from its own section below.
+ *  - Filtered (q or category set): a single flat, server-paginated grid —
+ *    same as a normal search/category result page.
  */
 export default function FeaturedProductsGrid() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [pages, setPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const location = useLocation();
 
   const q = searchParams.get("q") || "";
   const category = searchParams.get("category") || "all";
@@ -36,12 +62,60 @@ export default function FeaturedProductsGrid() {
   const inStock = searchParams.get("inStock") === "true";
   const page = parseInt(searchParams.get("page") || "1", 10);
 
-  useEffect(() => {
-    fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, category, sort, inStock, page]);
+  const browseMode = !q && category === "all";
 
-  const fetchProducts = async () => {
+  // ── Flat (filtered/search) mode state ──
+  const [flatProducts, setFlatProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(1);
+
+  // ── Browse mode state ──
+  const [allProducts, setAllProducts] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (browseMode) {
+      fetchAllProducts();
+    } else {
+      fetchFlatProducts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, category, sort, inStock, page, browseMode]);
+
+  // Scroll straight to the requested category section once it's rendered.
+  useEffect(() => {
+    if (loading || !browseMode || !location.hash) return;
+    const id = location.hash.slice(1);
+    const el = document.getElementById(id);
+    if (el) {
+      const timer = setTimeout(
+        () => el.scrollIntoView({ behavior: "smooth", block: "start" }),
+        50,
+      );
+      return () => clearTimeout(timer);
+    }
+  }, [loading, browseMode, location.hash]);
+
+  const fetchAllProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}?limit=300&sortBy=createdAt&order=desc`);
+      if (!res.ok) throw new Error("Failed to fetch products");
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "Failed to fetch products");
+      setAllProducts(data.data || []);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      setAllProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFlatProducts = async () => {
     try {
       setLoading(true);
       const { sortBy, order } = SORT_MAP[sort] || SORT_MAP.newest;
@@ -60,13 +134,13 @@ export default function FeaturedProductsGrid() {
       const data = await res.json();
 
       if (!data.success) throw new Error(data.message || "Failed to fetch products");
-      setProducts(data.data || []);
+      setFlatProducts(data.data || []);
       setTotal(data.total || 0);
       setPages(data.pages || 1);
       setError(null);
     } catch (err) {
       setError(err.message);
-      setProducts([]);
+      setFlatProducts([]);
     } finally {
       setLoading(false);
     }
@@ -77,6 +151,16 @@ export default function FeaturedProductsGrid() {
     params.set("page", String(nextPage));
     setSearchParams(params);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const viewAllInCategory = (cat) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("category", cat);
+    params.delete("page");
+    setSearchParams(params);
+    document
+      .getElementById("featured-products")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   if (loading) {
@@ -129,7 +213,7 @@ export default function FeaturedProductsGrid() {
             {error}
           </p>
           <button
-            onClick={fetchProducts}
+            onClick={browseMode ? fetchAllProducts : fetchFlatProducts}
             className="btn-primary"
             style={{ fontSize: "0.65rem" }}
           >
@@ -140,7 +224,100 @@ export default function FeaturedProductsGrid() {
     );
   }
 
-  if (products.length === 0) {
+  // ── Flat (filtered/search) mode ──
+  if (!browseMode) {
+    if (flatProducts.length === 0) {
+      return (
+        <div style={{ textAlign: "center", padding: "3rem 0" }}>
+          <Search className="w-8 h-8 mx-auto mb-3" style={{ color: "var(--color-border)" }} />
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontWeight: 600,
+              color: "var(--color-muted)",
+              fontSize: "0.85rem",
+            }}
+          >
+            No products match these filters.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <p
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "0.7rem",
+            color: "var(--color-muted)",
+            marginBottom: "0.875rem",
+          }}
+        >
+          {total} product{total !== 1 ? "s" : ""} found
+        </p>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+            gap: "0.875rem",
+          }}
+        >
+          {flatProducts.map((product) => (
+            <ProductTile key={product._id} product={product} />
+          ))}
+        </div>
+
+        {pages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => goToPage(page - 1)}
+              disabled={page <= 1}
+              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            <span
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                color: "var(--color-text)",
+                padding: "0 0.5rem",
+              }}
+            >
+              Page {page} of {pages}
+            </span>
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={page >= pages}
+              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Next page"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Browse mode — grouped by category ──
+  let pool = allProducts;
+  if (inStock) pool = pool.filter((p) => p.stock > 0);
+  const sorter = SORTERS[sort] || SORTERS.newest;
+
+  const bestSeller = pool.find((p) => p.isBestSeller) || null;
+  const rankAndFile = pool.filter((p) => !p.isBestSeller);
+
+  const sections = PRODUCT_CATEGORIES.map((cat) => ({
+    category: cat,
+    products: rankAndFile.filter((p) => p.category === cat).sort(sorter),
+  })).filter((s) => s.products.length > 0);
+
+  if (pool.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "3rem 0" }}>
         <Search className="w-8 h-8 mx-auto mb-3" style={{ color: "var(--color-border)" }} />
@@ -152,68 +329,99 @@ export default function FeaturedProductsGrid() {
             fontSize: "0.85rem",
           }}
         >
-          No products match these filters.
+          No products available yet.
         </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <p
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "0.7rem",
-          color: "var(--color-muted)",
-          marginBottom: "0.875rem",
-        }}
-      >
-        {total} product{total !== 1 ? "s" : ""} found
-      </p>
+    <div className="space-y-10">
+      {bestSeller && (
+        <Link
+          to={`/product/${bestSeller._id || bestSeller.id}`}
+          className="group relative flex flex-col sm:flex-row items-center gap-5 overflow-hidden rounded-2xl p-5 sm:p-7"
+          style={{ background: "linear-gradient(120deg, #1a1a1a 0%, #3a2410 100%)" }}
+        >
+          <div className="flex-shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-xl bg-white/95 flex items-center justify-center overflow-hidden">
+            <img
+              loading="lazy"
+              decoding="async"
+              src={getImage(bestSeller)}
+              alt={bestSeller.title}
+              className="w-full h-full object-contain p-2.5 group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = FALLBACK_IMG;
+              }}
+            />
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-body text-[0.6rem] font-black uppercase tracking-widest mb-2"
+              style={{ backgroundColor: "#FFD41D", color: "#1a1a1a" }}
+            >
+              ⭐ Our #1 Best Seller
+            </span>
+            <h3 className="font-heading text-white text-lg sm:text-xl font-bold leading-tight mb-2">
+              {bestSeller.title}
+            </h3>
+            <span className="font-heading font-bold text-base" style={{ color: "var(--color-orange)" }}>
+              KSh {(bestSeller.totalPrice ?? bestSeller.price)?.toLocaleString()}
+            </span>
+          </div>
+          <span className="btn-secondary text-xs flex-shrink-0">Shop Now</span>
+        </Link>
+      )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-          gap: "0.875rem",
-        }}
-      >
-        {products.map((product) => (
-          <ProductTile key={product._id} product={product} />
-        ))}
-      </div>
+      {sections.map(({ category: cat, products }) => (
+        <section
+          key={cat}
+          id={categoryAnchor(cat)}
+          style={{ scrollMarginTop: "110px" }}
+        >
+          <div className="flex items-end justify-between mb-4 gap-3">
+            <div>
+              <h3
+                className="font-heading font-bold text-[var(--heading)]"
+                style={{ fontSize: "1.1rem" }}
+              >
+                {cat}
+              </h3>
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.68rem",
+                  color: "var(--color-muted)",
+                }}
+              >
+                {products.length} product{products.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            {products.length > SECTION_PREVIEW_SIZE && (
+              <button
+                onClick={() => viewAllInCategory(cat)}
+                className="inline-flex items-center gap-1 text-xs font-body font-bold whitespace-nowrap"
+                style={{ color: "var(--color-red)" }}
+              >
+                View all <ArrowRight size={12} />
+              </button>
+            )}
+          </div>
 
-      {pages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-8">
-          <button
-            onClick={() => goToPage(page - 1)}
-            disabled={page <= 1}
-            className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={15} />
-          </button>
-          <span
+          <div
             style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              color: "var(--color-text)",
-              padding: "0 0.5rem",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+              gap: "0.875rem",
             }}
           >
-            Page {page} of {pages}
-          </span>
-          <button
-            onClick={() => goToPage(page + 1)}
-            disabled={page >= pages}
-            className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            aria-label="Next page"
-          >
-            <ChevronRight size={15} />
-          </button>
-        </div>
-      )}
+            {products.slice(0, SECTION_PREVIEW_SIZE).map((product) => (
+              <ProductTile key={product._id || product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

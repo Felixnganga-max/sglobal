@@ -20,22 +20,7 @@ import {
   Layers,
 } from "lucide-react";
 import { productService } from "../api/productService";
-
-const CATEGORIES = [
-  "Craft cooked potato chips",
-  "Just fruits",
-  "Hum Hum",
-  "Cakemix",
-  "Brownie & Pancake",
-  "Whipped creams",
-  "Boringer topping sauces",
-  "Kent soups",
-  "Kent stocks",
-  "Kent sauces",
-  "Kent syrups",
-  "Kent spreads",
-  "Water",
-];
+import { PRODUCT_CATEGORIES as CATEGORIES } from "../lib/categories";
 
 const BADGES = ["SPECIAL OFFER", "HOT DEALS", "LIMITED OFFER"];
 
@@ -53,6 +38,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
     stock: "",
     badge: "",
     isHalal: true,
+    isBestSeller: false,
     rating: 0,
     reviews: 0,
     shortDescription: "",
@@ -76,6 +62,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
         stock: editProduct.stock,
         badge: editProduct.badge || "",
         isHalal: editProduct.isHalal,
+        isBestSeller: editProduct.isBestSeller || false,
         rating: editProduct.rating || 0,
         reviews: editProduct.reviews || 0,
         shortDescription: editProduct.shortDescription,
@@ -306,6 +293,7 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
         stock: parseInt(formData.stock),
         badge: formData.badge || "",
         isHalal: formData.isHalal,
+        isBestSeller: formData.isBestSeller,
         rating: parseFloat(formData.rating) || 0,
         reviews: parseInt(formData.reviews) || 0,
         shortDescription: formData.shortDescription,
@@ -576,26 +564,55 @@ function ProductFormModal({ isOpen, onClose, editProduct, onSave }) {
                 </div>
               </div>
 
-              <label className="flex items-center gap-3 cursor-pointer group w-fit">
-                <div
-                  className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${formData.isHalal ? "bg-emerald-500" : "bg-gray-200"}`}
-                >
+              <div className="flex flex-wrap items-center gap-6">
+                <label className="flex items-center gap-3 cursor-pointer group w-fit">
                   <div
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${formData.isHalal ? "left-5" : "left-1"}`}
+                    className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${formData.isHalal ? "bg-emerald-500" : "bg-gray-200"}`}
+                  >
+                    <div
+                      className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${formData.isHalal ? "left-5" : "left-1"}`}
+                    />
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.isHalal}
+                    className="sr-only"
+                    onChange={(e) =>
+                      setFormData({ ...formData, isHalal: e.target.checked })
+                    }
                   />
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.isHalal}
-                  className="sr-only"
-                  onChange={(e) =>
-                    setFormData({ ...formData, isHalal: e.target.checked })
-                  }
-                />
-                <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900">
-                  Halal Certified
-                </span>
-              </label>
+                  <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900">
+                    Halal Certified
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                  <div
+                    className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${formData.isBestSeller ? "bg-amber-500" : "bg-gray-200"}`}
+                  >
+                    <div
+                      className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${formData.isBestSeller ? "left-5" : "left-1"}`}
+                    />
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.isBestSeller}
+                    className="sr-only"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        isBestSeller: e.target.checked,
+                      })
+                    }
+                  />
+                  <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900">
+                    ⭐ Top Seller{" "}
+                    <span className="font-normal text-gray-400">
+                      — featured on hero banners sitewide
+                    </span>
+                  </span>
+                </label>
+              </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">

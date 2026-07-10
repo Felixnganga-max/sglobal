@@ -57,7 +57,7 @@ const About = () => {
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/30"></div>
 
         <div className="relative z-10 pl-6 sm:pl-12 md:pl-20">
           <p className="text-[#FFD41D] text-xs font-black uppercase tracking-[0.3em] mb-2">
@@ -313,7 +313,7 @@ const About = () => {
           backgroundImage: `url(${assets.recipe})`,
         }}
       >
-        <div className="absolute inset-0 bg-black/55"></div>
+        <div className="absolute inset-0 bg-black/33"></div>
 
         <div className="relative z-10 text-center px-4">
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-light text-white tracking-wider mb-3">

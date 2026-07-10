@@ -1,4 +1,5 @@
 import React from "react";
+import { useSearchParams } from "react-router-dom";
 import HeroPromo from "../components/HeroPromo";
 import ProductToolbar from "../components/ProductToolbar";
 import FeaturedProductsGrid from "../components/FeaturedProductsGrid";
@@ -17,6 +18,16 @@ import RightSidebar from "../components/RightSidebar";
  * so the toolbar, sidebar and grid stay in sync without prop drilling.
  */
 export default function Products() {
+  const [searchParams] = useSearchParams();
+  const q = searchParams.get("q");
+  const category = searchParams.get("category");
+
+  const heading = q
+    ? `Search results for "${q}"`
+    : category && category !== "all"
+      ? category
+      : "All Products";
+
   return (
     <div className="min-h-screen bg-[var(--page-bg)]">
       <main className="w-full px-4 lg:px-8 py-8">
@@ -34,7 +45,7 @@ export default function Products() {
                   className="text-xl font-semibold text-[var(--heading)]"
                   style={{ scrollMarginTop: "96px" }}
                 >
-                  Shop All Products
+                  {heading}
                 </h2>
               </div>
 

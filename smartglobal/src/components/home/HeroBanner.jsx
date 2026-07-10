@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../../assets/assets";
+import { useProducts, getProductImage } from "../../lib/useProducts";
 
 const SLIDES = [
   {
@@ -35,17 +36,37 @@ const SLIDES = [
 
 export default function HeroBanner() {
   const [index, setIndex] = useState(0);
+  const { products } = useProducts();
+
+  // Whichever product is flagged as the top seller (e.g. Kent Cubes) gets
+  // pinned as the very first hero slide, sitewide — shown once, up front.
+  const bestSeller = products.find((p) => p.isBestSeller) || null;
+  const slides = bestSeller
+    ? [
+        {
+          id: "best-seller",
+          eyebrow: "⭐ Our #1 Best Seller",
+          title: bestSeller.title,
+          copy:
+            bestSeller.shortDescription ||
+            "The product everyone's stocking up on — grab yours today.",
+          image: getProductImage(bestSeller),
+          productId: bestSeller._id || bestSeller.id,
+        },
+        ...SLIDES,
+      ]
+    : SLIDES;
 
   const next = useCallback(() => {
-    setIndex((i) => (i + 1) % SLIDES.length);
-  }, []);
+    setIndex((i) => (i + 1) % slides.length);
+  }, [slides.length]);
 
   useEffect(() => {
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
   }, [next]);
 
-  const slide = SLIDES[index];
+  const slide = slides[index % slides.length];
 
   return (
     <section className="page-x pt-6 sm:pt-8">
@@ -64,7 +85,7 @@ export default function HeroBanner() {
             alt=""
             className="absolute inset-0 w-full h-full object-cover opacity-40 transition-opacity duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/95 via-gray-950/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/57 via-gray-950/36 to-transparent" />
 
           <div className="relative z-10 flex flex-col justify-center h-full min-h-[360px] px-6 sm:px-10 py-10 max-w-xl">
             <p className="text-eyebrow mb-3" style={{ color: "#FF7F11" }}>
@@ -80,7 +101,10 @@ export default function HeroBanner() {
               {slide.copy}
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/products" className="btn-primary text-xs">
+              <Link
+                to={slide.productId ? `/product/${slide.productId}` : "/products"}
+                className="btn-primary text-xs"
+              >
                 Shop Now
               </Link>
               <Link
@@ -95,7 +119,7 @@ export default function HeroBanner() {
 
           {/* Dot indicators */}
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-            {SLIDES.map((s, i) => (
+            {slides.map((s, i) => (
               <button
                 key={s.id}
                 aria-label={`Show ${s.title}`}
@@ -128,7 +152,7 @@ export default function HeroBanner() {
             alt="Kizembe Water"
             className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/42 via-black/12 to-transparent" />
           <div className="relative z-10 flex flex-col justify-end h-full min-h-[360px] p-6">
             <p className="text-eyebrow mb-2" style={{ color: "#fff" }}>
               New In

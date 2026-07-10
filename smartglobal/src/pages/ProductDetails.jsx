@@ -192,6 +192,15 @@ export default function ProductDetails() {
   const inStock = product.stock > 0;
   const maxQty = product.stock || 99;
 
+  // Products can be sold in packs (minimumOrderQuantity) — cartQty tracks
+  // number of packs, packPrice is the price for one pack.
+  const moq = product.minimumOrderQuantity || 1;
+  const unitPrice = product.price || 0;
+  const packPrice =
+    product.totalPrice != null
+      ? product.totalPrice
+      : parseFloat((unitPrice * moq).toFixed(2));
+
   // ── Images — use shared resolver ──
   const images = resolveImages(product);
   const PLACEHOLDER = "https://via.placeholder.com/600?text=No+Image";
@@ -270,6 +279,11 @@ export default function ProductDetails() {
                 }}
               />
               <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {product.isBestSeller && (
+                  <span className="px-3 py-1 text-sm font-body font-bold rounded text-amber-900 bg-amber-400">
+                    ⭐ Best Seller
+                  </span>
+                )}
                 {discount && (
                   <span className="px-3 py-1 text-white text-sm font-body font-bold rounded bg-red">
                     {discount}% OFF
@@ -387,16 +401,36 @@ export default function ProductDetails() {
             )}
 
             {/* Price */}
-            <div className="flex items-baseline gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="font-heading font-bold text-3xl text-red">
-                Ksh {(product.price * (cartQty || 1)).toLocaleString()}
+                Ksh {(packPrice * (cartQty || 1)).toLocaleString()}
               </span>
               {product.oldPrice && product.oldPrice > product.price && (
                 <span className="font-body text-lg text-gray-400 line-through">
-                  Ksh {(product.oldPrice * (cartQty || 1)).toLocaleString()}
+                  Ksh {(product.oldPrice * moq * (cartQty || 1)).toLocaleString()}
+                </span>
+              )}
+              {moq > 1 && (
+                <span
+                  className="inline-flex items-center justify-center rounded-full text-white font-black shadow-sm"
+                  style={{
+                    width: "1.75rem",
+                    height: "1.75rem",
+                    fontSize: "0.65rem",
+                    backgroundColor: "#f97316",
+                  }}
+                  title={`Sold in packs of ${moq}`}
+                >
+                  ×{moq}
                 </span>
               )}
             </div>
+            {moq > 1 && (
+              <p className="font-body text-xs font-semibold" style={{ color: "#16a34a" }}>
+                Ksh {unitPrice.toLocaleString()} per piece · pack of {moq} pieces
+                {cartQty > 0 && ` · ${(cartQty * moq).toLocaleString()} pieces in your cart`}
+              </p>
+            )}
 
             {product.shortDescription && (
               <p className="text-body">{product.shortDescription}</p>
@@ -406,7 +440,7 @@ export default function ProductDetails() {
             {inStock && (
               <div>
                 <label className="text-label block mb-2 text-gray-700">
-                  Quantity
+                  Quantity {moq > 1 ? `(packs of ${moq})` : ""}
                 </label>
                 <div className="flex items-center gap-4">
                   {cartQty === 0 ? (
@@ -415,7 +449,8 @@ export default function ProductDetails() {
                       className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-body font-bold text-sm text-white transition-all duration-300 hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
                       style={{ backgroundColor: "var(--color-red)" }}
                     >
-                      <ShoppingCart className="w-4 h-4" /> Add to Cart
+                      <ShoppingCart className="w-4 h-4" />{" "}
+                      {moq > 1 ? `Add ×${moq}` : "Add to Cart"}
                     </button>
                   ) : (
                     <div
@@ -453,7 +488,8 @@ export default function ProductDetails() {
                   )}
                   {cartQty > 0 && (
                     <span className="font-body text-xs text-muted">
-                      Ksh {(product.price * cartQty).toLocaleString()} total
+                      Ksh {(packPrice * cartQty).toLocaleString()} total
+                      {moq > 1 && ` (${(cartQty * moq).toLocaleString()} pcs)`}
                     </span>
                   )}
                 </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { categoryAnchor } from "../../lib/categories";
 
 const BANNERS = [
   {
@@ -7,14 +8,14 @@ const BANNERS = [
     title: "20% Off Kent Soups",
     subtitle: "This Week Only",
     bg: "linear-gradient(120deg, var(--color-blue) 0%, var(--color-blue-dark) 100%)",
-    to: "/products#cat-Kent%20soups",
+    to: `/products#${categoryAnchor("Kent soups")}`,
   },
   {
     id: "snacks",
     title: "Mega Snack Deals",
     subtitle: "SPUDS & Toppings",
     bg: "linear-gradient(120deg, #7B4019 0%, #4a2610 100%)",
-    to: "/products#cat-Craft%20cooked%20potato%20chips",
+    to: `/products#${categoryAnchor("Craft cooked potato chips")}`,
   },
 ];
 

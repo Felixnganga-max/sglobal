@@ -158,7 +158,7 @@ export default function RecipeDetail() {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)",
+                "linear-gradient(to top, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.18) 60%, transparent 100%)",
             }}
           />
           <div className="absolute bottom-0 left-0 right-0 page-x pb-6">

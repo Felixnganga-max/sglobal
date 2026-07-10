@@ -223,7 +223,7 @@ export default function Recipes() {
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/95 via-gray-950/80 to-gray-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/57 via-gray-950/48 to-gray-950/24" />
 
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-7 sm:p-10">
             <div>

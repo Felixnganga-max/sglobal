@@ -3,6 +3,7 @@ import { Heart, ShoppingCart, MapPin, Search, Check } from "lucide-react";
 import { assets } from "../assets/assets";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
+import { categorySlug } from "../lib/categories";
 
 import { API_BASE_URL } from "../api/config";
 const API_URL = `${API_BASE_URL}/products`;
@@ -21,6 +22,8 @@ const BADGE_COLORS = {
 const CATEGORY_CONFIG = [
   { key: "Kent soups", accent: "#FF0000", image: assets.kent },
   { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.spuds },
+  { key: "Just fruits", accent: "#16a34a", emoji: "🍓" },
+  { key: "Hazelnuts", accent: "#7B4019", image: assets.hazelnut },
   { key: "Cakemix", accent: "#FF7F11", image: assets.cake },
   { key: "Kent syrups", accent: "#FF0000", image: assets.top },
   { key: "Kent sauces", accent: "#1565C0", image: assets.sauces },
@@ -36,6 +39,7 @@ const STATIC_CATEGORIES = CATEGORY_CONFIG.map((c) => ({
     .join(" "),
   accent: c.accent,
   image: c.image,
+  emoji: c.emoji,
 }));
 
 // ─────────────────────────────────────────────────────────────
@@ -180,8 +184,15 @@ function ProductCard({ prod }) {
           }}
         />
 
-        <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
-          {prod.category}
+        <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start">
+          <span className="bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
+            {prod.category}
+          </span>
+          {prod.isBestSeller && (
+            <span className="bg-amber-400 text-amber-900 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
+              ⭐ Best Seller
+            </span>
+          )}
         </div>
 
         {moq > 1 && (
@@ -335,7 +346,7 @@ function ProductCard({ prod }) {
 function CategoryCard({ cat }) {
   return (
     <Link
-      to={`/products#cat-${encodeURIComponent(cat.id)}`}
+      to={`/products#cat-${categorySlug(cat.id)}`}
       className="group flex-shrink-0 w-[92px] lg:w-auto flex flex-col items-center gap-2.5 text-center"
     >
       <div
@@ -346,13 +357,24 @@ function CategoryCard({ cat }) {
           border: `2px solid ${cat.accent}`,
         }}
       >
-        <img
-          loading="lazy"
-          decoding="async"
-          src={cat.image}
-          alt={cat.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-        />
+        {cat.image ? (
+          <img
+            loading="lazy"
+            decoding="async"
+            src={cat.image}
+            alt={cat.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-500"
+            style={{ backgroundColor: `${cat.accent}14` }}
+          >
+            <span role="img" aria-hidden="true">
+              {cat.emoji || "🛒"}
+            </span>
+          </div>
+        )}
       </div>
       <p className="font-body text-gray-700 text-[0.68rem] font-bold leading-tight">
         {cat.title}
@@ -621,8 +643,13 @@ export default function Sales() {
 
   const searchQuery = searchParams.get("q") || "";
 
+  // Kent Cubes (or whichever product is flagged) is spotlighted separately
+  // below, so it's excluded here to avoid showing it twice on the page.
+  const bestSeller = products.find((p) => p.isBestSeller) || null;
+  const rankAndFile = products.filter((p) => !p.isBestSeller);
+
   const filteredProducts = searchQuery.trim()
-    ? products.filter((p) => {
+    ? rankAndFile.filter((p) => {
         const q = searchQuery.toLowerCase();
         return (
           (p.title || "").toLowerCase().includes(q) ||
@@ -631,17 +658,17 @@ export default function Sales() {
           (p.shortDescription || "").toLowerCase().includes(q)
         );
       })
-    : products;
+    : rankAndFile;
 
   const trendingCategories = [
     "all",
-    ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))),
+    ...Array.from(new Set(rankAndFile.map((p) => p.category).filter(Boolean))),
   ].slice(0, 6);
 
   const byCategory =
     activeCategory === "all"
-      ? products
-      : products.filter((p) => p.category === activeCategory);
+      ? rankAndFile
+      : rankAndFile.filter((p) => p.category === activeCategory);
 
   const displayProducts = searchQuery.trim()
     ? filteredProducts
@@ -699,6 +726,55 @@ export default function Sales() {
           ))}
         </div>
       </section>
+
+      {/* ── Best Seller Spotlight — featured once, at the very top ── */}
+      {bestSeller && (
+        <section className="page-x pb-8">
+          <Link
+            to={`/product/${bestSeller._id || bestSeller.id}`}
+            className="group relative flex flex-col sm:flex-row items-center gap-6 overflow-hidden rounded-2xl p-6 sm:p-8"
+            style={{
+              background:
+                "linear-gradient(120deg, #1a1a1a 0%, #3a2410 100%)",
+            }}
+          >
+            <div className="flex-shrink-0 w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-white/95 flex items-center justify-center overflow-hidden">
+              <img
+                loading="lazy"
+                decoding="async"
+                src={getImage(bestSeller)}
+                alt={bestSeller.title}
+                className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = FALLBACK_IMG;
+                }}
+              />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-body text-[0.62rem] font-black uppercase tracking-widest mb-3"
+                style={{ backgroundColor: "#FFD41D", color: "#1a1a1a" }}
+              >
+                ⭐ Our #1 Best Seller
+              </span>
+              <h3 className="font-heading text-white text-xl sm:text-2xl font-bold leading-tight mb-2">
+                {bestSeller.title}
+              </h3>
+              <p className="text-white/60 text-xs sm:text-sm leading-relaxed max-w-md mb-4">
+                {bestSeller.shortDescription ||
+                  "The product everyone's stocking up on — grab yours before it sells out."}
+              </p>
+              <span className="font-heading font-bold text-lg" style={{ color: "var(--color-orange)" }}>
+                KSh {(bestSeller.totalPrice ?? bestSeller.price)?.toLocaleString()}
+              </span>
+            </div>
+            <span className="btn-secondary text-xs flex-shrink-0 self-center sm:self-auto">
+              Shop Now
+            </span>
+          </Link>
+        </section>
+      )}
 
       {/* ── Promo Video ── */}
       {promoVideo && !promoDismissed && (
@@ -828,7 +904,7 @@ export default function Sales() {
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/95 via-gray-950/80 to-gray-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/57 via-gray-950/48 to-gray-950/24" />
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-7 sm:p-10">
             <div>
               <div className="flex items-center gap-2 mb-2">

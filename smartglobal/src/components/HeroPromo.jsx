@@ -79,7 +79,20 @@ export default function HeroPromo() {
           : Array.isArray(data)
             ? data
             : [];
-        setProducts(pickByCategory(list));
+        const deduped = pickByCategory(list);
+        // Whichever product is flagged as the top seller is pinned to the
+        // front so it's the first thing shown here — featured once, never
+        // duplicated in the side rail.
+        const bestSeller = list.find((p) => p.isBestSeller) || null;
+        const ordered = bestSeller
+          ? [
+              bestSeller,
+              ...deduped.filter(
+                (p) => (p._id || p.id) !== (bestSeller._id || bestSeller.id),
+              ),
+            ]
+          : deduped;
+        setProducts(ordered);
       })
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
@@ -426,8 +439,22 @@ export default function HeroPromo() {
               </>
             ) : (
               <>
-                <div className="hero-eyebrow-pill">
-                  <span className="hero-eyebrow-dot" />
+                <div
+                  className="hero-eyebrow-pill"
+                  style={
+                    hero?.isBestSeller
+                      ? {
+                          background: "rgba(255,212,29,0.18)",
+                          borderColor: "rgba(255,212,29,0.4)",
+                        }
+                      : undefined
+                  }
+                >
+                  {hero?.isBestSeller ? (
+                    <span style={{ fontSize: "0.7rem", lineHeight: 1 }}>⭐</span>
+                  ) : (
+                    <span className="hero-eyebrow-dot" />
+                  )}
                   <span
                     style={{
                       fontFamily: "var(--font-body)",
@@ -435,10 +462,12 @@ export default function HeroPromo() {
                       fontWeight: 700,
                       letterSpacing: "0.22em",
                       textTransform: "uppercase",
-                      color: "#ffa040",
+                      color: hero?.isBestSeller ? "#FFD41D" : "#ffa040",
                     }}
                   >
-                    {hero?.category || "Featured"}
+                    {hero?.isBestSeller
+                      ? "Our #1 Best Seller"
+                      : hero?.category || "Featured"}
                   </span>
                 </div>
 

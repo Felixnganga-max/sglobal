@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { API_BASE_URL } from "../api/config";
 const API_URL = `${API_BASE_URL}/products`;
@@ -15,74 +16,38 @@ const CATEGORY_ICONS = {
   "Kent soups": "🍲",
   "Kent stocks": "🫙",
   "Kent sauces": "🫕",
+  "Kent syrups": "🍯",
   "Kent spreads": "🧈",
-  "Kizembe spring water": "💧",
+  Water: "💧",
 };
 
 const BRANDS = [
   {
-    name: assets.logo3,
+    logo: assets.logo3,
+    keyword: "Kent",
     desc: "Soups, stocks & sauces",
     color: "var(--color-red)",
-    letter: "K",
   },
   {
-    name: assets.logo2,
+    logo: assets.logo2,
+    keyword: "chips",
     desc: "Craft cooked crisps",
     color: "var(--color-orange)",
-    letter: "F",
   },
   {
-    name: assets.logo1,
+    logo: assets.logo1,
+    keyword: "Water",
     desc: "Natural spring water",
     color: "var(--color-blue)",
-    letter: assets.logo1,
   },
 ];
 
-// Must match the slugify used in FeaturedProductsGrid
-function slugify(str) {
-  return str.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-}
-
-function scrollToCategory(category) {
-  // FeaturedProductsGrid uses id="cat-${category}" — raw category string (NOT slugified)
-  const rawId = `cat-${category}`;
-  let el = document.getElementById(rawId);
-
-  // fallback: try slugified version in case it changed
-  if (!el) {
-    el = document.getElementById(`cat-${slugify(category)}`);
-  }
-
-  if (el) {
-    const top = el.getBoundingClientRect().top + window.scrollY - 96;
-    window.scrollTo({ top, behavior: "smooth" });
-  } else {
-    const fallback = document.getElementById("featured-products");
-    if (fallback)
-      fallback.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}
-
-function scrollToBrand(brandName) {
-  const keyword = brandName.split(" ")[0].toLowerCase(); // "Kent", "Food", "Kizembe"
-  const allSections = document.querySelectorAll("[id^='cat-']");
-  for (const section of allSections) {
-    if (section.id.toLowerCase().includes(keyword)) {
-      const top = section.getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ top, behavior: "smooth" });
-      return;
-    }
-  }
-  const fallback = document.getElementById("featured-products");
-  if (fallback) fallback.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
 export default function ShopByCategory() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [active, setActive] = useState(null);
+
+  const activeCategory = searchParams.get("category") || null;
 
   useEffect(() => {
     fetch(API_URL)
@@ -108,14 +73,30 @@ export default function ShopByCategory() {
       .finally(() => setLoading(false));
   }, []);
 
+  function goToFeaturedProducts() {
+    const el = document.getElementById("featured-products");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function handleCategoryClick(cat) {
-    setActive(cat);
-    scrollToCategory(cat);
+    const params = new URLSearchParams(searchParams);
+    if (activeCategory === cat) {
+      params.delete("category");
+    } else {
+      params.set("category", cat);
+    }
+    params.delete("page");
+    setSearchParams(params);
+    goToFeaturedProducts();
   }
 
   function handleBrandClick(brand) {
-    setActive(null);
-    scrollToBrand(brand.name);
+    const params = new URLSearchParams(searchParams);
+    params.delete("category");
+    params.set("q", brand.keyword);
+    params.delete("page");
+    setSearchParams(params);
+    goToFeaturedProducts();
   }
 
   return (
@@ -159,7 +140,7 @@ export default function ShopByCategory() {
                 marginBottom: "2px",
               }}
             >
-              Browse
+              Filter
             </p>
             <h4
               style={{
@@ -224,7 +205,7 @@ export default function ShopByCategory() {
                 </div>
               ))
             : categories.map((cat, idx) => {
-                const isActive = active === cat;
+                const isActive = activeCategory === cat;
                 const isLast = idx === categories.length - 1;
                 return (
                   <button
@@ -373,19 +354,19 @@ export default function ShopByCategory() {
         >
           {BRANDS.map((brand) => (
             <button
-              key={brand.name}
+              key={brand.keyword}
               onClick={() => handleBrandClick(brand)}
               style={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "0px",
                 padding: "8px",
                 borderRadius: "10px",
                 border: "1px solid var(--color-border)",
                 backgroundColor: "var(--color-bg-soft)",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
+                overflow: "hidden",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = brand.color;
@@ -401,12 +382,12 @@ export default function ShopByCategory() {
               <img
                 loading="lazy"
                 decoding="async"
-                src={brand.name}
+                src={brand.logo}
                 alt={brand.desc}
                 style={{
-                  width: "200%",
-                  height: "150px",
-                  objectFit: "cover",
+                  width: "100%",
+                  height: "80px",
+                  objectFit: "contain",
                 }}
               />
             </button>

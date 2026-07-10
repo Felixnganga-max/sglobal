@@ -50,7 +50,7 @@ export const blogApi = {
       const formData = new FormData();
       Object.entries(blogData).forEach(([key, value]) => {
         if (value === undefined) return;
-        if (key === "content" || key === "tags") {
+        if (key === "tags") {
           formData.append(key, JSON.stringify(value));
         } else {
           formData.append(key, value);
@@ -79,7 +79,7 @@ export const blogApi = {
       const formData = new FormData();
       Object.entries(blogData).forEach(([key, value]) => {
         if (value === undefined) return;
-        if (key === "content" || key === "tags") {
+        if (key === "tags") {
           formData.append(key, JSON.stringify(value));
         } else {
           formData.append(key, value);
@@ -102,6 +102,47 @@ export const blogApi = {
 
   deleteBlog: async (id) => {
     const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "DELETE",
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  likeBlog: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/${id}/like`, {
+      method: "PATCH",
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  dislikeBlog: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/${id}/dislike`, {
+      method: "PATCH",
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  getComments: async (blogId) => {
+    const response = await fetch(`${API_BASE_URL}/${blogId}/comments`, {
+      method: "GET",
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  createComment: async (blogId, { name, message }) => {
+    const response = await fetch(`${API_BASE_URL}/${blogId}/comments`, {
+      method: "POST",
+      headers: createHeaders(),
+      body: JSON.stringify({ name, message }),
+    });
+    return handleResponse(response);
+  },
+
+  deleteComment: async (commentId) => {
+    const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
       method: "DELETE",
       headers: createHeaders(),
     });

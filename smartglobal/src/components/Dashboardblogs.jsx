@@ -27,9 +27,12 @@ import {
   Upload,
   Loader2,
   AlertCircle,
+  MessageCircle,
+  ThumbsUp,
 } from "lucide-react";
 import blogsData from "../lib/data";
 import { blogApi } from "../api/blogApi";
+import BlogCommentsModal from "./BlogCommentsModal";
 
 /**
  * DashboardBlogs.jsx - Smart Global Admin Blog Editor
@@ -37,12 +40,21 @@ import { blogApi } from "../api/blogApi";
  * Colors: Red (#BF1A1A), Yellow (#FFD41D), Black, White, Brown (#7B4019)
  */
 
+// Strips tags to get the real, human-readable text length — used to tell a
+// genuinely empty editor apart from one that just has "<p><br></p>" in it.
+function stripHtml(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html || "";
+  return (div.textContent || "").trim();
+}
+
 export default function DashboardBlogs() {
   const [view, setView] = useState("list"); // 'list' or 'edit'
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [commentsModalBlog, setCommentsModalBlog] = useState(null);
   const [currentBlog, setCurrentBlog] = useState(null);
   const [editorContent, setEditorContent] = useState("");
   const [blogMeta, setBlogMeta] = useState({
@@ -57,13 +69,22 @@ export default function DashboardBlogs() {
   const [tagInput, setTagInput] = useState("");
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
-  const [imagePosition, setImagePosition] = useState(null);
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchBlogs();
   }, []);
+
+  // Sync the contentEditable DOM node only when the editor opens or a
+  // different post is loaded — never on every keystroke (see the comment
+  // on the editor <div> below for why that distinction matters).
+  useEffect(() => {
+    if (view === "edit" && editorRef.current) {
+      editorRef.current.innerHTML = editorContent;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, currentBlog]);
 
   const fetchBlogs = async () => {
     try {
@@ -106,16 +127,7 @@ export default function DashboardBlogs() {
       featuredImage: blog.featuredImage?.url || null,
       author: blog.author?.name || "Smart Global Team",
     });
-    // Convert content array to HTML-like string for editing
-    const contentHtml = blog.content
-      .map((block) => {
-        if (block.type === "heading") return `<h2>${block.text}</h2>`;
-        if (block.type === "subheading") return `<h3>${block.text}</h3>`;
-        if (block.type === "paragraph") return `<p>${block.text}</p>`;
-        return "";
-      })
-      .join("\n\n");
-    setEditorContent(contentHtml);
+    setEditorContent(blog.content || "");
     setView("edit");
   };
 
@@ -133,8 +145,15 @@ export default function DashboardBlogs() {
 
   // Save blog
   const handleSaveBlog = async () => {
-    if (!blogMeta.title || !blogMeta.category || !editorContent) {
-      alert("Please fill in all required fields (Title, Category, Content)");
+    if (
+      !blogMeta.title ||
+      !blogMeta.category ||
+      !blogMeta.excerpt ||
+      stripHtml(editorContent).length === 0
+    ) {
+      alert(
+        "Please fill in all required fields (Title, Category, Excerpt, Content)",
+      );
       return;
     }
     if (!currentBlog && !blogMeta.featuredImage) {
@@ -150,15 +169,12 @@ export default function DashboardBlogs() {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
-    // Parse editor content into content blocks
-    const contentBlocks = parseContentToBlocks(editorContent);
-
     const payload = {
       title: blogMeta.title,
       slug,
       category: blogMeta.category,
       excerpt: blogMeta.excerpt,
-      content: contentBlocks,
+      content: editorContent,
       tags: blogMeta.tags,
       readTime: calculateReadTime(editorContent),
       authorName: blogMeta.author,
@@ -190,35 +206,10 @@ export default function DashboardBlogs() {
     }
   };
 
-  // Parse HTML content to content blocks
-  const parseContentToBlocks = (html) => {
-    const blocks = [];
-    const div = document.createElement("div");
-    div.innerHTML = html;
-
-    div.childNodes.forEach((node) => {
-      if (node.nodeName === "H2") {
-        blocks.push({ type: "heading", text: node.textContent });
-      } else if (node.nodeName === "H3") {
-        blocks.push({ type: "subheading", text: node.textContent });
-      } else if (node.nodeName === "P" && node.textContent.trim()) {
-        blocks.push({ type: "paragraph", text: node.textContent });
-      } else if (node.nodeName === "IMG") {
-        blocks.push({
-          type: "image",
-          src: node.getAttribute("src"),
-          alt: node.getAttribute("alt") || "",
-        });
-      }
-    });
-
-    return blocks;
-  };
-
-  // Calculate read time
-  const calculateReadTime = (content) => {
-    const words = content.split(/\s+/).length;
-    const minutes = Math.ceil(words / 200);
+  // Calculate read time from the actual rendered text (tags stripped)
+  const calculateReadTime = (html) => {
+    const words = stripHtml(html).split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(1, Math.ceil(words / 200));
     return `${minutes} min read`;
   };
 
@@ -241,27 +232,40 @@ export default function DashboardBlogs() {
     });
   };
 
-  // Insert image
+  // Insert image at the cursor (or at the end if nothing is selected inside
+  // the editor). The DOM is the source of truth here, so we read it back
+  // into state immediately after mutating it — nothing re-renders the
+  // editor from state on its own anymore (see the editor <div> below).
   const handleInsertImage = () => {
     if (!imageUrl) return;
 
     const editor = editorRef.current;
     if (!editor) return;
 
-    const imageHtml = `<img loading="lazy" decoding="async" src="${imageUrl}" alt="Blog image" class="w-full rounded-none my-6" />`;
+    const img = document.createElement("img");
+    img.src = imageUrl;
+    img.alt = "Blog image";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.className = "w-full rounded-none my-6";
 
-    // Insert at cursor position
     const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const img = document.createElement("div");
-      img.innerHTML = imageHtml;
-      range.insertNode(img.firstChild);
+    const range =
+      selection && selection.rangeCount > 0
+        ? selection.getRangeAt(0)
+        : null;
+    const rangeIsInsideEditor =
+      range && editor.contains(range.commonAncestorContainer);
+
+    if (rangeIsInsideEditor) {
+      range.deleteContents();
+      range.insertNode(img);
+      range.collapse(false);
     } else {
-      // Append to end if no selection
-      setEditorContent(editorContent + "\n" + imageHtml);
+      editor.appendChild(img);
     }
 
+    setEditorContent(editor.innerHTML);
     setImageUrl("");
     setShowImageModal(false);
   };
@@ -442,9 +446,15 @@ export default function DashboardBlogs() {
                         {new Date(blog.publishDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Eye size={14} />
-                          <span>{blog.views.toLocaleString()}</span>
+                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Eye size={14} />
+                            {blog.views.toLocaleString()}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <ThumbsUp size={14} />
+                            {blog.likes || 0}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -462,10 +472,23 @@ export default function DashboardBlogs() {
                             <Edit3 size={18} />
                           </button>
                           <button
+                            onClick={() =>
+                              window.open(
+                                `/blogs?post=${blog.slug}`,
+                                "_blank",
+                              )
+                            }
                             className="p-2 hover:bg-green-50 rounded-none transition-colors text-green-600"
                             title="Preview"
                           >
                             <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => setCommentsModalBlog(blog)}
+                            className="p-2 hover:bg-yellow-50 rounded-none transition-colors text-yellow-700"
+                            title="Comments"
+                          >
+                            <MessageCircle size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteBlog(blog._id)}
@@ -484,6 +507,12 @@ export default function DashboardBlogs() {
           </div>
           )}
         </div>
+        {commentsModalBlog && (
+          <BlogCommentsModal
+            blog={commentsModalBlog}
+            onClose={() => setCommentsModalBlog(null)}
+          />
+        )}
       </div>
     );
   }
@@ -662,13 +691,17 @@ export default function DashboardBlogs() {
                 </div>
               </div>
 
-              {/* Editor Content */}
+              {/* Editor Content — deliberately NOT driven by React's
+                  dangerouslySetInnerHTML on every keystroke: re-setting the
+                  DOM from state on each render is what was resetting the
+                  caret to the start of the field (the "typing backwards"
+                  bug). The DOM is only synced imperatively below, when the
+                  editor first mounts or a different post is loaded. */}
               <div
                 ref={editorRef}
                 contentEditable
                 onInput={(e) => setEditorContent(e.currentTarget.innerHTML)}
-                className="p-6 min-h-[500px] focus:outline-none prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ __html: editorContent }}
+                className="blog-editor-content p-6 min-h-[500px] focus:outline-none"
                 suppressContentEditableWarning
               />
             </div>

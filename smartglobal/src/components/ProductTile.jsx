@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../../context/Cartcontext";
-import { getProductImage, FALLBACK_IMG } from "../../lib/useProducts";
-import { withTransform } from "../../lib/cloudinary";
+import { useCart } from "../context/Cartcontext";
+import { getProductImage, FALLBACK_IMG } from "../lib/useProducts";
+import { withTransform } from "../lib/cloudinary";
 
 const BADGE_COLORS = {
   "SPECIAL OFFER": "#16a34a",
@@ -16,7 +16,7 @@ const BADGE_COLORS = {
 };
 
 // Shared compact product card used across the homepage e-commerce
-// sections (trending, best deals, trending-this-week, recommended).
+// sections and the Products catalog page.
 export default function ProductTile({ product }) {
   const navigate = useNavigate();
   const { addToCart, cartItems } = useCart();

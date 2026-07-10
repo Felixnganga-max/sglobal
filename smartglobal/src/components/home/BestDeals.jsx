@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Flame } from "lucide-react";
 import { useProducts } from "../../lib/useProducts";
-import ProductTile from "./ProductTile";
+import ProductTile from "../ProductTile";
 
 export default function BestDeals() {
   const { products, loading } = useProducts();

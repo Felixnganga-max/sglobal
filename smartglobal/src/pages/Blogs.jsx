@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Search,
   Grid as GridIcon,
@@ -6,7 +7,6 @@ import {
   Calendar,
   Clock,
   Eye,
-  Heart,
   Share2,
   ArrowRight,
   ArrowLeft,
@@ -17,20 +17,11 @@ import {
 import blogsData from "../lib/data";
 import { blogApi } from "../api/blogApi";
 import { mergeWithLive, normalizeLiveBlog } from "../lib/mergeLive";
-
-function formatDate(iso) {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
+import { formatDate, contentToHtml } from "../lib/blogFormat";
+import BlogEngagement from "../components/BlogEngagement";
 
 export default function Blogs() {
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [view, setView] = useState("grid");
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -53,6 +44,23 @@ export default function Blogs() {
       .catch(() => {
         // Keep showing the curated posts if the live fetch fails.
       });
+  }, []);
+
+  // Deep-link support: /blogs?post=<slug> (used by the dashboard's Preview
+  // button, and shareable from anywhere else) opens that post directly.
+  useEffect(() => {
+    const postSlug = searchParams.get("post");
+    if (!postSlug) return;
+    blogApi
+      .getBlog(postSlug)
+      .then((res) => {
+        if (res?.data) setCurrentPost(normalizeLiveBlog(res.data));
+      })
+      .catch(() => {
+        const dummyMatch = blogsData.blogs.find((b) => b.slug === postSlug);
+        if (dummyMatch) setCurrentPost(dummyMatch);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const allTags = useMemo(() => {
@@ -101,9 +109,34 @@ export default function Blogs() {
   function openPost(post) {
     setCurrentPost(post);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // Record a real view server-side for posts published from the
+    // dashboard (the curated showcase posts have no backend record).
+    if (post.isLive) {
+      blogApi
+        .getBlog(post._id)
+        .then((res) => {
+          if (res?.data) setCurrentPost((prev) => ({ ...prev, ...res.data, isLive: true }));
+        })
+        .catch(() => {});
+    }
   }
   function closePost() {
     setCurrentPost(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleShare(post) {
+    const shareData = {
+      title: post.title,
+      text: post.excerpt,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied!");
+    }
   }
 
   // ── Single post view ──────────────────────────────────────────
@@ -191,51 +224,23 @@ export default function Blogs() {
               <span className="flex items-center gap-1.5 font-body text-xs">
                 <Eye size={13} /> {currentPost.views} views
               </span>
-              <button className="p-2 rounded-lg hover:bg-red-50 transition-colors">
-                <Heart size={15} style={{ color: "var(--color-orange)" }} />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-blue-50 transition-colors">
+              <button
+                onClick={() => handleShare(currentPost)}
+                className="p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                aria-label="Share this post"
+              >
                 <Share2 size={15} style={{ color: "var(--color-blue)" }} />
               </button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="space-y-5">
-            {currentPost.content.map((block, idx) => {
-              if (block.type === "paragraph")
-                return (
-                  <p
-                    key={idx}
-                    className="font-body text-sm leading-relaxed"
-                    style={{ color: "#374151" }}
-                  >
-                    {block.text}
-                  </p>
-                );
-              if (block.type === "heading")
-                return (
-                  <h2
-                    key={idx}
-                    className="font-heading font-bold text-base mt-8 mb-2"
-                    style={{ color: "var(--color-text)" }}
-                  >
-                    {block.text}
-                  </h2>
-                );
-              if (block.type === "subheading")
-                return (
-                  <h3
-                    key={idx}
-                    className="font-heading font-bold text-sm mt-5 mb-1"
-                    style={{ color: "var(--color-orange)" }}
-                  >
-                    {block.text}
-                  </h3>
-                );
-              return null;
-            })}
-          </div>
+          <div
+            className="blog-content"
+            dangerouslySetInnerHTML={{
+              __html: contentToHtml(currentPost.content),
+            }}
+          />
 
           {/* Tags */}
           <div
@@ -270,6 +275,8 @@ export default function Blogs() {
               ))}
             </div>
           </div>
+
+          <BlogEngagement blog={currentPost} />
         </article>
       </div>
     );

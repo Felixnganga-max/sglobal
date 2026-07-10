@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useProducts } from "../../lib/useProducts";
-import ProductTile from "./ProductTile";
+import ProductTile from "../ProductTile";
 
 const TABS = [
   {

@@ -15,7 +15,7 @@ import React, {
 
 // ── Order API ─────────────────────────────────────────────────────────────────
 import { API_BASE_URL } from "../api/config";
-const ORDER_API = `${API_BASE_URL}/orders`;
+const ORDER_API = `${API_BASE_URL}/orders/create-order`;
 
 function getSessionId() {
   let id = sessionStorage.getItem("sg_session_id");

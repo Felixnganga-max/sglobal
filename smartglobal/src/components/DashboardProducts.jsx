@@ -35,25 +35,7 @@ import {
 } from "lucide-react";
 import { productService } from "../api/productService";
 import ProductFormModal from "./ProductFormModal";
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-const CATEGORIES = [
-  "Craft cooked potato chips",
-  "Just fruits",
-  "Hum Hum",
-  "Cakemix",
-  "Brownie & Pancake",
-  "Whipped creams",
-  "Boringer topping sauces",
-  "Kent soups",
-  "Kent stocks",
-  "Kent sauces",
-  "Kent syrups",
-  "Kent spreads",
-  "Water",
-];
+import { PRODUCT_CATEGORIES as CATEGORIES } from "../lib/categories";
 
 const BADGES = ["SPECIAL OFFER", "HOT DEALS", "LIMITED OFFER"];
 

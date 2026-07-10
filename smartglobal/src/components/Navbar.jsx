@@ -11,7 +11,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { assets } from "../assets/assets";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 
 import { API_BASE_URL } from "../api/config";
@@ -296,7 +296,7 @@ export default function Navbar() {
           {/* ── Main row ── */}
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <a href="/" className="group flex items-center gap-3 relative z-10">
+            <Link to="/" className="group flex items-center gap-3 relative z-10">
               <div className="relative">
                 <div className="absolute inset-0 blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 rounded-full scale-150 bg-red"></div>
                 <img
@@ -318,7 +318,7 @@ export default function Navbar() {
                   PREMIUM & SPECIALTY FOOD PRODUCTS
                 </div>
               </div>
-            </a>
+            </Link>
 
             {/* Desktop Nav */}
             <nav
@@ -338,9 +338,9 @@ export default function Navbar() {
               )}
               <div className="flex items-center gap-1">
                 {navLinks.map((link, index) => (
-                  <a
+                  <Link
                     key={link.name}
-                    href={link.href}
+                    to={link.href}
                     onMouseEnter={(e) => handleMouseEnter(e, index)}
                     className={`relative px-5 py-2.5 font-body font-bold text-[13px] tracking-wide transition-all duration-300 rounded-full ${
                       hoveredIndex === index
@@ -361,7 +361,7 @@ export default function Navbar() {
                         />
                       )}
                     </span>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </nav>
@@ -440,18 +440,8 @@ export default function Navbar() {
                           )}
                         </div>
                         <div className="py-2">
-                          <a
-                            href="/profile"
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
-                            onClick={() => setUserDropdownOpen(false)}
-                          >
-                            <UserCircle className="w-5 h-5 text-gray-600" />
-                            <span className="font-body text-sm font-semibold text-gray-700">
-                              My Profile
-                            </span>
-                          </a>
-                          <a
-                            href="/orders"
+                          <Link
+                            to="/orders"
                             className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                             onClick={() => setUserDropdownOpen(false)}
                           >
@@ -459,10 +449,10 @@ export default function Navbar() {
                             <span className="font-body text-sm font-semibold text-gray-700">
                               Order History
                             </span>
-                          </a>
+                          </Link>
                           {user?.role === "admin" && (
-                            <a
-                              href="/dashboard"
+                            <Link
+                              to="/dashboard"
                               className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100"
                               onClick={() => setUserDropdownOpen(false)}
                             >
@@ -482,7 +472,7 @@ export default function Navbar() {
                               <span className="font-body text-sm font-semibold text-gray-700">
                                 Dashboard
                               </span>
-                            </a>
+                            </Link>
                           )}
                           <button
                             onClick={handleLogout}
@@ -500,16 +490,16 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <a
-                    href="/auth"
+                  <Link
+                    to="/auth"
                     aria-label="User Account"
                     className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
                   >
                     <User className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
-                  </a>
-                  <a href="/place-order" className="btn-primary ml-2">
+                  </Link>
+                  <Link to="/place-order" className="btn-primary ml-2">
                     Place Order
-                  </a>
+                  </Link>
                 </>
               )}
             </div>
@@ -539,13 +529,13 @@ export default function Navbar() {
                   <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
                 </button>
               ) : (
-                <a
-                  href="/auth"
+                <Link
+                  to="/auth"
                   aria-label="Login"
                   className="p-2.5 rounded-xl hover:bg-gray-100 transition-all"
                 >
                   <User className="h-5 w-5 text-gray-700" />
-                </a>
+                </Link>
               )}
 
               <button
@@ -725,9 +715,10 @@ export default function Navbar() {
             <nav className="max-w-[1600px] mx-auto px-6 py-6">
               <div className="space-y-1">
                 {navLinks.map((link, index) => (
-                  <a
+                  <Link
                     key={link.name}
-                    href={link.href}
+                    to={link.href}
+                    onClick={() => setMobileOpen(false)}
                     className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-100 transition-all duration-300 font-body font-bold text-sm text-gray-800"
                     style={{
                       animation: "slideRight 0.4s ease-out forwards",
@@ -739,7 +730,7 @@ export default function Navbar() {
                     {link.hasDropdown && (
                       <ChevronDown className="h-4 w-4 text-gray-500" />
                     )}
-                  </a>
+                  </Link>
                 ))}
               </div>
 
@@ -757,33 +748,26 @@ export default function Navbar() {
                     </div>
                   </div>
                   <div className="mt-3 space-y-1">
-                    <a
-                      href="/profile"
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <UserCircle className="w-4 h-4 text-gray-500" />
-                      <span className="font-body text-sm font-semibold text-gray-700">
-                        My Profile
-                      </span>
-                    </a>
-                    <a
-                      href="/orders"
+                    <Link
+                      to="/orders"
+                      onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
                     >
                       <History className="w-4 h-4 text-gray-500" />
                       <span className="font-body text-sm font-semibold text-gray-700">
                         Order History
                       </span>
-                    </a>
+                    </Link>
                     {user?.role === "admin" && (
-                      <a
-                        href="/dashboard"
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setMobileOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
                       >
                         <span className="font-body text-sm font-semibold text-gray-700">
                           Dashboard
                         </span>
-                      </a>
+                      </Link>
                     )}
                   </div>
                   <button
@@ -795,12 +779,13 @@ export default function Navbar() {
                 </div>
               )}
 
-              <a
-                href="/place-order"
+              <Link
+                to="/place-order"
+                onClick={() => setMobileOpen(false)}
                 className="btn-primary mt-4 block w-full text-center"
               >
                 Place Order
-              </a>
+              </Link>
             </nav>
           </div>
         )}

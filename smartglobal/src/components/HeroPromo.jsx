@@ -367,22 +367,28 @@ export default function HeroPromo() {
         <div className="hero-panel">
           <div className="hero-dots-bg" aria-hidden="true" />
 
-          {/* Product image */}
+          {/* Product image — tapping it goes straight to that exact product */}
           <div className="hero-img-wrap">
             {loading ? (
               <div className="hero-img-skeleton" />
             ) : hero && getImage(hero) ? (
-              <img
-                loading="lazy"
-                decoding="async"
-                key={heroIdx}
-                src={getImage(hero)}
-                alt={hero.title || "Featured product"}
-                className={`hero-img${animating ? " fade-out" : ""}`}
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
+              <Link
+                to={`/product/${hero._id || hero.id}`}
+                aria-label={`View ${hero.title || "this product"}`}
+                style={{ display: "block", width: "100%", height: "100%" }}
+              >
+                <img
+                  loading="lazy"
+                  decoding="async"
+                  key={heroIdx}
+                  src={getImage(hero)}
+                  alt={hero.title || "Featured product"}
+                  className={`hero-img${animating ? " fade-out" : ""}`}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              </Link>
             ) : null}
           </div>
 
@@ -451,26 +457,42 @@ export default function HeroPromo() {
                 </p>
 
                 <div className="hero-actions">
-                  <button
-                    onClick={scrollToProducts}
-                    className="btn-secondary"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                      fontSize: "0.62rem",
-                      padding: "0.45rem 1.1rem",
-                    }}
-                  >
-                    Shop Now <ArrowRight size={12} />
-                  </button>
-                  {hero && (
+                  {hero ? (
                     <Link
                       to={`/product/${hero._id || hero.id}`}
+                      className="btn-secondary"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        fontSize: "0.62rem",
+                        padding: "0.45rem 1.1rem",
+                      }}
+                    >
+                      Shop Now <ArrowRight size={12} />
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={scrollToProducts}
+                      className="btn-secondary"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        fontSize: "0.62rem",
+                        padding: "0.45rem 1.1rem",
+                      }}
+                    >
+                      Shop Now <ArrowRight size={12} />
+                    </button>
+                  )}
+                  {hero && (
+                    <button
+                      onClick={scrollToProducts}
                       className="btn-hero-ghost"
                     >
-                      View Product
-                    </Link>
+                      Browse All
+                    </button>
                   )}
                 </div>
 

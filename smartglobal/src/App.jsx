@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
@@ -19,6 +19,13 @@ function App() {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith("/dashboard");
   const isAuth = location.pathname === "/auth";
+
+  // React Router doesn't scroll to top on navigation by default — without
+  // this, clicking a link from partway down one page lands you partway
+  // down the next page too (e.g. Hero/Recipes CTAs, related-recipe links).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <>

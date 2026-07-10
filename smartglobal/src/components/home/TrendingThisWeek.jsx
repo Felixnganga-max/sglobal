@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useProducts } from "../../lib/useProducts";
-import ProductTile from "./ProductTile";
+import ProductTile from "../ProductTile";
 
 export default function TrendingThisWeek() {
   const { products, loading } = useProducts();

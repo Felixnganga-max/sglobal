@@ -275,7 +275,7 @@ export default function Dashboard() {
   const renderContent = () => {
     switch (activeTab) {
       case "main":
-        return <DashboardMain user={user} />;
+        return <DashboardMain user={user} onNavigate={setActiveTab} />;
       case "products":
         return <DashboardProducts />;
       case "recipes":
@@ -289,7 +289,7 @@ export default function Dashboard() {
       case "settings":
         return <DashboardSettings user={user} onUserUpdate={fetchUserData} />;
       default:
-        return <DashboardMain user={user} />;
+        return <DashboardMain user={user} onNavigate={setActiveTab} />;
     }
   };
 

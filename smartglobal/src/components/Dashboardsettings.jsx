@@ -1,20 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  User,
-  Bell,
-  Lock,
-  Palette,
-  Globe,
-  CreditCard,
-  Mail,
-  Shield,
   Save,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  KeyRound,
+  ShieldAlert,
 } from "lucide-react";
+import { API_BASE_URL } from "../api/config";
+
+const AUTH_URL = `${API_BASE_URL}/auth`;
 
 /**
  * DashboardSettings Component
- * Settings and preferences management for Smart Global Dashboard
+ * Every control here is wired to a real backend field/endpoint — nothing
+ * here is decorative. Sections that had no honest, safely-buildable backing
+ * (2FA, session timeout, dark mode/compact view theming, brand color
+ * picker, "delete all data") were removed rather than left as fake toggles.
  */
+
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 function SettingSection({ title, description, children }) {
   return (
@@ -60,6 +72,7 @@ function ToggleSwitch({ label, description, enabled, onChange }) {
         )}
       </div>
       <button
+        type="button"
         onClick={onChange}
         className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
           enabled ? "bg-[#BF1A1A]" : "bg-gray-300"
@@ -75,26 +88,186 @@ function ToggleSwitch({ label, description, enabled, onChange }) {
   );
 }
 
-export default function DashboardSettings() {
-  // Profile Settings
-  const [fullName, setFullName] = useState("Admin User");
-  const [email, setEmail] = useState("admin@smartglobal.com");
-  const [phone, setPhone] = useState("+1 (555) 123-4567");
-  const [company, setCompany] = useState("Smart Global");
+function InlineStatus({ error, success }) {
+  if (!error && !success) return null;
+  return (
+    <div
+      className={`flex items-center gap-2 text-xs font-bold ${
+        error ? "text-red-600" : "text-green-600"
+      }`}
+    >
+      {error ? (
+        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+      ) : (
+        <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+      )}
+      {error || success}
+    </div>
+  );
+}
 
-  // Notification Settings
+export default function DashboardSettings({ user, onUserUpdate }) {
+  const navigate = useNavigate();
+
+  // Profile
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+  const [profileSuccess, setProfileSuccess] = useState(null);
+
+  // Notifications
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [orderUpdates, setOrderUpdates] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
   const [weeklyReports, setWeeklyReports] = useState(true);
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifError, setNotifError] = useState(null);
+  const [notifSuccess, setNotifSuccess] = useState(null);
 
-  // Security Settings
-  const [twoFactor, setTwoFactor] = useState(false);
-  const [sessionTimeout, setSessionTimeout] = useState(true);
+  // Security
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(null);
+  const [deactivating, setDeactivating] = useState(false);
 
-  // Appearance Settings
-  const [darkMode, setDarkMode] = useState(false);
-  const [compactView, setCompactView] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    setFullName(user.name || "");
+    setEmail(user.email || "");
+    setPhone(user.phone || "");
+    setCompany(user.company || "");
+    const prefs = user.notificationPreferences || {};
+    setEmailNotifications(prefs.emailNotifications ?? true);
+    setOrderUpdates(prefs.orderUpdates ?? true);
+    setMarketingEmails(prefs.marketingEmails ?? false);
+    setWeeklyReports(prefs.weeklyReports ?? true);
+  }, [user]);
+
+  const syncLocalUser = (updated) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...stored, ...updated }));
+    } catch {
+      // Non-fatal — the next /me fetch will still pick up the real state.
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    setProfileError(null);
+    setProfileSuccess(null);
+    try {
+      const res = await fetch(`${AUTH_URL}/updatedetails`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ name: fullName, email, phone, company }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "Failed to save");
+      syncLocalUser(data.data);
+      onUserUpdate?.();
+      setProfileSuccess("Profile updated.");
+    } catch (err) {
+      setProfileError(err.message || "Failed to save profile");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    setNotifSaving(true);
+    setNotifError(null);
+    setNotifSuccess(null);
+    try {
+      const res = await fetch(`${AUTH_URL}/updatedetails`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          notificationPreferences: {
+            emailNotifications,
+            orderUpdates,
+            marketingEmails,
+            weeklyReports,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "Failed to save");
+      syncLocalUser(data.data);
+      onUserUpdate?.();
+      setNotifSuccess("Notification preferences saved.");
+    } catch (err) {
+      setNotifError(err.message || "Failed to save preferences");
+    } finally {
+      setNotifSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    if (!currentPassword || !newPassword) {
+      setPasswordError("Enter your current and new password.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      const res = await fetch(`${AUTH_URL}/updatepassword`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "Failed to change password");
+      if (data.token) localStorage.setItem("token", data.token);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setPasswordSuccess("Password changed.");
+    } catch (err) {
+      setPasswordError(err.message || "Failed to change password");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (
+      !window.confirm(
+        "Deactivate your account? You will be logged out immediately and won't be able to sign back in until an admin reactivates it. This cannot be undone by yourself.",
+      )
+    )
+      return;
+    setDeactivating(true);
+    try {
+      const res = await fetch(`${AUTH_URL}/deactivate`, {
+        method: "PUT",
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "Failed to deactivate");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/");
+    } catch (err) {
+      alert(err.message || "Failed to deactivate account");
+      setDeactivating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -111,7 +284,6 @@ export default function DashboardSettings() {
         </p>
       </div>
 
-      {/* Settings Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Profile Settings */}
         <SettingSection
@@ -119,17 +291,17 @@ export default function DashboardSettings() {
           description="Update your personal information"
         >
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#BF1A1A] to-[#7B4019] flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-              SG
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#BF1A1A] to-[#7B4019] flex items-center justify-center text-white font-bold text-2xl shadow-lg flex-shrink-0">
+              {(fullName || "SG")
+                .split(" ")
+                .map((w) => w[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
             </div>
-            <div>
-              <button className="px-4 py-2 bg-[#BF1A1A] text-white rounded-none text-sm font-bold hover:bg-[#8B1414] transition-colors">
-                Change Avatar
-              </button>
-              <p className="text-xs text-gray-500 mt-2">
-                JPG, PNG or GIF. Max 2MB.
-              </p>
-            </div>
+            <p className="text-xs text-gray-500">
+              Your initials are shown here based on your name below.
+            </p>
           </div>
 
           <InputField
@@ -138,7 +310,6 @@ export default function DashboardSettings() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />
-
           <InputField
             label="Email Address"
             type="email"
@@ -146,15 +317,13 @@ export default function DashboardSettings() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-
           <InputField
             label="Phone Number"
             type="tel"
-            placeholder="+1 (555) 000-0000"
+            placeholder="+254 700 000 000"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
-
           <InputField
             label="Company"
             placeholder="Your company name"
@@ -162,9 +331,19 @@ export default function DashboardSettings() {
             onChange={(e) => setCompany(e.target.value)}
           />
 
-          <button className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <Save className="h-5 w-5" />
-            Save Changes
+          <InlineStatus error={profileError} success={profileSuccess} />
+
+          <button
+            onClick={handleSaveProfile}
+            disabled={profileSaving}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#BF1A1A] to-[#8B1414] text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+          >
+            {profileSaving ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Save className="h-5 w-5" />
+            )}
+            {profileSaving ? "Saving..." : "Save Changes"}
           </button>
         </SettingSection>
 
@@ -177,117 +356,106 @@ export default function DashboardSettings() {
             label="Email Notifications"
             description="Receive notifications via email"
             enabled={emailNotifications}
-            onChange={() => setEmailNotifications(!emailNotifications)}
+            onChange={() => setEmailNotifications((v) => !v)}
           />
-
           <ToggleSwitch
             label="Order Updates"
             description="Get notified about order status changes"
             enabled={orderUpdates}
-            onChange={() => setOrderUpdates(!orderUpdates)}
+            onChange={() => setOrderUpdates((v) => !v)}
           />
-
           <ToggleSwitch
             label="Marketing Emails"
             description="Receive promotional emails and offers"
             enabled={marketingEmails}
-            onChange={() => setMarketingEmails(!marketingEmails)}
+            onChange={() => setMarketingEmails((v) => !v)}
           />
-
           <ToggleSwitch
             label="Weekly Reports"
             description="Get weekly performance summaries"
             enabled={weeklyReports}
-            onChange={() => setWeeklyReports(!weeklyReports)}
+            onChange={() => setWeeklyReports((v) => !v)}
           />
+
+          <InlineStatus error={notifError} success={notifSuccess} />
+
+          <button
+            onClick={handleSaveNotifications}
+            disabled={notifSaving}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-none font-bold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+          >
+            {notifSaving ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Save className="h-5 w-5" />
+            )}
+            {notifSaving ? "Saving..." : "Save Preferences"}
+          </button>
         </SettingSection>
 
         {/* Security Settings */}
         <SettingSection
           title="Security"
-          description="Protect your account with security features"
+          description="Change your password or deactivate your account"
         >
-          <ToggleSwitch
-            label="Two-Factor Authentication"
-            description="Add an extra layer of security"
-            enabled={twoFactor}
-            onChange={() => setTwoFactor(!twoFactor)}
-          />
-
-          <ToggleSwitch
-            label="Session Timeout"
-            description="Automatically log out after 30 minutes of inactivity"
-            enabled={sessionTimeout}
-            onChange={() => setSessionTimeout(!sessionTimeout)}
-          />
-
-          <div className="pt-4 space-y-3">
-            <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-none font-bold hover:bg-gray-200 transition-colors">
-              Change Password
-            </button>
-            <button className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-none font-bold hover:bg-red-100 transition-colors">
-              Deactivate Account
-            </button>
+          <div className="grid grid-cols-1 gap-3">
+            <InputField
+              label="Current Password"
+              type="password"
+              placeholder="••••••••"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+            <InputField
+              label="New Password"
+              type="password"
+              placeholder="At least 6 characters"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <InputField
+              label="Confirm New Password"
+              type="password"
+              placeholder="Re-enter new password"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+            />
           </div>
-        </SettingSection>
 
-        {/* Appearance Settings */}
-        <SettingSection
-          title="Appearance"
-          description="Customize how the dashboard looks"
-        >
-          <ToggleSwitch
-            label="Dark Mode"
-            description="Switch to dark theme"
-            enabled={darkMode}
-            onChange={() => setDarkMode(!darkMode)}
-          />
+          <InlineStatus error={passwordError} success={passwordSuccess} />
 
-          <ToggleSwitch
-            label="Compact View"
-            description="Show more content in less space"
-            enabled={compactView}
-            onChange={() => setCompactView(!compactView)}
-          />
+          <button
+            onClick={handleChangePassword}
+            disabled={passwordSaving}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-none font-bold hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            {passwordSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <KeyRound className="h-4 w-4" />
+            )}
+            {passwordSaving ? "Updating..." : "Change Password"}
+          </button>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Brand Color
-            </label>
-            <div className="flex gap-3">
-              {["#BF1A1A", "#FFD41D", "#7B4019", "#4F46E5", "#10B981"].map(
-                (color) => (
-                  <button
-                    key={color}
-                    className="w-12 h-12 rounded-none border-2 border-gray-200 hover:border-gray-400 transition-colors"
-                    style={{ backgroundColor: color }}
-                  />
-                ),
+          <div className="pt-4 mt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500 mb-3">
+              Deactivating your account signs you out immediately and blocks
+              future logins until an admin reactivates it.
+            </p>
+            <button
+              onClick={handleDeactivate}
+              disabled={deactivating}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-none font-bold hover:bg-red-100 transition-colors disabled:opacity-50"
+            >
+              {deactivating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldAlert className="h-4 w-4" />
               )}
-            </div>
+              {deactivating ? "Deactivating..." : "Deactivate Account"}
+            </button>
           </div>
         </SettingSection>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="bg-red-50 rounded-none p-6 border-2 border-red-200">
-        <h3
-          className="text-xl font-black text-red-900 mb-2"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-        >
-          Danger Zone
-        </h3>
-        <p className="text-sm text-red-700 mb-4">
-          These actions are irreversible. Please proceed with caution.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <button className="px-6 py-3 bg-red-600 text-white rounded-none font-bold hover:bg-red-700 transition-colors">
-            Delete All Data
-          </button>
-          <button className="px-6 py-3 bg-red-600 text-white rounded-none font-bold hover:bg-red-700 transition-colors">
-            Close Account
-          </button>
-        </div>
       </div>
     </div>
   );

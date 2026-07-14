@@ -102,7 +102,7 @@ export default function ContactUs() {
                 icon: Phone,
                 title: "Call Us Directly",
                 sub: "Mon–Sat, 8AM–6PM",
-                text: "+254 140 252 223",
+                text: "+254 700 826 813",
                 href: "tel:+254140252223",
               },
             ].map(({ icon: Icon, title, sub, text, href }) => (

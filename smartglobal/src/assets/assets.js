@@ -27,6 +27,8 @@ import sauces from "./sauces.png";
 import logo3 from "./logo3.jfif";
 import logo2 from "./logo2.jfif";
 import logo1 from "./logo1.png";
+import jst from "./jst.jpeg"
+
 
 export const assets = {
   sauces,
@@ -55,5 +57,6 @@ export const assets = {
   logo,
   recipe,
   cara,
+  jst,
   water,
 };

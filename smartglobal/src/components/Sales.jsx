@@ -4,6 +4,7 @@ import { assets } from "../assets/assets";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 import { categorySlug } from "../lib/categories";
+import PackBadge from "./PackBadge";
 
 import { API_BASE_URL } from "../api/config";
 const API_URL = `${API_BASE_URL}/products`;
@@ -22,7 +23,7 @@ const BADGE_COLORS = {
 const CATEGORY_CONFIG = [
   { key: "Kent soups", accent: "#FF0000", image: assets.kent },
   { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.spuds },
-  { key: "Just fruits", accent: "#16a34a", emoji: "🍓" },
+  { key: "Just fruits", accent: "#16a34a", image: assets.jst },
   { key: "Hazelnuts", accent: "#7B4019", image: assets.hazelnut },
   { key: "Cakemix", accent: "#FF7F11", image: assets.cake },
   { key: "Kent syrups", accent: "#FF0000", image: assets.top },
@@ -195,22 +196,7 @@ function ProductCard({ prod }) {
           )}
         </div>
 
-        {moq > 1 && (
-          <div
-            className="absolute top-1.5 right-1.5 flex items-center justify-center rounded-full text-white font-black shadow-md"
-            style={{
-              width: "1.75rem",
-              height: "1.75rem",
-              fontSize: "0.55rem",
-              backgroundColor: "#f97316",
-              lineHeight: 1,
-              letterSpacing: "-0.02em",
-              flexShrink: 0,
-            }}
-          >
-            ×{moq}
-          </div>
-        )}
+        <PackBadge moq={moq} />
 
         {prod.badge && (
           <div
@@ -325,7 +311,7 @@ function ProductCard({ prod }) {
                 </>
               ) : moq > 1 ? (
                 <>
-                  <ShoppingCart size={10} /> Add ×{moq}
+                  <ShoppingCart size={10} /> Add Pack ({moq})
                 </>
               ) : (
                 <>
@@ -718,7 +704,7 @@ export default function Sales() {
 
         <div
           ref={scrollRef}
-          className="flex gap-5 overflow-x-auto pb-1 lg:grid lg:grid-cols-6 lg:justify-items-center lg:overflow-visible"
+          className="flex gap-5 overflow-x-auto pb-1 lg:grid lg:grid-cols-8 lg:justify-items-center lg:overflow-visible"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {STATIC_CATEGORIES.map((cat) => (
@@ -734,8 +720,7 @@ export default function Sales() {
             to={`/product/${bestSeller._id || bestSeller.id}`}
             className="group relative flex flex-col sm:flex-row items-center gap-6 overflow-hidden rounded-2xl p-6 sm:p-8"
             style={{
-              background:
-                "linear-gradient(120deg, #1a1a1a 0%, #3a2410 100%)",
+              background: "linear-gradient(120deg, #1a1a1a 0%, #3a2410 100%)",
             }}
           >
             <div className="flex-shrink-0 w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-white/95 flex items-center justify-center overflow-hidden">
@@ -765,8 +750,12 @@ export default function Sales() {
                 {bestSeller.shortDescription ||
                   "The product everyone's stocking up on — grab yours before it sells out."}
               </p>
-              <span className="font-heading font-bold text-lg" style={{ color: "var(--color-orange)" }}>
-                KSh {(bestSeller.totalPrice ?? bestSeller.price)?.toLocaleString()}
+              <span
+                className="font-heading font-bold text-lg"
+                style={{ color: "var(--color-orange)" }}
+              >
+                KSh{" "}
+                {(bestSeller.totalPrice ?? bestSeller.price)?.toLocaleString()}
               </span>
             </div>
             <span className="btn-secondary text-xs flex-shrink-0 self-center sm:self-auto">

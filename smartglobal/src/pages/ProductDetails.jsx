@@ -410,26 +410,44 @@ export default function ProductDetails() {
                   Ksh {(product.oldPrice * moq * (cartQty || 1)).toLocaleString()}
                 </span>
               )}
-              {moq > 1 && (
-                <span
-                  className="inline-flex items-center justify-center rounded-full text-white font-black shadow-sm"
-                  style={{
-                    width: "1.75rem",
-                    height: "1.75rem",
-                    fontSize: "0.65rem",
-                    backgroundColor: "#f97316",
-                  }}
-                  title={`Sold in packs of ${moq}`}
-                >
-                  ×{moq}
-                </span>
-              )}
             </div>
+
+            {/* Bulk pack callout — spells out unit price + minimum dispatch
+                quantity up front, since a bare "×15" multiplier next to the
+                price left shoppers unsure whether they were buying 1 piece
+                or a full pack. */}
             {moq > 1 && (
-              <p className="font-body text-xs font-semibold" style={{ color: "#16a34a" }}>
-                Ksh {unitPrice.toLocaleString()} per piece · pack of {moq} pieces
-                {cartQty > 0 && ` · ${(cartQty * moq).toLocaleString()} pieces in your cart`}
-              </p>
+              <div
+                className="rounded-xl border-2 p-4 flex items-start gap-3"
+                style={{ borderColor: "#16a34a", backgroundColor: "#f0fdf4" }}
+              >
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "rgba(22,163,74,0.15)" }}
+                >
+                  <Package className="w-5 h-5" style={{ color: "#16a34a" }} />
+                </div>
+                <div>
+                  <p className="font-heading font-bold text-sm text-gray-900">
+                    1 piece = Ksh {unitPrice.toLocaleString()}
+                  </p>
+                  <p className="font-body text-xs text-gray-600 mt-1 leading-relaxed">
+                    Sold in bulk — we dispatch a minimum of{" "}
+                    <strong>{moq} pieces per order</strong> (1 pack = Ksh{" "}
+                    {packPrice.toLocaleString()}). The stepper below adds one
+                    full pack at a time; packs can't be split.
+                  </p>
+                  {cartQty > 0 && (
+                    <p
+                      className="font-body text-xs font-bold mt-2"
+                      style={{ color: "#16a34a" }}
+                    >
+                      ✓ {cartQty} pack{cartQty > 1 ? "s" : ""} selected ·{" "}
+                      {(cartQty * moq).toLocaleString()} pieces total
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
 
             {product.shortDescription && (
@@ -440,7 +458,9 @@ export default function ProductDetails() {
             {inStock && (
               <div>
                 <label className="text-label block mb-2 text-gray-700">
-                  Quantity {moq > 1 ? `(packs of ${moq})` : ""}
+                  {moq > 1
+                    ? `How many packs? (1 pack = ${moq} pcs, minimum order)`
+                    : "Quantity"}
                 </label>
                 <div className="flex items-center gap-4">
                   {cartQty === 0 ? (
@@ -450,7 +470,7 @@ export default function ProductDetails() {
                       style={{ backgroundColor: "var(--color-red)" }}
                     >
                       <ShoppingCart className="w-4 h-4" />{" "}
-                      {moq > 1 ? `Add ×${moq}` : "Add to Cart"}
+                      {moq > 1 ? `Add 1 Pack (${moq} pcs)` : "Add to Cart"}
                     </button>
                   ) : (
                     <div
@@ -488,8 +508,9 @@ export default function ProductDetails() {
                   )}
                   {cartQty > 0 && (
                     <span className="font-body text-xs text-muted">
-                      Ksh {(packPrice * cartQty).toLocaleString()} total
-                      {moq > 1 && ` (${(cartQty * moq).toLocaleString()} pcs)`}
+                      {moq > 1
+                        ? `${cartQty} pack${cartQty > 1 ? "s" : ""} · ${(cartQty * moq).toLocaleString()} pcs · Ksh ${(packPrice * cartQty).toLocaleString()} total`
+                        : `Ksh ${(packPrice * cartQty).toLocaleString()} total`}
                     </span>
                   )}
                 </div>

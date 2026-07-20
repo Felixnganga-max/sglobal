@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 import { getProductImage, FALLBACK_IMG } from "../lib/useProducts";
 import { withTransform } from "../lib/cloudinary";
+import PackBadge from "./PackBadge";
 
 const BADGE_COLORS = {
   "SPECIAL OFFER": "#16a34a",
@@ -72,22 +73,7 @@ export default function ProductTile({ product }) {
           )}
         </div>
 
-        {moq > 1 && (
-          <div
-            className="absolute top-1.5 right-1.5 flex items-center justify-center rounded-full text-white font-black shadow-md"
-            style={{
-              width: "1.75rem",
-              height: "1.75rem",
-              fontSize: "0.55rem",
-              backgroundColor: "#f97316",
-              lineHeight: 1,
-              letterSpacing: "-0.02em",
-              flexShrink: 0,
-            }}
-          >
-            ×{moq}
-          </div>
-        )}
+        <PackBadge moq={moq} />
 
         {product.badge && (
           <div
@@ -206,7 +192,7 @@ export default function ProductTile({ product }) {
                 </>
               ) : moq > 1 ? (
                 <>
-                  <ShoppingCart size={10} /> Add ×{moq}
+                  <ShoppingCart size={10} /> Add Pack ({moq})
                 </>
               ) : (
                 <>

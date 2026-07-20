@@ -66,8 +66,8 @@ export default function Footer() {
                 },
                 {
                   icon: Phone,
-                  text: "+254 140 252 223",
-                  href: "tel:+254140252223",
+                  text: "+254 700 826 813",
+                  href: "tel:+254700826813",
                 },
               ].map(({ icon: Icon, text, href }) => (
                 <li key={href}>

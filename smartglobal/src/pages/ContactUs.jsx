@@ -103,7 +103,7 @@ export default function ContactUs() {
                 title: "Call Us Directly",
                 sub: "Mon–Sat, 8AM–6PM",
                 text: "+254 700 826 813",
-                href: "tel:+254140252223",
+                href: "tel:+254700826813",
               },
             ].map(({ icon: Icon, title, sub, text, href }) => (
               <a
@@ -197,7 +197,7 @@ export default function ContactUs() {
                   className="font-semibold"
                   style={{ color: "var(--color-orange)" }}
                 >
-                  +254 140 252 223
+                  +254 700 826 813
                 </span>{" "}
                 or email{" "}
                 <a
@@ -261,7 +261,7 @@ export default function ContactUs() {
                   id="phone"
                   name="phone"
                   type="tel"
-                  placeholder="254 140 252 223"
+                  placeholder="254 700 826 813"
                   value={form.phone}
                   onChange={handleChange}
                   icon={Phone}

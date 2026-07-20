@@ -28,7 +28,7 @@ const EMAILJS_SERVICE_ID = "service_clzf6de";
 const EMAILJS_ADMIN_TEMPLATE_ID = "template_abh0rep";
 const EMAILJS_CUSTOMER_TEMPLATE_ID = "template_c2c49uz";
 const EMAILJS_PUBLIC_KEY = "zm6PlmVWX9FqeDYD0";
-const WHATSAPP_NUMBER = "254140252223";
+const WHATSAPP_NUMBER = "254700826813";
 import { API_BASE_URL } from "../api/config";
 const ZONES_API = `${API_BASE_URL}/zones`;
 const ORDERS_API =

@@ -18,12 +18,12 @@ const organizationSchema = {
   name: "Smart Global Limited",
   alternateName: ["Smart Global", "SMART GLOBAL"],
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/logo.jpg`,
   foundingDate: "2007",
   description:
     "Smart Global Limited started operations in 2007 and has since become authorized importers and distributors for Kent Boringer and Spuds Craft Crisps, and a local distributor for Kizembe Spring Water. Products available countrywide in all leading supermarkets, retailers, and across the HORECA industry in Kenya.",
   email: "info@smartglobal.com",
-  telephone: "+254700000000",
+  telephone: "+254700826813",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Nairobi",
@@ -32,7 +32,7 @@ const organizationSchema = {
   },
   contactPoint: {
     "@type": "ContactPoint",
-    telephone: "+254700000000",
+    telephone: "+254700826813",
     email: "info@smartglobal.com",
     contactType: "customer service",
     areaServed: "KE",
@@ -70,9 +70,9 @@ const localBusinessSchema = {
   "@context": SITE_URL,
   "@type": "FoodEstablishment",
   name: "Smart Global Limited",
-  image: `${SITE_URL}/logo.png`,
+  image: `${SITE_URL}/logo.jpg`,
   url: SITE_URL,
-  telephone: "+254700000000",
+  telephone: "+254700826813",
   email: "info@smartglobal.com",
   foundingDate: "2007",
   priceRange: "KSh",
@@ -216,7 +216,7 @@ createRoot(document.getElementById("root")).render(
         content="Authorized importers and distributors of Kent Boringer and Spuds Craft Crisps. Local distributor for Kizembe Spring Water. Available in all leading supermarkets across Kenya."
       />
       <meta property="og:url" content={SITE_URL} />
-      <meta property="og:image" content={`${SITE_URL}/logo.png`} />
+      <meta property="og:image" content={`${SITE_URL}/logo.jpg`} />
       <meta property="og:image:alt" content="Smart Global Limited Logo" />
       <meta property="og:locale" content="en_KE" />
 
@@ -231,7 +231,7 @@ createRoot(document.getElementById("root")).render(
         name="twitter:description"
         content="Kent Boringer, Spuds Craft Crisps & Kizembe Spring Water. Quality you can trust. Flavours you'll love."
       />
-      <meta name="twitter:image" content={`${SITE_URL}/logo.png`} />
+      <meta name="twitter:image" content={`${SITE_URL}/logo.jpg`} />
 
       {/* ── Geo targeting (boosts Kenyan local search results) ── */}
       <meta name="geo.region" content="KE-110" />

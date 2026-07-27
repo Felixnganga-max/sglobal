@@ -9,28 +9,28 @@ const SLIDES = [
     eyebrow: "Kent Boringer · Toppings",
     title: "Elevate Your Sweet Moments",
     copy: "Rich raspberry to luscious caramel — every drop adds magic to desserts, pancakes and ice cream.",
-    image: assets.cara,
+    image: assets.cb,
   },
   {
     id: "spuds",
     eyebrow: "SPUDS · Snacking",
     title: "Craft-Cooked Potato Chips",
     copy: "Small-batch cooked, premium potatoes, zero trans fat — Kenya's favourite crunch.",
-    image: assets.spuds,
+    image: assets.sp,
   },
   {
     id: "water",
     eyebrow: "Kizembe · Hydration",
     title: "Pure Spring Water, Every Bottle",
     copy: "Sourced and bottled for everyday freshness — trusted countrywide.",
-    image: assets.water,
+    image: assets.kiz,
   },
   {
     id: "hazelnut",
     eyebrow: "Kent Boringer · Beverages",
     title: "Rich Hazelnut Creations",
     copy: "Silky, indulgent hazelnut mix for drinks and desserts that feel premium.",
-    image: assets.hazelnut,
+    image: assets.hz,
   },
 ];
 

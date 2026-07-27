@@ -28,9 +28,17 @@ import logo3 from "./logo3.jfif";
 import logo2 from "./logo2.jfif";
 import logo1 from "./logo1.png";
 import jst from "./jst.jpeg"
+import hz from "./hz.png";
+import cb from "./cb.jpeg";
+import sp from "./sp.jpeg";
+import kiz from "./kiz.png";
 
 
 export const assets = {
+   sp,
+  hz,
+  cb,
+  kiz,
   sauces,
   crepes,
   hazelnut,

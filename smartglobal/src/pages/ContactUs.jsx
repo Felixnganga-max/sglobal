@@ -88,8 +88,8 @@ export default function ContactUs() {
                 icon: Mail,
                 title: "Email Support",
                 sub: "Quick response guaranteed",
-                text: "info@smartglobal.com",
-                href: "mailto:info@smartglobal.com",
+                text: "info@smartgloballtd.com",
+                href: "mailto:info@smartgloballtd.com",
               },
               {
                 icon: MapPin,
@@ -201,11 +201,11 @@ export default function ContactUs() {
                 </span>{" "}
                 or email{" "}
                 <a
-                  href="mailto:info@smartglobal.com"
+                  href="mailto:info@smartgloballtd.com"
                   className="font-semibold"
                   style={{ color: "var(--color-orange)" }}
                 >
-                  info@smartglobal.com
+                  info@smartgloballtd.com
                 </a>
               </p>
             </div>

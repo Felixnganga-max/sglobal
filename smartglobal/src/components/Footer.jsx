@@ -61,8 +61,8 @@ export default function Footer() {
               {[
                 {
                   icon: Mail,
-                  text: "info@smartglobal.com",
-                  href: "mailto:info@smartglobal.com",
+                  text: "info@smartgloballtd.com",
+                  href: "mailto:info@smartgloballtd.com",
                 },
                 {
                   icon: Phone,

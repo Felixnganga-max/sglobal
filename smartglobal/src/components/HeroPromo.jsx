@@ -12,7 +12,7 @@ function scrollToProducts() {
 }
 
 import { API_BASE_URL } from "../api/config";
-const API_URL = `${API_BASE_URL}/products`;
+const API_URL = `${API_BASE_URL}/products?limit=200`;
 
 function getImage(product) {
   if (!product) return null;
@@ -25,14 +25,36 @@ function getImage(product) {
   return product.imageUrl || product.img || product.photo || null;
 }
 
-function pickByCategory(products) {
-  const map = new Map();
+// Picks up to `count` distinct products, preferring one per category first
+// (for variety) and backfilling with leftover products so the hero + side
+// rail always have enough items to fill out, even if the catalog is
+// currently concentrated in just a couple of categories.
+function pickDiverse(products, count = 6) {
   const shuffled = [...products].sort(() => Math.random() - 0.5);
+  const picked = [];
+  const seenIds = new Set();
+  const seenCats = new Set();
+
   shuffled.forEach((p) => {
+    if (picked.length >= count) return;
     const cat = p.category || "Other";
-    if (!map.has(cat)) map.set(cat, p);
+    if (seenCats.has(cat)) return;
+    seenCats.add(cat);
+    seenIds.add(p._id || p.id);
+    picked.push(p);
   });
-  return Array.from(map.values());
+
+  if (picked.length < count) {
+    shuffled.forEach((p) => {
+      if (picked.length >= count) return;
+      const id = p._id || p.id;
+      if (seenIds.has(id)) return;
+      seenIds.add(id);
+      picked.push(p);
+    });
+  }
+
+  return picked;
 }
 
 function Counter({ target, suffix = "" }) {
@@ -79,7 +101,7 @@ export default function HeroPromo() {
           : Array.isArray(data)
             ? data
             : [];
-        const deduped = pickByCategory(list);
+        const deduped = pickDiverse(list, 6);
         // Whichever product is flagged as the top seller is pinned to the
         // front so it's the first thing shown here — featured once, never
         // duplicated in the side rail.

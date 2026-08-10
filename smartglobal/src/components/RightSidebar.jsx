@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { API_BASE_URL } from "../api/config";
-const API_URL = `${API_BASE_URL}/products`;
+const API_URL = `${API_BASE_URL}/products?limit=200`;
 import { assets } from "../assets/assets";
+import { PRODUCT_CATEGORIES } from "../lib/categories";
 
 const CATEGORY_ICONS = {
   "Craft cooked potato chips": "🥔",
@@ -30,13 +31,13 @@ const BRANDS = [
     color: "var(--color-red)",
   },
   {
-    logo: assets.logo2,
+    logo: assets.spuds1,
     keyword: "chips",
     desc: "Craft cooked crisps",
     color: "var(--color-orange)",
   },
   {
-    logo: assets.logo1,
+    logo: assets.logo2,
     keyword: "Water",
     desc: "Natural spring water",
     color: "var(--color-blue)",
@@ -59,16 +60,13 @@ export default function ShopByCategory() {
           : Array.isArray(data)
             ? data
             : [];
-        const seen = new Set();
-        const cats = [];
-        list.forEach((p) => {
-          const cat = p.category || "Other";
-          if (!seen.has(cat)) {
-            seen.add(cat);
-            cats.push(cat);
-          }
-        });
-        setCategories(cats);
+        const present = new Set(list.map((p) => p.category || "Other"));
+        // Show categories in the canonical (backend) order, filtered down
+        // to only the ones that actually have products right now, with any
+        // unrecognised category appended at the end.
+        const ordered = PRODUCT_CATEGORIES.filter((c) => present.has(c));
+        PRODUCT_CATEGORIES.forEach((c) => present.delete(c));
+        setCategories([...ordered, ...present]);
       })
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));

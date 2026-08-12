@@ -15,7 +15,6 @@ import spuds3 from "./spuds-3.jpg";
 import spuds4 from "./spuds-4.png";
 import spuds5 from "./spuds-5.png";
 import logo from "./logo.png";
-import recipe from "./recipe.jpg";
 import kizembe from "./kizembe.jpg";
 import kize from "./kize.png";
 import water from "./images/water.jpeg";
@@ -27,16 +26,17 @@ import sauces from "./sauces.png";
 import logo3 from "./logo3.jfif";
 import logo2 from "./logo2.jfif";
 import logo1 from "./logo1.png";
-import jst from "./jst.jpeg"
+import jst from "./jst.jpeg";
 import hz from "./hz.png";
 import cb from "./cb.jpeg";
 import sp from "./sp.jpeg";
 import kiz from "./kiz.png";
-
+import recipe from "./recipe.png";
 
 export const assets = {
-   sp,
+  sp,
   hz,
+
   cb,
   kiz,
   sauces,

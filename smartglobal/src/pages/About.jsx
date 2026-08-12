@@ -278,8 +278,8 @@ export default function About() {
         </div>
       </section>
 
-      {/* ══════════════════ QUOTE + PRODUCT GRID (single red block) ══════════════════ */}
-      <section style={{ backgroundColor: "var(--color-red)" }}>
+      {/* ══════════════════ QUOTE + PRODUCT GRID (single blue block) ══════════════════ */}
+      <section style={{ backgroundColor: "var(--color-blue)" }}>
         {/* Quote */}
         <div className="page-x pt-12 sm:pt-16 pb-10 max-w-3xl mx-auto text-center sm:text-left">
           <p className="font-heading font-bold text-white text-xl sm:text-2xl leading-snug">
@@ -306,7 +306,7 @@ export default function About() {
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
                 style={{ backgroundColor: "#fff" }}
               >
-                <ChevronRight size={16} style={{ color: "var(--color-red)" }} />
+                <ChevronRight size={16} style={{ color: "var(--color-blue)" }} />
               </button>
             </div>
           </div>
@@ -459,7 +459,7 @@ export default function About() {
       {/* ══════════════════════ NEWSLETTER ══════════════════════ */}
       <section
         className="page-x py-14 sm:py-16 text-center"
-        style={{ backgroundColor: "var(--color-blue)" }}
+        style={{ backgroundColor: "var(--color-red)" }}
       >
         <div className="max-w-lg mx-auto">
           <h2 className="font-heading font-bold text-white text-2xl sm:text-3xl mb-2">
@@ -485,7 +485,7 @@ export default function About() {
             <button
               type="submit"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white font-body font-bold text-xs uppercase tracking-widest whitespace-nowrap transition-transform duration-200 hover:scale-[1.03]"
-              style={{ color: "var(--color-blue)" }}
+              style={{ color: "var(--color-red)" }}
             >
               Subscribe
               <Send size={13} />

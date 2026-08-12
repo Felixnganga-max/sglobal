@@ -274,7 +274,7 @@ export default function FeaturedProductsGrid() {
             <button
               onClick={() => goToPage(page - 1)}
               disabled={page <= 1}
-              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-9 h-9 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-blue hover:text-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Previous page"
             >
               <ChevronLeft size={15} />
@@ -293,7 +293,7 @@ export default function FeaturedProductsGrid() {
             <button
               onClick={() => goToPage(page + 1)}
               disabled={page >= pages}
-              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-9 h-9 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-blue hover:text-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Next page"
             >
               <ChevronRight size={15} />
@@ -402,7 +402,7 @@ export default function FeaturedProductsGrid() {
               <button
                 onClick={() => viewAllInCategory(cat)}
                 className="inline-flex items-center gap-1 text-xs font-body font-bold whitespace-nowrap"
-                style={{ color: "var(--color-red)" }}
+                style={{ color: "var(--color-blue)" }}
               >
                 View all <ArrowRight size={12} />
               </button>

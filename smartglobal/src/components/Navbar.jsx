@@ -328,11 +328,11 @@ export default function Navbar() {
             >
               {hoveredIndex !== null && (
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 h-10 rounded-full bg-red transition-all duration-300 ease-out"
+                  className="absolute top-1/2 -translate-y-1/2 h-10 rounded-full bg-blue transition-all duration-300 ease-out"
                   style={{
                     left: `${hoverPosition.x}px`,
                     width: `${hoverPosition.width}px`,
-                    boxShadow: "0 8px 32px rgba(255,0,0,0.25)",
+                    boxShadow: "0 8px 32px rgba(1,0,40,0.3)",
                   }}
                 />
               )}
@@ -371,10 +371,10 @@ export default function Navbar() {
               <button
                 onClick={() => setSearchOpen((v) => !v)}
                 aria-label="Search"
-                className={`group relative p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${searchOpen ? "bg-red" : "hover:bg-gray-100/80"}`}
+                className={`group relative p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${searchOpen ? "bg-blue" : "hover:bg-gray-100/80"}`}
               >
                 <Search
-                  className={`h-5 w-5 transition-colors duration-300 ${searchOpen ? "text-white" : "text-gray-600 group-hover:text-red"}`}
+                  className={`h-5 w-5 transition-colors duration-300 ${searchOpen ? "text-white" : "text-gray-600 group-hover:text-blue"}`}
                 />
               </button>
 
@@ -398,7 +398,7 @@ export default function Navbar() {
                     aria-label="Order History"
                     className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
                   >
-                    <History className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
+                    <History className="h-5 w-5 text-gray-600 group-hover:text-blue transition-colors duration-300" />
                   </button>
 
                   <div className="relative" ref={dropdownRef}>
@@ -407,17 +407,17 @@ export default function Navbar() {
                       aria-label="User Profile"
                       className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
                     >
-                      <UserCircle className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
+                      <UserCircle className="h-5 w-5 text-gray-600 group-hover:text-blue transition-colors duration-300" />
                       <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
                     </button>
 
                     {userDropdownOpen && (
                       <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                         <div
-                          className="bg-red p-4 text-white"
+                          className="bg-blue p-4 text-white"
                           style={{
                             background:
-                              "linear-gradient(135deg, var(--color-red) 0%, #8B1414 100%)",
+                              "linear-gradient(135deg, var(--color-blue) 0%, var(--color-blue-light) 100%)",
                           }}
                         >
                           <div className="flex items-center gap-3">
@@ -495,7 +495,7 @@ export default function Navbar() {
                     aria-label="User Account"
                     className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
                   >
-                    <User className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
+                    <User className="h-5 w-5 text-gray-600 group-hover:text-blue transition-colors duration-300" />
                   </Link>
                   <Link to="/place-order" className="btn-primary ml-2">
                     Place Order
@@ -565,7 +565,7 @@ export default function Navbar() {
                     if (mobileResults.length > 0) setShowMobileResults(true);
                   }}
                   placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-body font-medium outline-none focus:border-red focus:ring-2 focus:ring-red/15 transition-all shadow-sm"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-body font-medium outline-none focus:border-blue focus:ring-2 focus:ring-blue/15 transition-all shadow-sm"
                   style={{ fontSize: "0.8rem" }}
                 />
                 {mobileSearchQuery && (
@@ -593,7 +593,7 @@ export default function Navbar() {
                   >
                     {mobileSearching ? (
                       <div className="flex items-center justify-center py-6 gap-2">
-                        <div className="w-4 h-4 border-2 border-red border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin" />
                         <span className="text-xs font-body text-gray-500">
                           Searching...
                         </span>
@@ -633,7 +633,7 @@ export default function Navbar() {
                     if (desktopResults.length > 0) setShowDesktopResults(true);
                   }}
                   placeholder="Search products by name or category..."
-                  className="w-full pl-14 pr-10 py-4 text-sm font-body font-semibold rounded-2xl bg-white border border-gray-200 focus:border-red focus:outline-none focus:ring-2 focus:ring-red/20 transition-all duration-300 shadow-lg"
+                  className="w-full pl-14 pr-10 py-4 text-sm font-body font-semibold rounded-2xl bg-white border border-gray-200 focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20 transition-all duration-300 shadow-lg"
                 />
                 {searchQuery && (
                   <button
@@ -662,7 +662,7 @@ export default function Navbar() {
                   >
                     {desktopSearching ? (
                       <div className="flex items-center justify-center py-6 gap-2">
-                        <div className="w-4 h-4 border-2 border-red border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin" />
                         <span className="text-sm font-body text-gray-500">
                           Searching...
                         </span>
@@ -697,7 +697,7 @@ export default function Navbar() {
                             target: { value: term },
                           });
                         }}
-                        className="px-3 py-1.5 bg-gray-100 hover:bg-red hover:text-white rounded-full text-xs font-body font-bold transition-all duration-300"
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-blue hover:text-white rounded-full text-xs font-body font-bold transition-all duration-300"
                       >
                         {term}
                       </button>
@@ -737,7 +737,7 @@ export default function Navbar() {
               {isAuthenticated && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
-                    <div className="w-10 h-10 bg-red rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-blue rounded-full flex items-center justify-center">
                       <UserCircle className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">

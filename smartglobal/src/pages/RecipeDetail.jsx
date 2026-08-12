@@ -286,7 +286,12 @@ export default function RecipeDetail() {
                     <Icon
                       size={14}
                       className="mx-auto mb-1"
-                      style={{ color: "var(--color-orange)" }}
+                      style={{
+                        color:
+                          label === "Total Time"
+                            ? "var(--color-blue)"
+                            : "var(--color-orange)",
+                      }}
                     />
                     <p
                       className="font-body text-[0.58rem] mb-0.5"
@@ -356,7 +361,7 @@ export default function RecipeDetail() {
                   <div className="flex items-center gap-2 mb-4">
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: "var(--color-orange)" }}
+                      style={{ backgroundColor: "var(--color-blue)" }}
                     >
                       <Utensils size={13} className="text-white" />
                     </div>
@@ -377,7 +382,7 @@ export default function RecipeDetail() {
                         <span
                           className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-[0.55rem] flex-shrink-0 mt-0.5"
                           style={{
-                            backgroundColor: "var(--color-orange-dark)",
+                            backgroundColor: "var(--color-blue-dark)",
                           }}
                         >
                           {i + 1}

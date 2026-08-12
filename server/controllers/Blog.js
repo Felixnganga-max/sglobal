@@ -22,7 +22,10 @@ exports.getAllBlogs = async (req, res) => {
       limit = 20,
     } = req.query;
 
-    const filter = { published: true };
+    // Admins (the dashboard) see everything, including drafts, so they can
+    // manage unpublished posts; everyone else only ever sees published ones.
+    const isAdmin = req.user && req.user.role === "admin";
+    const filter = isAdmin ? {} : { published: true };
 
     if (category && category !== "all") {
       filter.category = category;
@@ -116,6 +119,7 @@ exports.createBlog = async (req, res) => {
       readTime,
       authorName,
       imageData,
+      published,
     } = req.body;
 
     if (!title || !category || !excerpt || !content) {
@@ -158,6 +162,7 @@ exports.createBlog = async (req, res) => {
       tags: parseArrayField(tags),
       readTime: readTime || "5 min read",
       author: authorName ? { name: authorName } : undefined,
+      published: published !== undefined ? published : true,
       featuredImage: imageInfo,
     });
 

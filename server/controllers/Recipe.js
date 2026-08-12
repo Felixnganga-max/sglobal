@@ -187,10 +187,10 @@ exports.createRecipe = async (req, res) => {
       imageName, // If using existing product image
     } = req.body;
 
-    // Validation
+    // Validation — product is optional; a recipe doesn't need to be linked
+    // to an existing product to be published.
     if (
       !title ||
-      !productId ||
       !category ||
       !description ||
       !prepTime ||
@@ -217,13 +217,16 @@ exports.createRecipe = async (req, res) => {
       });
     }
 
-    // Verify product exists
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
+    // Verify product exists, only if one was actually selected
+    let product = null;
+    if (productId) {
+      product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
+      }
     }
 
     let imageInfo;
@@ -238,7 +241,7 @@ exports.createRecipe = async (req, res) => {
     } else if (imageData) {
       // Image uploaded as base64
       imageInfo = await uploadBase64Image(imageData, "kent-boringer-recipes");
-    } else if (imageName && product.image) {
+    } else if (imageName && product?.image) {
       // Use existing product image
       imageInfo = {
         url: product.image.url,
@@ -260,7 +263,7 @@ exports.createRecipe = async (req, res) => {
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, ""),
-      product: productId,
+      product: productId || undefined,
       category,
       description,
       prepTime: parseInt(prepTime),
@@ -348,7 +351,7 @@ exports.updateRecipe = async (req, res) => {
     } = req.body;
 
     // Verify product if changing
-    if (productId && productId !== recipe.product.toString()) {
+    if (productId && productId !== recipe.product?.toString()) {
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({

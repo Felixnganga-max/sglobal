@@ -25,7 +25,7 @@ export default function TrendingThisWeek() {
         <Link
           to="/products"
           className="hidden sm:inline-flex items-center gap-1 text-xs font-body font-bold uppercase tracking-widest"
-          style={{ color: "var(--color-red)" }}
+          style={{ color: "var(--color-blue)" }}
         >
           View All Products
         </Link>

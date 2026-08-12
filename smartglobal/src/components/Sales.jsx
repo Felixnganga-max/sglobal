@@ -297,7 +297,7 @@ function ProductCard({ prod }) {
                 backgroundColor: addedFeedback
                   ? "#16a34a"
                   : isInCart
-                    ? "#8B1414"
+                    ? "var(--color-red-dark)"
                     : "var(--color-red)",
               }}
             >
@@ -792,7 +792,7 @@ export default function Sales() {
                 <button
                   onClick={() => setSearchParams({})}
                   className="font-bold underline"
-                  style={{ color: "var(--color-red)" }}
+                  style={{ color: "var(--color-blue)" }}
                 >
                   Clear search
                 </button>
@@ -826,7 +826,7 @@ export default function Sales() {
                 }`}
                 style={
                   activeCategory === cat
-                    ? { backgroundColor: "var(--color-red)" }
+                    ? { backgroundColor: "var(--color-blue)" }
                     : undefined
                 }
               >
@@ -872,7 +872,7 @@ export default function Sales() {
                 searchQuery ? setSearchParams({}) : setActiveCategory("all")
               }
               className="mt-3 text-xs font-body font-bold underline"
-              style={{ color: "var(--color-red)" }}
+              style={{ color: "var(--color-blue)" }}
             >
               {searchQuery ? "Clear search" : "Show all products"}
             </button>

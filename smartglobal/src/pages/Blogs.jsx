@@ -226,8 +226,15 @@ export default function Blogs() {
               </span>
               <button
                 onClick={() => handleShare(currentPost)}
-                className="p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                className="p-2 rounded-lg transition-colors"
                 aria-label="Share this post"
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor =
+                    "var(--color-blue-tint)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "transparent")
+                }
               >
                 <Share2 size={15} style={{ color: "var(--color-blue)" }} />
               </button>
@@ -354,7 +361,7 @@ export default function Blogs() {
                 className="w-full pl-9 pr-4 py-2.5 font-body text-sm rounded-full border focus:outline-none transition-colors"
                 style={{ borderColor: "var(--color-border)" }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "var(--color-orange)";
+                  e.target.style.borderColor = "var(--color-blue)";
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = "var(--color-border)";
@@ -504,7 +511,7 @@ export default function Blogs() {
                         </span>
                         <span
                           className="flex items-center gap-1 font-body text-xs font-bold transition-gap"
-                          style={{ color: "var(--color-orange)" }}
+                          style={{ color: "var(--color-blue)" }}
                         >
                           Read More <ArrowRight size={13} />
                         </span>
@@ -526,8 +533,8 @@ export default function Blogs() {
                   onMouseEnter={(e) => {
                     if (page !== 1) {
                       e.currentTarget.style.backgroundColor =
-                        "var(--color-orange)";
-                      e.currentTarget.style.borderColor = "var(--color-orange)";
+                        "var(--color-blue)";
+                      e.currentTarget.style.borderColor = "var(--color-blue)";
                       e.currentTarget.style.color = "#fff";
                     }
                   }}
@@ -544,7 +551,7 @@ export default function Blogs() {
                   style={{ color: "var(--color-muted)" }}
                 >
                   Page{" "}
-                  <strong style={{ color: "var(--color-orange)" }}>
+                  <strong style={{ color: "var(--color-blue)" }}>
                     {page}
                   </strong>{" "}
                   of {pageCount}
@@ -557,8 +564,8 @@ export default function Blogs() {
                   onMouseEnter={(e) => {
                     if (page !== pageCount) {
                       e.currentTarget.style.backgroundColor =
-                        "var(--color-orange)";
-                      e.currentTarget.style.borderColor = "var(--color-orange)";
+                        "var(--color-blue)";
+                      e.currentTarget.style.borderColor = "var(--color-blue)";
                       e.currentTarget.style.color = "#fff";
                     }
                   }}
@@ -583,10 +590,10 @@ export default function Blogs() {
                 style={{ borderColor: "var(--color-border)" }}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Tag size={13} style={{ color: "var(--color-orange)" }} />
+                  <Tag size={13} style={{ color: "var(--color-blue)" }} />
                   <p className="text-eyebrow">Categories</p>
                 </div>
-                <div className="section-rule mb-4" />
+                <div className="section-rule-blue mb-4" />
                 <ul className="space-y-1">
                   {categories.map((c) => (
                     <li key={c}>
@@ -599,7 +606,7 @@ export default function Blogs() {
                         style={{
                           backgroundColor:
                             selectedCategory === c
-                              ? "var(--color-orange)"
+                              ? "var(--color-blue)"
                               : "transparent",
                           color:
                             selectedCategory === c

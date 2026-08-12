@@ -68,9 +68,9 @@ function ChannelBadge({ channel }) {
         background:
           channel === "whatsapp"
             ? "rgba(37,211,102,0.1)"
-            : "rgba(191,26,26,0.08)",
-        color: channel === "whatsapp" ? "#16a34a" : "#BF1A1A",
-        border: `1px solid ${channel === "whatsapp" ? "rgba(37,211,102,0.25)" : "rgba(191,26,26,0.2)"}`,
+            : "var(--color-blue-tint)",
+        color: channel === "whatsapp" ? "#16a34a" : "var(--color-blue)",
+        border: `1px solid ${channel === "whatsapp" ? "rgba(37,211,102,0.25)" : "rgba(1,0,40,0.25)"}`,
       }}
     >
       {channel === "whatsapp" ? <MessageCircle size={9} /> : <Mail size={9} />}
@@ -117,7 +117,7 @@ function OrderCard({ order, index }) {
           background:
             order.status === "complete"
               ? "linear-gradient(90deg,#22c55e,#16a34a)"
-              : "linear-gradient(90deg,var(--color-red),var(--color-orange))",
+              : "linear-gradient(90deg,var(--color-blue-light),var(--color-blue))",
         }}
       />
 
@@ -132,7 +132,7 @@ function OrderCard({ order, index }) {
             width: 42,
             height: 42,
             background: "var(--color-bg-soft)",
-            color: "var(--color-red)",
+            color: "var(--color-blue)",
           }}
         >
           <ShoppingBag size={17} />
@@ -209,7 +209,7 @@ function OrderCard({ order, index }) {
                     width: 5,
                     height: 5,
                     borderRadius: "50%",
-                    background: "var(--color-red)",
+                    background: "var(--color-blue)",
                     flexShrink: 0,
                   }}
                 />
@@ -250,7 +250,7 @@ function OrderCard({ order, index }) {
                 className="flex items-center gap-2 text-body"
                 style={{ color: "#555" }}
               >
-                <span style={{ color: "var(--color-red)" }}>{row.icon}</span>
+                <span style={{ color: "var(--color-blue)" }}>{row.icon}</span>
                 {row.val}
               </div>
             ))}
@@ -289,8 +289,8 @@ function LoginWall({ navigate }) {
       <div
         className="rounded-2xl p-8 text-center"
         style={{
-          background: "linear-gradient(135deg,#1a1a1a 0%,#2d0a0a 100%)",
-          border: "1px solid rgba(191,26,26,0.25)",
+          background: "linear-gradient(135deg,#1a1a1a 0%,var(--color-blue) 100%)",
+          border: "1px solid rgba(51,51,110,0.35)",
           maxWidth: 400,
           width: "100%",
           position: "relative",
@@ -303,7 +303,7 @@ function LoginWall({ navigate }) {
             width: 300,
             height: 300,
             background:
-              "radial-gradient(circle,rgba(191,26,26,0.18) 0%,transparent 70%)",
+              "radial-gradient(circle,rgba(51,51,110,0.28) 0%,transparent 70%)",
             top: -80,
             right: -60,
             pointerEvents: "none",
@@ -314,9 +314,9 @@ function LoginWall({ navigate }) {
           style={{
             width: 56,
             height: 56,
-            background: "rgba(191,26,26,0.2)",
-            border: "1px solid rgba(191,26,26,0.4)",
-            color: "#ff6b6b",
+            background: "rgba(51,51,110,0.35)",
+            border: "1px solid rgba(51,51,110,0.5)",
+            color: "var(--color-blue-light)",
             position: "relative",
           }}
         >
@@ -425,7 +425,7 @@ export default function Orders() {
         @keyframes spin2 { to { transform:rotate(360deg); } }
         .oh-shimmer { background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%); background-size:200% 100%; animation:shimmer2 1.4s infinite; border-radius:10px; }
         @keyframes shimmer2 { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
-        .top-strip { height:3px; background:linear-gradient(90deg,var(--color-red),var(--color-orange),var(--color-red)); background-size:200% 100%; animation:shimmer2 3s linear infinite; }
+        .top-strip { height:3px; background:linear-gradient(90deg,var(--color-red),var(--color-orange),var(--color-blue-light)); background-size:200% 100%; animation:shimmer2 3s linear infinite; }
       `}</style>
 
       <div ref={topRef} />
@@ -448,8 +448,8 @@ export default function Orders() {
               <span
                 className="text-label px-3 py-1 rounded-full"
                 style={{
-                  background: "rgba(191,26,26,0.08)",
-                  color: "var(--color-red)",
+                  background: "var(--color-blue-tint)",
+                  color: "var(--color-blue)",
                 }}
               >
                 {user.name?.split(" ")[0]}

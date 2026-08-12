@@ -243,7 +243,7 @@ export default function About() {
               <a
                 href="#products"
                 className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-200 hover:scale-105"
-                style={{ backgroundColor: "var(--color-red)" }}
+                style={{ backgroundColor: "var(--color-blue)" }}
                 aria-label="Learn more about Smart Global"
               >
                 <Award size={22} color="#fff" />
@@ -381,7 +381,7 @@ export default function About() {
             <div>
               <p
                 className="font-heading font-bold"
-                style={{ fontSize: "2.75rem", color: "var(--color-red)" }}
+                style={{ fontSize: "2.75rem", color: "var(--color-blue)" }}
               >
                 3
               </p>
@@ -413,12 +413,12 @@ export default function About() {
       >
         <style>{`
           .faq-item { background:#fff; border:1px solid #ebebeb; border-radius:14px; overflow:hidden; transition:border-color 0.25s, box-shadow 0.25s; margin-bottom:10px; }
-          .faq-item.open { border-color:var(--color-red); box-shadow:0 0 0 3px rgba(255,0,0,0.06); }
+          .faq-item.open { border-color:var(--color-blue); box-shadow:0 0 0 3px rgba(1,0,40,0.12); }
           .faq-btn { width:100%; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; background:none; border:none; cursor:pointer; text-align:left; font-family:inherit; }
           .faq-q { font-size:14px; font-weight:600; color:#1a1a1a; line-height:1.5; flex:1; transition:color 0.2s; }
-          .faq-item.open .faq-q, .faq-btn:hover .faq-q { color:var(--color-red); }
+          .faq-item.open .faq-q, .faq-btn:hover .faq-q { color:var(--color-blue); }
           .faq-icon { width:28px; height:28px; border-radius:50%; border:1.5px solid #e0e0e0; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.25s, border-color 0.25s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1); }
-          .faq-item.open .faq-icon { background:var(--color-red); border-color:var(--color-red); transform:rotate(45deg); }
+          .faq-item.open .faq-icon { background:var(--color-blue); border-color:var(--color-blue); transform:rotate(45deg); }
           .faq-body { max-height:0; overflow:hidden; transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
           .faq-body-inner { padding:14px 20px 20px; font-size:13px; color:#666; line-height:1.75; border-top:1px solid #f2f2f2; }
           .faq-tag { display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:2px 8px; border-radius:20px; margin-right:6px; margin-bottom:10px; }
@@ -459,7 +459,7 @@ export default function About() {
       {/* ══════════════════════ NEWSLETTER ══════════════════════ */}
       <section
         className="page-x py-14 sm:py-16 text-center"
-        style={{ backgroundColor: "var(--color-red)" }}
+        style={{ backgroundColor: "var(--color-blue)" }}
       >
         <div className="max-w-lg mx-auto">
           <h2 className="font-heading font-bold text-white text-2xl sm:text-3xl mb-2">
@@ -485,7 +485,7 @@ export default function About() {
             <button
               type="submit"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white font-body font-bold text-xs uppercase tracking-widest whitespace-nowrap transition-transform duration-200 hover:scale-[1.03]"
-              style={{ color: "var(--color-red)" }}
+              style={{ color: "var(--color-blue)" }}
             >
               Subscribe
               <Send size={13} />

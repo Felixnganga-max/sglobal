@@ -236,7 +236,7 @@ export default function ProductDetails() {
   const cartBtnColor = addedFeedback
     ? "#16a34a"
     : cartQty > 0
-      ? "#8B1414"
+      ? "var(--color-red-dark)"
       : "var(--color-red)";
 
   return (
@@ -247,7 +247,7 @@ export default function ProductDetails() {
           <div className="flex items-center gap-2 text-sm font-body">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-muted hover:text-red transition-colors"
+              className="flex items-center gap-2 text-muted hover:text-blue transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -317,8 +317,8 @@ export default function ProductDetails() {
                 <Heart
                   className="w-5 h-5"
                   style={{
-                    fill: isWishlisted ? "var(--color-red)" : "transparent",
-                    color: isWishlisted ? "var(--color-red)" : "#9ca3af",
+                    fill: isWishlisted ? "var(--color-blue)" : "transparent",
+                    color: isWishlisted ? "var(--color-blue)" : "#9ca3af",
                   }}
                 />
               </button>
@@ -335,7 +335,7 @@ export default function ProductDetails() {
                     style={{
                       borderColor:
                         selectedImage === index
-                          ? "var(--color-red)"
+                          ? "var(--color-blue)"
                           : "var(--color-border)",
                     }}
                   >
@@ -543,9 +543,9 @@ export default function ProductDetails() {
               </button>
               <button
                 onClick={handleShare}
-                className="px-4 py-3 border-2 border-border rounded-xl hover:border-gray-400 transition-all"
+                className="group px-4 py-3 border-2 border-border rounded-xl hover:border-blue transition-all"
               >
-                <Share2 className="w-4 h-4 text-muted" />
+                <Share2 className="w-4 h-4 text-muted group-hover:text-blue transition-colors" />
               </button>
             </div>
 
@@ -624,7 +624,7 @@ export default function ProductDetails() {
                           key={j}
                           className="flex items-start gap-2 font-body text-sm text-muted"
                         >
-                          <span className="text-red mt-0.5">●</span>
+                          <span className="text-blue mt-0.5">●</span>
                           {item}
                         </li>
                       ))}
@@ -638,7 +638,7 @@ export default function ProductDetails() {
                           key={j}
                           className="flex items-start gap-2 font-body text-sm text-muted"
                         >
-                          <span className="font-bold text-red">{j + 1}.</span>
+                          <span className="font-bold text-blue">{j + 1}.</span>
                           {item}
                         </li>
                       ))}
@@ -662,7 +662,7 @@ export default function ProductDetails() {
                   key={i}
                   className="flex items-center gap-2 font-body text-sm text-muted"
                 >
-                  <span className="font-bold text-red">✓</span>
+                  <span className="font-bold text-blue">✓</span>
                   {f}
                 </div>
               ))}
@@ -709,13 +709,13 @@ export default function ProductDetails() {
                 <h2 className="text-section-title text-gray-900">
                   Related Products
                 </h2>
-                <div className="section-rule mt-2" />
+                <div className="section-rule-blue mt-2" />
               </div>
               <button
                 onClick={() =>
                   navigate(`/products?category=${product.category}`)
                 }
-                className="font-body text-sm font-bold text-red hover:underline transition-colors"
+                className="font-body text-sm font-bold text-blue hover:underline transition-colors"
               >
                 View All →
               </button>

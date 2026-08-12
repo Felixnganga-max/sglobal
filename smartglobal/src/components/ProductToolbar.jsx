@@ -73,11 +73,7 @@ export default function ProductToolbar() {
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
             placeholder="Search products..."
-            className="w-full pl-11 pr-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 transition-all"
-            style={{
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-bg-soft)",
-            }}
+            className="w-full pl-11 pr-4 py-2.5 rounded-xl text-sm border border-(--color-border) bg-soft focus:outline-none focus:border-blue focus:ring-2 focus:ring-blue/20 transition-all"
           />
         </div>
 
@@ -89,12 +85,11 @@ export default function ProductToolbar() {
           <select
             value={category}
             onChange={(e) => updateParam("category", e.target.value === "all" ? undefined : e.target.value)}
-            className="px-3 py-2.5 rounded-xl text-sm font-semibold focus:outline-none max-w-[9.5rem] sm:max-w-none"
-            style={{
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-bg-soft)",
-              color: "var(--color-text)",
-            }}
+            className={`px-3 py-2.5 rounded-xl text-sm font-semibold border focus:outline-none focus:border-blue transition-colors max-w-38 sm:max-w-none ${
+              category !== "all"
+                ? "border-blue bg-blue-tint text-blue"
+                : "border-(--color-border) bg-soft text-(--color-text)"
+            }`}
           >
             <option value="all">All Categories</option>
             {PRODUCT_CATEGORIES.map((cat) => (
@@ -106,12 +101,11 @@ export default function ProductToolbar() {
           <select
             value={sort}
             onChange={(e) => updateParam("sort", e.target.value)}
-            className="px-3 py-2.5 rounded-xl text-sm font-semibold focus:outline-none"
-            style={{
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-bg-soft)",
-              color: "var(--color-text)",
-            }}
+            className={`px-3 py-2.5 rounded-xl text-sm font-semibold border focus:outline-none focus:border-blue transition-colors ${
+              sort !== "newest"
+                ? "border-blue bg-blue-tint text-blue"
+                : "border-(--color-border) bg-soft text-(--color-text)"
+            }`}
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -123,9 +117,9 @@ export default function ProductToolbar() {
           <label
             className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold cursor-pointer select-none whitespace-nowrap"
             style={{
-              border: "1px solid var(--color-border)",
-              backgroundColor: inStock ? "rgba(255,127,17,0.08)" : "var(--color-bg-soft)",
-              color: inStock ? "var(--color-orange)" : "var(--color-text)",
+              border: `1px solid ${inStock ? "var(--color-blue)" : "var(--color-border)"}`,
+              backgroundColor: inStock ? "var(--color-blue-tint)" : "var(--color-bg-soft)",
+              color: inStock ? "var(--color-blue)" : "var(--color-text)",
             }}
           >
             <input
@@ -156,8 +150,7 @@ export default function ProductToolbar() {
           ))}
           <button
             onClick={clearAll}
-            className="text-xs font-bold underline ml-1"
-            style={{ color: "var(--color-red)" }}
+            className="text-xs font-bold underline ml-1 text-blue"
           >
             Clear all
           </button>
@@ -172,9 +165,9 @@ function FilterChip({ label, onClear }) {
     <span
       className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
       style={{
-        backgroundColor: "var(--color-bg-soft)",
-        color: "var(--color-text)",
-        border: "1px solid var(--color-border)",
+        backgroundColor: "var(--color-blue-tint)",
+        color: "var(--color-blue)",
+        border: "1px solid var(--color-blue)",
       }}
     >
       {label}

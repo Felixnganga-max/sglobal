@@ -32,7 +32,7 @@ function Blank({ as = "input", ...props }) {
       "inline-block bg-transparent border-0 border-b-2 outline-none font-body font-semibold px-1 pb-0.5 align-baseline transition-colors duration-200",
     style: { borderColor: "var(--color-border)", color: "var(--color-text)" },
     onFocus: (e) => {
-      e.target.style.borderColor = "var(--color-orange)";
+      e.target.style.borderColor = "var(--color-blue)";
     },
     onBlur: (e) => {
       e.target.style.borderColor = "var(--color-border)";
@@ -66,11 +66,11 @@ function FaqRow({ q, a, open, onToggle }) {
         <span
           className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-300"
           style={{
-            backgroundColor: "rgba(255,127,17,0.1)",
+            backgroundColor: "var(--color-blue-tint)",
             transform: open ? "rotate(180deg)" : "rotate(0deg)",
           }}
         >
-          <ChevronDown size={14} style={{ color: "var(--color-orange)" }} />
+          <ChevronDown size={14} style={{ color: "var(--color-blue)" }} />
         </span>
       </button>
       <div
@@ -334,7 +334,7 @@ export default function ContactUs() {
       {/* ══════════════════════ FIND WHAT YOU NEED FASTER ══════════════════════ */}
       <section
         className="relative page-x section-y mt-10"
-        style={{ backgroundColor: "var(--color-red)" }}
+        style={{ backgroundColor: "var(--color-blue)" }}
       >
         <div className="text-center max-w-xl mx-auto mb-10">
           <p
@@ -416,20 +416,26 @@ export default function ContactUs() {
                   title: "Email Support",
                   text: "info@smartgloballtd.com",
                   href: "mailto:info@smartgloballtd.com",
+                  accent: "var(--color-blue)",
+                  tint: "var(--color-blue-tint)",
                 },
                 {
                   icon: MapPin,
                   title: "Visit Our Office",
                   text: "Nairobi Business District, Kenya",
                   href: "#",
+                  accent: "var(--color-orange)",
+                  tint: "rgba(255,127,17,0.1)",
                 },
                 {
                   icon: Phone,
                   title: "Call Us Directly",
                   text: "+254 700 826 813",
                   href: "tel:+254700826813",
+                  accent: "var(--color-red)",
+                  tint: "rgba(255,0,0,0.08)",
                 },
-              ].map(({ icon: Icon, title, text, href }) => (
+              ].map(({ icon: Icon, title, text, href, accent, tint }) => (
                 <li key={title}>
                   <a
                     href={href}
@@ -439,7 +445,7 @@ export default function ContactUs() {
                       border: "1px solid var(--color-border)",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--color-orange)";
+                      e.currentTarget.style.borderColor = accent;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = "var(--color-border)";
@@ -447,9 +453,9 @@ export default function ContactUs() {
                   >
                     <span
                       className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: "rgba(255,127,17,0.1)" }}
+                      style={{ backgroundColor: tint }}
                     >
-                      <Icon size={15} style={{ color: "var(--color-orange)" }} />
+                      <Icon size={15} style={{ color: accent }} />
                     </span>
                     <div>
                       <p
@@ -460,7 +466,7 @@ export default function ContactUs() {
                       </p>
                       <p
                         className="font-body text-xs font-semibold"
-                        style={{ color: "var(--color-orange)" }}
+                        style={{ color: accent }}
                       >
                         {text}
                       </p>
@@ -571,7 +577,7 @@ export default function ContactUs() {
 
             <button
               type="submit"
-              className="btn-secondary inline-flex items-center gap-2 mt-7"
+              className="btn-blue inline-flex items-center gap-2 mt-7"
             >
               Submit
               <Send size={13} />
@@ -595,7 +601,7 @@ export default function ContactUs() {
               }}
             >
               You Have Questions,{" "}
-              <span style={{ color: "var(--color-orange)" }}>We Have Answers</span>
+              <span style={{ color: "var(--color-blue)" }}>We Have Answers</span>
             </h2>
           </div>
 

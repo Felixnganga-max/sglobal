@@ -2,6 +2,27 @@
 @import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
 
 /* ─────────────────────────────────────────
+   THEME TOKENS (registered with Tailwind)
+   Declaring these inside @theme — not a plain :root block — is what makes
+   Tailwind generate variant-prefixed utilities for them (hover:text-red,
+   group-hover:text-blue, focus:border-blue, ring-blue/20, etc). They're
+   still emitted as ordinary --color-* custom properties too, so
+   var(--color-red) keeps working anywhere it's used inline.
+───────────────────────────────────────── */
+@theme {
+  /* Brand Colors — red and navy blue are co-equal primaries (roughly 50/50
+     usage across the site), orange is a minor tertiary accent. */
+  --color-red: #ff0000;
+  --color-red-dark: #cc0000;
+  --color-orange: #ff7f11;
+  --color-orange-dark: #d96800;
+  --color-blue: #010028;
+  --color-blue-dark: #1c1c5c; /* lighter than --color-blue on purpose — used on :hover, and #010028 is already near-black so hover has to lighten, not darken */
+  --color-blue-light: #33336e;
+  --color-blue-tint: #e9e9f3; /* pale navy tint for light backgrounds/badges, mirrors red-50-style washes */
+}
+
+/* ─────────────────────────────────────────
    CSS VARIABLES
 ───────────────────────────────────────── */
 :root {
@@ -9,15 +30,6 @@
   --font-heading: "Ubuntu", sans-serif; /* top-level headings */
   --font-body: "Poppins", sans-serif; /* all body / UI text */
   --font-lora: "Lora", Georgia, serif; /* reserved, not used yet */
-
-  /* Brand Colors */
-  --color-red: #ff0000;
-  --color-red-dark: #cc0000;
-  --color-orange: #ff7f11;
-  --color-orange-dark: #d96800;
-  --color-blue: #1565c0;
-  --color-blue-dark: #0d47a1;
-  --color-blue-light: #1e88e5;
 
   /* Neutrals */
   --color-text: #1a1a1a;
@@ -152,6 +164,9 @@ body {
 .bg-blue-light {
   background-color: var(--color-blue-light);
 }
+.bg-blue-tint {
+  background-color: var(--color-blue-tint);
+}
 .bg-soft {
   background-color: var(--color-bg-soft);
 }
@@ -196,6 +211,13 @@ body {
   width: 4rem;
   height: 0.25rem;
   background-color: var(--color-red);
+  margin: 0.75rem auto 0;
+}
+
+.section-rule-center-blue {
+  width: 4rem;
+  height: 0.25rem;
+  background-color: var(--color-blue);
   margin: 0.75rem auto 0;
 }
 
@@ -269,7 +291,7 @@ body {
   transition:
     background-color 0.22s ease,
     transform 0.18s ease;
-  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.3);
+  box-shadow: 0 4px 14px rgba(1, 0, 40, 0.35);
 }
 .btn-blue:hover {
   background-color: var(--color-blue-dark);
@@ -295,6 +317,28 @@ body {
 }
 .btn-outline:hover {
   background-color: var(--color-red);
+  color: #ffffff;
+}
+
+/* Outline (blue border, transparent bg) — same shape as .btn-outline, blue brand */
+.btn-outline-blue {
+  display: inline-block;
+  padding: 0.7rem 1.9rem;
+  background-color: transparent;
+  color: var(--color-blue);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  border: 2px solid var(--color-blue);
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+.btn-outline-blue:hover {
+  background-color: var(--color-blue);
   color: #ffffff;
 }
 

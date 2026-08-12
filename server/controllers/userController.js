@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -19,12 +19,14 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create user. Role is never taken from the request body — public
+    // registration always creates a plain "user"; admin accounts are
+    // granted via scripts/createAdmin.js, not the API.
     const user = await User.create({
       name,
       email,
       password,
-      role: role || "user",
+      role: "user",
     });
 
     sendTokenResponse(user, 201, res);

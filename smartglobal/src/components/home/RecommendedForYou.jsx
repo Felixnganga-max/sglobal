@@ -56,7 +56,7 @@ export default function RecommendedForYou() {
               }`}
               style={
                 activeTab === i
-                  ? { backgroundColor: "var(--color-red)" }
+                  ? { backgroundColor: "var(--color-blue)" }
                   : undefined
               }
             >

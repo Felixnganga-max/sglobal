@@ -123,14 +123,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
     "Beverages",
   ];
   const difficulties = ["Easy", "Medium", "Hard"];
-  const imageOptions = [
-    { name: "top2", label: "Pancake Mix" },
-    { name: "kent", label: "Kent Soup" },
-    { name: "topping", label: "Toppings" },
-    { name: "spuds", label: "SPUDS Chips" },
-    { name: "crepes", label: "Crepes" },
-    { name: "ice", label: "Ice Cream" },
-  ];
 
   useEffect(() => {
     if (editRecipe) {
@@ -161,12 +153,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
-  const handleImageSelect = (imageName) =>
-    setFormData({
-      ...formData,
-      image: imageName,
-      imagePreview: getImageFromAssets(imageName),
-    });
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -234,11 +220,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
   const validateForm = () => {
     if (!formData.title.trim()) {
       setError("Please enter a recipe title");
-      setCurrentTab("basic");
-      return false;
-    }
-    if (!formData.productId) {
-      setError("Please select a product");
       setCurrentTab("basic");
       return false;
     }
@@ -392,7 +373,7 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Product *
+                  Linked Product (optional)
                 </label>
                 <select
                   value={formData.productId}
@@ -401,13 +382,16 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#BF1A1A]"
                 >
-                  <option value="">Select product</option>
+                  <option value="">No linked product</option>
                   {products.map((product) => (
                     <option key={product._id} value={product._id}>
                       {product.title}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Link this recipe to a product page, or leave it unlinked.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -576,37 +560,6 @@ function RecipeFormModal({ isOpen, onClose, editRecipe, onSave, products }) {
                 <label className="block text-sm font-bold text-gray-700 mb-2">
                   Recipe Image *
                 </label>
-                <div className="mb-4">
-                  <p className="text-xs text-gray-600 mb-3">
-                    Select from product images:
-                  </p>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                    {imageOptions.map((img) => (
-                      <button
-                        key={img.name}
-                        type="button"
-                        onClick={() => handleImageSelect(img.name)}
-                        className={`relative border-2 rounded-none p-2 transition-all ${
-                          formData.image === img.name
-                            ? "border-[#BF1A1A] ring-2 ring-[#BF1A1A] ring-opacity-50"
-                            : "border-gray-200 hover:border-[#BF1A1A]"
-                        }`}
-                      >
-                        <img
-                          loading="lazy"
-                          decoding="async"
-                          src={getImageFromAssets(img.name)}
-                          alt={img.label}
-                          className="w-full h-16 object-contain"
-                        />
-                        <p className="text-xs text-center mt-1 font-semibold">
-                          {img.label}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="text-center text-sm text-gray-500 mb-3">OR</div>
                 <div className="border-2 border-dashed border-gray-300 rounded-none p-6 hover:border-[#BF1A1A] transition-colors">
                   {formData.imagePreview ? (
                     <div className="relative">

@@ -20,7 +20,7 @@ export default function Footer() {
         className="h-1 w-full"
         style={{
           background:
-            "linear-gradient(to right, var(--color-red), var(--color-orange), var(--color-red))",
+            "linear-gradient(to right, var(--color-red), var(--color-orange), var(--color-blue-light))",
         }}
       />
 
@@ -115,41 +115,47 @@ export default function Footer() {
                   href: "https://linkedin.com/company/smartglobal",
                   label: "LinkedIn",
                 },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--color-red)";
-                    e.currentTarget.style.borderColor = "var(--color-red)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                  }}
-                >
-                  <Icon
-                    size={15}
-                    className="text-gray-400 group-hover:text-white"
-                  />
-                </a>
-              ))}
+              ].map(({ Icon, href, label }, index) => {
+                const accent =
+                  index % 2 === 0 ? "var(--color-red)" : "var(--color-blue-light)";
+                return (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = accent;
+                      e.currentTarget.style.borderColor = accent;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(255,255,255,0.06)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                    }}
+                  >
+                    <Icon
+                      size={15}
+                      className="text-gray-400 group-hover:text-white"
+                    />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Nav columns */}
+          {/* Nav columns — each gets its own brand accent so the footer
+              carries red, blue and orange in roughly equal measure */}
           {[
             {
               title: "Products",
+              accent: "var(--color-red)",
               links: [
                 { label: "Kent Toppings", to: "/products/toppings" },
                 { label: "SPUDS Chips", to: "/products/spuds" },
@@ -160,6 +166,7 @@ export default function Footer() {
             },
             {
               title: "Company",
+              accent: "var(--color-blue-light)",
               links: [
                 { label: "About Us", to: "/about" },
                 { label: "Recipes", to: "/recipes" },
@@ -170,6 +177,7 @@ export default function Footer() {
             },
             {
               title: "Resources",
+              accent: "var(--color-orange)",
               links: [
                 { label: "Help Center", to: "/help" },
                 { label: "FAQ", to: "/faq" },
@@ -178,10 +186,13 @@ export default function Footer() {
                 { label: "Become a Distributor", to: "/distributors" },
               ],
             },
-          ].map(({ title, links }) => (
+          ].map(({ title, accent, links }) => (
             <nav key={title} aria-label={title}>
               <h3 className="text-eyebrow mb-4">{title}</h3>
-              <div className="section-rule-orange mb-4" />
+              <div
+                className="w-16 h-1 mb-4"
+                style={{ backgroundColor: accent }}
+              />
               <ul className="space-y-2.5">
                 {links.map(({ label, to }) => (
                   <li key={label}>
@@ -191,7 +202,7 @@ export default function Footer() {
                     >
                       <span
                         className="w-1 h-1 rounded-full flex-shrink-0 transition-all duration-200 group-hover:w-2"
-                        style={{ backgroundColor: "var(--color-orange)" }}
+                        style={{ backgroundColor: accent }}
                       />
                       {label}
                     </Link>
@@ -207,8 +218,8 @@ export default function Footer() {
           className="mt-12 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"
           style={{
             background:
-              "linear-gradient(135deg, rgba(255,0,0,0.12) 0%, rgba(255,127,17,0.08) 100%)",
-            border: "1px solid rgba(255,127,17,0.2)",
+              "linear-gradient(135deg, rgba(51,51,110,0.35) 0%, rgba(255,127,17,0.08) 100%)",
+            border: "1px solid rgba(51,51,110,0.4)",
           }}
         >
           <div>
@@ -228,7 +239,7 @@ export default function Footer() {
               style={{ borderColor: "rgba(255,127,17,0.3)" }}
             />
             <button
-              className="btn-secondary px-5 py-2.5 whitespace-nowrap"
+              className="btn-blue px-5 py-2.5 whitespace-nowrap"
               style={{ fontSize: "0.65rem" }}
             >
               Subscribe

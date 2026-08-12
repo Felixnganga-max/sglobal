@@ -10,8 +10,8 @@ const BADGE_COLORS = {
   "SPECIAL OFFER": "#16a34a",
   "HOT DEALS": "#d97706",
   "LIMITED OFFER": "#1a1a1a",
-  NEW: "#1565C0",
-  SALE: "#FF0000",
+  NEW: "var(--color-blue)",
+  SALE: "var(--color-red)",
   HOT: "#FF7F11",
   LIMITED: "#1a1a1a",
 };
@@ -162,8 +162,8 @@ export default function ProductTile({ product }) {
               <Heart
                 size={11}
                 style={{
-                  fill: wishlisted ? "var(--color-red)" : "transparent",
-                  color: wishlisted ? "var(--color-red)" : "#9ca3af",
+                  fill: wishlisted ? "var(--color-blue)" : "transparent",
+                  color: wishlisted ? "var(--color-blue)" : "#9ca3af",
                 }}
               />
             </button>
@@ -178,7 +178,7 @@ export default function ProductTile({ product }) {
                 backgroundColor: addedFeedback
                   ? "#16a34a"
                   : isInCart
-                    ? "#8B1414"
+                    ? "var(--color-red-dark)"
                     : "var(--color-red)",
               }}
             >

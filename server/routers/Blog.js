@@ -15,10 +15,10 @@ const {
   createComment,
   deleteComment,
 } = require("../controllers/Comment");
-const { protect, authorize } = require("../middleware/authMiddleware");
+const { protect, authorize, optionalAuth } = require("../middleware/authMiddleware");
 
 // ── Public ────────────────────────────────────────────────────────────────────
-router.get("/", getAllBlogs);
+router.get("/", optionalAuth, getAllBlogs);
 router.get("/:blogId/comments", getComments);
 router.post("/:blogId/comments", createComment);
 router.patch("/:id/like", likeBlog);

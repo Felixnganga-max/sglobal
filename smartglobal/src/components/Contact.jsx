@@ -97,6 +97,16 @@ function InputField({ label, id, error, textarea, ...props }) {
             backgroundColor: "rgba(255,255,255,0.08)",
             borderColor: error ? "#f87171" : "rgba(255,255,255,0.15)",
           }}
+          onFocus={(e) => {
+            e.target.style.borderColor = "var(--color-blue-light)";
+            e.target.style.boxShadow = "0 0 0 3px rgba(51,51,110,0.35)";
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = error
+              ? "#f87171"
+              : "rgba(255,255,255,0.15)";
+            e.target.style.boxShadow = "none";
+          }}
           {...props}
         />
       ) : (
@@ -106,6 +116,16 @@ function InputField({ label, id, error, textarea, ...props }) {
           style={{
             backgroundColor: "rgba(255,255,255,0.08)",
             borderColor: error ? "#f87171" : "rgba(255,255,255,0.15)",
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = "var(--color-blue-light)";
+            e.target.style.boxShadow = "0 0 0 3px rgba(51,51,110,0.35)";
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = error
+              ? "#f87171"
+              : "rgba(255,255,255,0.15)";
+            e.target.style.boxShadow = "none";
           }}
           {...props}
         />
@@ -327,11 +347,19 @@ export default function Contact() {
               {/* Contact meta */}
               <div className="mt-6 flex flex-wrap gap-5">
                 {[
-                  { icon: MessageCircle, text: "+254 700 826 813" },
-                  { icon: Mail, text: "info@smartglobal.com" },
-                ].map(({ icon: Icon, text }) => (
+                  {
+                    icon: MessageCircle,
+                    text: "+254 700 826 813",
+                    color: "var(--color-orange)",
+                  },
+                  {
+                    icon: Mail,
+                    text: "info@smartglobal.com",
+                    color: "var(--color-blue-light)",
+                  },
+                ].map(({ icon: Icon, text, color }) => (
                   <div key={text} className="flex items-center gap-2">
-                    <Icon size={13} style={{ color: "var(--color-orange)" }} />
+                    <Icon size={13} style={{ color }} />
                     <span className="font-body text-xs text-white/70 font-medium">
                       {text}
                     </span>
@@ -394,7 +422,7 @@ export default function Contact() {
                     style={{ backgroundColor: "rgba(0,0,0,0.15)" }}
                   >
                     <div className="flex items-center gap-2">
-                      <Mail size={14} className="text-orange-300" />
+                      <Mail size={14} style={{ color: "var(--color-blue-light)" }} />
                       <span className="text-white font-body font-bold text-xs uppercase tracking-wider">
                         Email Order
                       </span>
@@ -476,7 +504,7 @@ export default function Contact() {
                       disabled={isLoading || !hasItems}
                       className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-body font-bold uppercase tracking-widest transition-all duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
-                        backgroundColor: "var(--color-orange)",
+                        backgroundColor: "var(--color-blue)",
                         color: "#fff",
                       }}
                     >

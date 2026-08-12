@@ -14,13 +14,11 @@ const recipeSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    // Optional link to a Product — recipes can stand on their own and don't
+    // require an existing product to be created.
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
-      required: [
-        true,
-        "Product is required - each recipe must be linked to a product",
-      ],
     },
     category: {
       type: String,

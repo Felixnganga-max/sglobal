@@ -141,9 +141,9 @@ export default function Recipes() {
             className="flex flex-col items-center gap-2 px-5 py-3 rounded-xl transition-all duration-200 font-body"
             style={{
               backgroundColor:
-                selectedCategory === "All" ? "var(--color-orange)" : "#fff",
+                selectedCategory === "All" ? "var(--color-blue)" : "#fff",
               color: selectedCategory === "All" ? "#fff" : "var(--color-text)",
-              border: `1px solid ${selectedCategory === "All" ? "var(--color-orange)" : "var(--color-border)"}`,
+              border: `1px solid ${selectedCategory === "All" ? "var(--color-blue)" : "var(--color-border)"}`,
               minWidth: "80px",
             }}
           >
@@ -167,10 +167,10 @@ export default function Recipes() {
               className="flex flex-col items-center gap-2 px-5 py-3 rounded-xl transition-all duration-200 font-body"
               style={{
                 backgroundColor:
-                  selectedCategory === c.name ? "var(--color-orange)" : "#fff",
+                  selectedCategory === c.name ? "var(--color-blue)" : "#fff",
                 color:
                   selectedCategory === c.name ? "#fff" : "var(--color-text)",
-                border: `1px solid ${selectedCategory === c.name ? "var(--color-orange)" : "var(--color-border)"}`,
+                border: `1px solid ${selectedCategory === c.name ? "var(--color-blue)" : "var(--color-border)"}`,
                 minWidth: "80px",
               }}
             >
@@ -194,7 +194,7 @@ export default function Recipes() {
             <button
               onClick={() => setSelectedCategory("All")}
               className="font-body text-xs font-bold transition-colors"
-              style={{ color: "var(--color-orange)" }}
+              style={{ color: "var(--color-blue)" }}
             >
               View all →
             </button>
@@ -302,7 +302,7 @@ function RecipeCard({ recipe, onClick }) {
             className="flex items-center gap-1 font-body text-[0.62rem]"
             style={{ color: "var(--color-muted)" }}
           >
-            <Clock size={11} style={{ color: "var(--color-orange)" }} />{" "}
+            <Clock size={11} style={{ color: "var(--color-blue)" }} />{" "}
             {recipe.totalTime}
           </span>
           <span

@@ -65,6 +65,7 @@ export default function DashboardBlogs() {
     excerpt: "",
     featuredImage: null,
     author: "Smart Global Team",
+    published: true,
   });
   const [tagInput, setTagInput] = useState("");
   const [showImageModal, setShowImageModal] = useState(false);
@@ -110,6 +111,7 @@ export default function DashboardBlogs() {
       excerpt: "",
       featuredImage: null,
       author: "Smart Global Team",
+      published: true,
     });
     setEditorContent("");
     setView("edit");
@@ -126,6 +128,7 @@ export default function DashboardBlogs() {
       excerpt: blog.excerpt,
       featuredImage: blog.featuredImage?.url || null,
       author: blog.author?.name || "Smart Global Team",
+      published: blog.published !== undefined ? blog.published : true,
     });
     setEditorContent(blog.content || "");
     setView("edit");
@@ -178,6 +181,7 @@ export default function DashboardBlogs() {
       tags: blogMeta.tags,
       readTime: calculateReadTime(editorContent),
       authorName: blogMeta.author,
+      published: blogMeta.published,
     };
     // Only send a new image if the user uploaded one (data URL); otherwise
     // the backend keeps the existing image untouched on update.
@@ -334,13 +338,13 @@ export default function DashboardBlogs() {
             <StatCard
               icon={<CheckCircle className="text-green-600" size={24} />}
               label="Published"
-              value={blogs.length}
+              value={blogs.filter((b) => b.published).length}
               color="green"
             />
             <StatCard
               icon={<Clock className="text-orange-600" size={24} />}
               label="Drafts"
-              value={0}
+              value={blogs.filter((b) => !b.published).length}
               color="orange"
             />
           </div>
@@ -458,8 +462,14 @@ export default function DashboardBlogs() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-none">
-                          Published
+                        <span
+                          className={`px-3 py-1 text-xs font-bold rounded-none ${
+                            blog.published
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          {blog.published ? "Published" : "Draft"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -817,6 +827,42 @@ export default function DashboardBlogs() {
                 }
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all"
               />
+            </div>
+
+            {/* Publish status */}
+            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
+              <label className="block text-sm font-bold text-gray-700 mb-3">
+                Status
+              </label>
+              <div className="flex rounded-none border-2 border-gray-200 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setBlogMeta({ ...blogMeta, published: true })}
+                  className={`flex-1 py-2 text-sm font-bold transition-colors ${
+                    blogMeta.published
+                      ? "bg-[#BF1A1A] text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Publish
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBlogMeta({ ...blogMeta, published: false })}
+                  className={`flex-1 py-2 text-sm font-bold transition-colors ${
+                    !blogMeta.published
+                      ? "bg-gray-700 text-white"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  Save as Draft
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {blogMeta.published
+                  ? "Live on the site once saved."
+                  : "Hidden from visitors until you publish it."}
+              </p>
             </div>
           </div>
         </div>

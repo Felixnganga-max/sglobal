@@ -341,15 +341,15 @@ export default function PlaceOrder() {
     .po-nav { position: sticky; top: 0; z-index: 100; background: #fff; border-bottom: 1px solid #e8e8e8; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
     .po-nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .po-back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #555; background: none; border: none; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.15s, color 0.15s; white-space: nowrap; }
-    .po-back-btn:hover { background: #f0f0f0; color: #BF1A1A; }
+    .po-back-btn:hover { background: #f0f0f0; color: var(--color-blue); }
     .po-nav-title { font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.01em; }
-    .po-badge { font-size: 11px; font-weight: 700; color: #BF1A1A; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .po-badge { font-size: 11px; font-weight: 700; color: var(--color-blue); background: var(--color-blue-tint); border: 1px solid rgba(1,0,40,0.18); padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
     .po-layout { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
     @media (max-width: 860px) { .po-layout { grid-template-columns: 1fr; padding: 20px 16px 60px; } }
     .po-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 16px; padding: 24px; }
     .po-card + .po-card { margin-top: 16px; }
     .po-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .po-step-dot { width: 26px; height: 26px; border-radius: 50%; background: #BF1A1A; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .po-step-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--color-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
     .po-step-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
     .po-field { margin-bottom: 14px; }
     .po-field:last-child { margin-bottom: 0; }
@@ -359,17 +359,17 @@ export default function PlaceOrder() {
     .po-input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
     .po-input { width: 100%; background: #fafafa; border: 1.5px solid #e8e8e8; border-radius: 10px; padding: 11px 14px 11px 38px; font-family: 'Outfit', sans-serif; font-size: 14px; color: #1a1a1a; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
     .po-input::placeholder { color: #bbb; }
-    .po-input:focus { border-color: #BF1A1A; background: #fff; box-shadow: 0 0 0 3px rgba(191,26,26,0.08); }
+    .po-input:focus { border-color: var(--color-blue); background: #fff; box-shadow: 0 0 0 3px rgba(1,0,40,0.08); }
     .po-input.error { border-color: #ef4444; }
     .po-input-pr { padding-right: 40px; }
     .po-textarea { width: 100%; background: #fafafa; border: 1.5px solid #e8e8e8; border-radius: 10px; padding: 11px 14px 11px 38px; font-family: 'Outfit', sans-serif; font-size: 14px; color: #1a1a1a; outline: none; transition: border-color 0.2s, box-shadow 0.2s; resize: none; }
     .po-textarea::placeholder { color: #bbb; }
-    .po-textarea:focus { border-color: #BF1A1A; background: #fff; box-shadow: 0 0 0 3px rgba(191,26,26,0.08); }
+    .po-textarea:focus { border-color: var(--color-blue); background: #fff; box-shadow: 0 0 0 3px rgba(1,0,40,0.08); }
     .po-error-msg { font-size: 11px; color: #ef4444; margin-top: 4px; font-weight: 500; }
     .po-pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #aaa; display: flex; align-items: center; padding: 0; }
     .po-pw-toggle:hover { color: #555; }
-    .po-auth-banner { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #7f1d1d; line-height: 1.6; }
-    .po-auth-banner strong { font-weight: 700; color: #BF1A1A; }
+    .po-auth-banner { background: var(--color-blue-tint); border: 1px solid rgba(1,0,40,0.18); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: var(--color-blue-dark); line-height: 1.6; }
+    .po-auth-banner strong { font-weight: 700; color: var(--color-blue); }
     .po-logged-in-banner { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; font-size: 12px; color: #166534; font-weight: 500; }
     .po-zone-accordion { border: 1.5px solid #e8e8e8; border-radius: 10px; overflow: hidden; background: #fafafa; }
     .po-zone-accordion.error { border-color: #ef4444; }
@@ -377,20 +377,20 @@ export default function PlaceOrder() {
     .po-zone-region:last-child { border-bottom: none; }
     .po-zone-region-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 11px 14px 11px 38px; background: none; border: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; color: #1a1a1a; text-align: left; transition: background 0.15s; position: relative; }
     .po-zone-region-btn:hover { background: #f5f5f5; }
-    .po-zone-region-btn.open { background: #fff8f8; color: #BF1A1A; }
+    .po-zone-region-btn.open { background: var(--color-blue-tint); color: var(--color-blue); }
     .po-zone-region-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; pointer-events: none; }
     .po-zone-region-fee { font-size: 11px; font-weight: 400; color: #999; flex: 1; }
     .po-zone-region-chevron { transition: transform 0.2s; color: #aaa; flex-shrink: 0; }
-    .po-zone-region-chevron.open { transform: rotate(180deg); color: #BF1A1A; }
+    .po-zone-region-chevron.open { transform: rotate(180deg); color: var(--color-blue); }
     .po-zone-locations { max-height: 0; overflow: hidden; background: #fff; transition: max-height 0.25s ease; }
     .po-zone-locations.open { max-height: 600px; }
     .po-zone-location-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 48px; background: none; border: none; border-top: 1px solid #f5f5f5; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 13px; color: #555; text-align: left; transition: background 0.15s, color 0.15s; }
-    .po-zone-location-btn:hover { background: #fef2f2; color: #BF1A1A; }
-    .po-zone-location-btn.selected { background: #fef2f2; color: #BF1A1A; font-weight: 600; }
+    .po-zone-location-btn:hover { background: var(--color-blue-tint); color: var(--color-blue); }
+    .po-zone-location-btn.selected { background: var(--color-blue-tint); color: var(--color-blue); font-weight: 600; }
     .po-zone-location-dot { width: 6px; height: 6px; border-radius: 50%; background: #e0e0e0; flex-shrink: 0; transition: background 0.15s; }
     .po-zone-location-btn.selected .po-zone-location-dot,
-    .po-zone-location-btn:hover .po-zone-location-dot { background: #BF1A1A; }
-    .po-zone-fee-pill { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 10px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 20px; font-size: 11px; font-weight: 600; color: #BF1A1A; }
+    .po-zone-location-btn:hover .po-zone-location-dot { background: var(--color-blue); }
+    .po-zone-fee-pill { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 10px; background: var(--color-blue-tint); border: 1px solid rgba(1,0,40,0.18); border-radius: 20px; font-size: 11px; font-weight: 600; color: var(--color-blue); }
     .po-cart-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; }
     .po-cart-item:last-child { border-bottom: none; padding-bottom: 0; }
     .po-cart-item:first-child { padding-top: 0; }
@@ -400,10 +400,10 @@ export default function PlaceOrder() {
     .po-cart-price { font-size: 12px; color: #888; margin-top: 2px; }
     .po-qty-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
     .po-qty-btn { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid #e0e0e0; background: #fff; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; padding: 0; flex-shrink: 0; }
-    .po-qty-btn:hover { border-color: #BF1A1A; color: #BF1A1A; background: #fef2f2; }
+    .po-qty-btn:hover { border-color: var(--color-blue); color: var(--color-blue); background: var(--color-blue-tint); }
     .po-qty-num { font-size: 14px; font-weight: 700; color: #1a1a1a; width: 20px; text-align: center; }
     .po-cart-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-    .po-subtotal { font-size: 14px; font-weight: 700; color: #BF1A1A; }
+    .po-subtotal { font-size: 14px; font-weight: 700; color: var(--color-red-dark); }
     .po-remove-btn { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fff; color: #bbb; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; padding: 0; }
     .po-remove-btn:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
     .po-summary-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 16px; padding: 24px; position: sticky; top: 76px; }
@@ -421,7 +421,7 @@ export default function PlaceOrder() {
     .po-delivery-val { font-size: 13px; font-weight: 600; color: #1a1a1a; }
     .po-total-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 4px; }
     .po-total-label { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; }
-    .po-total-amount { font-size: 24px; font-weight: 700; color: #1a1a1a; }
+    .po-total-amount { font-size: 24px; font-weight: 700; color: var(--color-red); }
     .po-no-zone-note { font-size: 11px; color: #bbb; margin-top: 4px; margin-bottom: 20px; }
     .po-btn-wa { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; border-radius: 12px; border: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px; color: #fff; background: #25D366; transition: all 0.2s; margin-bottom: 10px; }
     .po-btn-wa:hover { background: #1fba58; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.3); }
@@ -451,8 +451,8 @@ export default function PlaceOrder() {
     .po-channel-wa { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
     .po-channel-email { background: #fef2f2; color: #BF1A1A; border: 1px solid #fecaca; }
     .po-success-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-    .po-orders-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 28px; background: #BF1A1A; color: #fff; border: none; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .po-orders-btn:hover { background: #a51717; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(191,26,26,0.3); }
+    .po-orders-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 28px; background: var(--color-blue); color: #fff; border: none; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .po-orders-btn:hover { background: var(--color-blue-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(1,0,40,0.35); }
     .po-home-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; background: #fff; color: #1a1a1a; border: 1.5px solid #e8e8e8; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .po-home-btn:hover { border-color: #1a1a1a; transform: translateY(-1px); }
     .po-empty { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
@@ -460,8 +460,8 @@ export default function PlaceOrder() {
     .po-empty-icon { width: 72px; height: 72px; border-radius: 50%; background: #f5f5f5; border: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
     .po-empty-h { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
     .po-empty-p { font-size: 14px; color: #888; margin-bottom: 24px; line-height: 1.6; }
-    .po-browse-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: #BF1A1A; color: #fff; border: none; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .po-browse-btn:hover { background: #a51717; }
+    .po-browse-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: var(--color-blue); color: #fff; border: none; border-radius: 50px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .po-browse-btn:hover { background: var(--color-blue-dark); }
     @media (max-width: 480px) { .po-card { padding: 18px; } .po-summary-card { padding: 18px; } .po-cart-img { width: 50px; height: 50px; } }
   `;
 
@@ -728,7 +728,7 @@ export default function PlaceOrder() {
                     type="button"
                     onClick={() => navigate("/auth")}
                     style={{
-                      color: "#BF1A1A",
+                      color: "var(--color-blue)",
                       fontWeight: 700,
                       background: "none",
                       border: "none",

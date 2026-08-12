@@ -117,14 +117,14 @@ export default function ShopByCategory() {
           background: "#fff",
         }}
       >
-        {/* Header — flat red, no gradient */}
+        {/* Header — flat navy, no gradient */}
         <div
           style={{
             padding: "0.875rem 1.125rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "var(--color-red)",
+            backgroundColor: "var(--color-blue)",
           }}
         >
           <div>

@@ -116,7 +116,7 @@ export default function BlogEngagement({ blog }) {
           style={{
             borderColor: disliked ? "var(--color-blue)" : "var(--color-border)",
             color: disliked ? "var(--color-blue)" : "var(--color-text)",
-            backgroundColor: disliked ? "rgba(21,101,192,0.06)" : "transparent",
+            backgroundColor: disliked ? "var(--color-blue-tint)" : "transparent",
           }}
         >
           <ThumbsDown size={14} />

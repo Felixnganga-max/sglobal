@@ -6,20 +6,26 @@ const STRIPS = [
   {
     id: "pancake",
     title: "Pancake Mixes",
-    bg: "linear-gradient(135deg, #d96800 0%, #a34e00 100%)",
-    image: assets.top2,
+    image: assets.kentt,
+    // Scrim tuned to each photo's own brand tone (not flat black) so the
+    // card reads as one cohesive photographic panel, not a sticker on a
+    // solid swatch — darkest behind the text, fading out over the image.
+    overlay:
+      "linear-gradient(0deg, rgba(163,78,0,0.94) 0%, rgba(163,78,0,0.62) 42%, rgba(163,78,0,0.08) 78%, rgba(163,78,0,0) 100%)",
   },
   {
     id: "toppings",
     title: "Topping Sauces",
-    bg: "linear-gradient(135deg, #16a34a 0%, #0f6b32 100%)",
-    image: assets.topping,
+    image: assets.toppingg,
+    overlay:
+      "linear-gradient(0deg, rgba(15,107,50,0.94) 0%, rgba(15,107,50,0.62) 42%, rgba(15,107,50,0.08) 78%, rgba(15,107,50,0) 100%)",
   },
   {
     id: "spuds",
     title: "SPUDS Chips",
-    bg: "linear-gradient(135deg, #1a1a1a 0%, #000000 100%)",
-    image: assets.spuds,
+    image: assets.spudss,
+    overlay:
+      "linear-gradient(0deg, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.62) 42%, rgba(0,0,0,0.08) 78%, rgba(0,0,0,0) 100%)",
   },
 ];
 
@@ -31,14 +37,22 @@ export default function PromoStrip() {
           <Link
             key={s.id}
             to={`/products#cat-${encodeURIComponent(s.id)}`}
-            className="group relative overflow-hidden rounded-2xl flex items-center justify-between px-5 py-5"
-            style={{ background: s.bg, minHeight: "110px" }}
+            className="group relative overflow-hidden rounded-2xl flex flex-col justify-end px-5 py-5"
+            style={{ minHeight: "170px" }}
           >
-            <div>
-              <h3 className="font-heading text-white text-sm sm:text-base font-bold leading-tight">
+            <img
+              loading="lazy"
+              decoding="async"
+              src={s.image}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0" style={{ background: s.overlay }} />
+            <div className="relative z-10">
+              <h3 className="font-heading text-white text-sm sm:text-base font-bold leading-tight drop-shadow-sm">
                 {s.title}
               </h3>
-              <span className="mt-2 inline-flex items-center gap-1 text-white/80 text-[0.65rem] font-body font-bold uppercase tracking-widest">
+              <span className="mt-2 inline-flex items-center gap-1 text-white/90 text-[0.65rem] font-body font-bold uppercase tracking-widest">
                 Shop Now
                 <svg
                   className="w-3 h-3 group-hover:translate-x-0.5 transition-transform"
@@ -55,13 +69,6 @@ export default function PromoStrip() {
                 </svg>
               </span>
             </div>
-            <img
-              loading="lazy"
-              decoding="async"
-              src={s.image}
-              alt=""
-              className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-500"
-            />
           </Link>
         ))}
       </div>

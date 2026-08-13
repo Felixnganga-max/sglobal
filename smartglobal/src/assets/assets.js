@@ -32,11 +32,16 @@ import cb from "./cb.jpeg";
 import sp from "./sp.jpeg";
 import kiz from "./kiz.png";
 import recipe from "./recipe.png";
+import kentt from "./kentt.jpg";
+import spudss from "./spudss.jpg";
+import toppingg from "./toppingg.jpg";
 
 export const assets = {
   sp,
   hz,
-
+  kentt,
+  spudss,
+  toppingg,
   cb,
   kiz,
   sauces,

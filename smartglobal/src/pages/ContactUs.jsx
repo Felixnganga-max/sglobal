@@ -687,18 +687,24 @@ export default function ContactUs() {
       {/* ══════════════════════ JOIN THE FAMILY CTA ══════════════════════ */}
       <section
         className="page-x py-14 sm:py-16 text-center relative overflow-hidden"
-        style={{ backgroundColor: "var(--color-red)" }}
+        style={{ backgroundColor: "#fff" }}
       >
         <div className="relative max-w-lg mx-auto">
-          <h2 className="font-heading font-bold text-white text-2xl sm:text-3xl uppercase tracking-wide mb-2">
+          <h2
+            className="font-heading font-bold text-2xl sm:text-3xl uppercase tracking-wide mb-2"
+            style={{ color: "var(--color-text)" }}
+          >
             Join the Smart Global Family
           </h2>
-          <p className="font-body text-sm text-white/70 mb-7">
+          <p
+            className="font-body text-sm mb-7"
+            style={{ color: "var(--color-muted)" }}
+          >
             Explore our full range of premium foods and beverages, or chat
             with us directly on WhatsApp.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link to="/products" className="btn-white whitespace-nowrap">
+            <Link to="/products" className="btn-blue whitespace-nowrap">
               Shop Our Products
             </Link>
             <a

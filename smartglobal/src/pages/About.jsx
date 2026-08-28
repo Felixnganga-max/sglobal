@@ -459,7 +459,7 @@ export default function About() {
       {/* ══════════════════════ NEWSLETTER ══════════════════════ */}
       <section
         className="page-x py-14 sm:py-16 text-center"
-        style={{ backgroundColor: "var(--color-red)" }}
+        style={{ backgroundColor: "var(--color-blue)" }}
       >
         <div className="max-w-lg mx-auto">
           <h2 className="font-heading font-bold text-white text-2xl sm:text-3xl mb-2">
@@ -485,7 +485,7 @@ export default function About() {
             <button
               type="submit"
               className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white font-body font-bold text-xs uppercase tracking-widest whitespace-nowrap transition-transform duration-200 hover:scale-[1.03]"
-              style={{ color: "var(--color-red)" }}
+              style={{ color: "var(--color-blue)" }}
             >
               Subscribe
               <Send size={13} />

@@ -30,8 +30,8 @@ import {
   MessageCircle,
   ThumbsUp,
 } from "lucide-react";
-import blogsData from "../lib/data";
 import { blogApi } from "../api/blogApi";
+import { BLOG_CATEGORIES } from "../lib/categories";
 import BlogCommentsModal from "./BlogCommentsModal";
 
 /**
@@ -55,6 +55,7 @@ export default function DashboardBlogs() {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [commentsModalBlog, setCommentsModalBlog] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState({});
   const [currentBlog, setCurrentBlog] = useState(null);
   const [editorContent, setEditorContent] = useState("");
   const [blogMeta, setBlogMeta] = useState({
@@ -62,20 +63,29 @@ export default function DashboardBlogs() {
     slug: "",
     category: "",
     tags: [],
-    excerpt: "",
     featuredImage: null,
     author: "Smart Global Team",
     published: true,
   });
   const [tagInput, setTagInput] = useState("");
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
+  const [insertingImage, setInsertingImage] = useState(false);
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
+  const contentImageInputRef = useRef(null);
 
   useEffect(() => {
     fetchBlogs();
+    fetchUnreadCounts();
   }, []);
+
+  const fetchUnreadCounts = async () => {
+    try {
+      const res = await blogApi.getUnreadCommentCounts();
+      setUnreadCounts(res.data?.byBlog || {});
+    } catch {
+      // Non-critical — badges just won't show.
+    }
+  };
 
   // Sync the contentEditable DOM node only when the editor opens or a
   // different post is loaded — never on every keystroke (see the comment
@@ -108,7 +118,6 @@ export default function DashboardBlogs() {
       slug: "",
       category: "",
       tags: [],
-      excerpt: "",
       featuredImage: null,
       author: "Smart Global Team",
       published: true,
@@ -125,7 +134,6 @@ export default function DashboardBlogs() {
       slug: blog.slug,
       category: blog.category,
       tags: blog.tags,
-      excerpt: blog.excerpt,
       featuredImage: blog.featuredImage?.url || null,
       author: blog.author?.name || "Smart Global Team",
       published: blog.published !== undefined ? blog.published : true,
@@ -151,12 +159,9 @@ export default function DashboardBlogs() {
     if (
       !blogMeta.title ||
       !blogMeta.category ||
-      !blogMeta.excerpt ||
       stripHtml(editorContent).length === 0
     ) {
-      alert(
-        "Please fill in all required fields (Title, Category, Excerpt, Content)",
-      );
+      alert("Please fill in all required fields (Title, Category, Content)");
       return;
     }
     if (!currentBlog && !blogMeta.featuredImage) {
@@ -176,7 +181,6 @@ export default function DashboardBlogs() {
       title: blogMeta.title,
       slug,
       category: blogMeta.category,
-      excerpt: blogMeta.excerpt,
       content: editorContent,
       tags: blogMeta.tags,
       readTime: calculateReadTime(editorContent),
@@ -236,18 +240,17 @@ export default function DashboardBlogs() {
     });
   };
 
-  // Insert image at the cursor (or at the end if nothing is selected inside
-  // the editor). The DOM is the source of truth here, so we read it back
-  // into state immediately after mutating it — nothing re-renders the
-  // editor from state on its own anymore (see the editor <div> below).
-  const handleInsertImage = () => {
-    if (!imageUrl) return;
-
+  // Insert an uploaded image at the cursor (or at the end if nothing is
+  // selected inside the editor). The DOM is the source of truth here, so
+  // we read it back into state immediately after mutating it — nothing
+  // re-renders the editor from state on its own anymore (see the editor
+  // <div> below).
+  const insertImageIntoEditor = (url) => {
     const editor = editorRef.current;
     if (!editor) return;
 
     const img = document.createElement("img");
-    img.src = imageUrl;
+    img.src = url;
     img.alt = "Blog image";
     img.loading = "lazy";
     img.decoding = "async";
@@ -270,8 +273,24 @@ export default function DashboardBlogs() {
     }
 
     setEditorContent(editor.innerHTML);
-    setImageUrl("");
-    setShowImageModal(false);
+  };
+
+  // Always uploads straight from the admin's computer to Cloudinary — no
+  // "paste an image address" option, so nothing embedded in a post ever
+  // depends on a link elsewhere on the web going down.
+  const handleContentImageSelect = async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setInsertingImage(true);
+    try {
+      const res = await blogApi.uploadImage(file);
+      insertImageIntoEditor(res.data.url);
+    } catch (err) {
+      alert(err.message || "Failed to upload image");
+    } finally {
+      setInsertingImage(false);
+    }
   };
 
   // Format text
@@ -495,10 +514,15 @@ export default function DashboardBlogs() {
                           </button>
                           <button
                             onClick={() => setCommentsModalBlog(blog)}
-                            className="p-2 hover:bg-yellow-50 rounded-none transition-colors text-yellow-700"
+                            className="relative p-2 hover:bg-yellow-50 rounded-none transition-colors text-yellow-700"
                             title="Comments"
                           >
                             <MessageCircle size={18} />
+                            {unreadCounts[blog._id] > 0 && (
+                              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[#BF1A1A] text-white text-[0.6rem] font-black rounded-full">
+                                {unreadCounts[blog._id]}
+                              </span>
+                            )}
                           </button>
                           <button
                             onClick={() => handleDeleteBlog(blog._id)}
@@ -521,6 +545,9 @@ export default function DashboardBlogs() {
           <BlogCommentsModal
             blog={commentsModalBlog}
             onClose={() => setCommentsModalBlog(null)}
+            onRead={(blogId) =>
+              setUnreadCounts((prev) => ({ ...prev, [blogId]: 0 }))
+            }
           />
         )}
       </div>
@@ -693,10 +720,24 @@ export default function DashboardBlogs() {
                   />
                   <div className="w-px h-6 bg-gray-300" />
                   <ToolbarButton
-                    icon={<ImageIcon size={18} />}
-                    onClick={() => setShowImageModal(true)}
-                    title="Insert Image"
+                    icon={
+                      insertingImage ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <ImageIcon size={18} />
+                      )
+                    }
+                    onClick={() => contentImageInputRef.current?.click()}
+                    title="Insert image from your computer"
                     primary
+                    disabled={insertingImage}
+                  />
+                  <input
+                    ref={contentImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleContentImageSelect}
+                    className="hidden"
                   />
                 </div>
               </div>
@@ -719,22 +760,6 @@ export default function DashboardBlogs() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Excerpt */}
-            <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Excerpt *
-              </label>
-              <textarea
-                value={blogMeta.excerpt}
-                onChange={(e) =>
-                  setBlogMeta({ ...blogMeta, excerpt: e.target.value })
-                }
-                placeholder="Brief description for previews..."
-                rows={4}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all resize-none"
-              />
-            </div>
-
             {/* Category */}
             <div className="bg-white rounded-none p-6 shadow-lg border-2 border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -748,9 +773,9 @@ export default function DashboardBlogs() {
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all font-semibold"
               >
                 <option value="">Select category...</option>
-                {blogsData.categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
-                    {cat.name}
+                {BLOG_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
                   </option>
                 ))}
               </select>
@@ -867,68 +892,6 @@ export default function DashboardBlogs() {
           </div>
         </div>
       </div>
-
-      {/* Image Insert Modal */}
-      {showImageModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-none p-8 max-w-lg w-full shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-black text-gray-900">
-                Insert Image
-              </h3>
-              <button
-                onClick={() => setShowImageModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-none transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-none focus:border-[#BF1A1A] focus:outline-none transition-all"
-                />
-              </div>
-              {imageUrl && (
-                <div className="border-2 border-gray-200 rounded-none p-4">
-                  <img
-                    loading="lazy"
-                    decoding="async"
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full rounded-none"
-                    onError={(e) => {
-                      e.target.src = "";
-                      e.target.alt = "Invalid image URL";
-                    }}
-                  />
-                </div>
-              )}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowImageModal(false)}
-                  className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-none font-bold transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleInsertImage}
-                  className="flex-1 px-6 py-3 bg-[#BF1A1A] hover:bg-[#8B1414] text-white rounded-none font-bold transition-all"
-                >
-                  Insert
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -953,12 +916,13 @@ function StatCard({ icon, label, value, color }) {
   );
 }
 
-function ToolbarButton({ icon, onClick, title, primary }) {
+function ToolbarButton({ icon, onClick, title, primary, disabled }) {
   return (
     <button
       onClick={onClick}
       title={title}
-      className={`p-2 rounded-none transition-all ${
+      disabled={disabled}
+      className={`p-2 rounded-none transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
         primary
           ? "bg-[#BF1A1A] text-white hover:bg-[#8B1414]"
           : "hover:bg-gray-200 text-gray-700"

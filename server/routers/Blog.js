@@ -9,11 +9,16 @@ const {
   deleteBlog,
   likeBlog,
   dislikeBlog,
+  uploadBlogImage,
 } = require("../controllers/Blog");
 const {
   getComments,
   createComment,
   deleteComment,
+  replyToComment,
+  likeComment,
+  markCommentsRead,
+  getUnreadCommentCounts,
 } = require("../controllers/Comment");
 const { protect, authorize, optionalAuth } = require("../middleware/authMiddleware");
 
@@ -41,6 +46,37 @@ router.put(
   updateBlog,
 );
 router.delete("/:id", protect, authorize("admin"), deleteBlog);
+router.post(
+  "/upload-image",
+  protect,
+  authorize("admin"),
+  uploadImage.single("image"),
+  uploadBlogImage,
+);
+router.patch(
+  "/:blogId/comments/mark-read",
+  protect,
+  authorize("admin"),
+  markCommentsRead,
+);
+router.get(
+  "/comments/unread-counts",
+  protect,
+  authorize("admin"),
+  getUnreadCommentCounts,
+);
+router.patch(
+  "/comments/:commentId/reply",
+  protect,
+  authorize("admin"),
+  replyToComment,
+);
+router.patch(
+  "/comments/:commentId/like",
+  protect,
+  authorize("admin"),
+  likeComment,
+);
 router.delete(
   "/comments/:commentId",
   protect,

@@ -90,3 +90,116 @@ exports.deleteComment = async (req, res) => {
     });
   }
 };
+
+// @desc    Reply to a comment as Smart Global
+// @route   PATCH /smartglobal/blogs/comments/:commentId/reply
+// @access  Private/Admin
+exports.replyToComment = async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Reply message is required",
+      });
+    }
+
+    const comment = await Comment.findByIdAndUpdate(
+      req.params.commentId,
+      { adminReply: { message: message.trim(), repliedAt: new Date() } },
+      { new: true, runValidators: true },
+    );
+
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Reply posted",
+      data: comment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Like a comment (business appreciation gesture)
+// @route   PATCH /smartglobal/blogs/comments/:commentId/like
+// @access  Private/Admin
+exports.likeComment = async (req, res) => {
+  try {
+    const comment = await Comment.findByIdAndUpdate(
+      req.params.commentId,
+      { $inc: { likes: 1 } },
+      { new: true },
+    );
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+    res.status(200).json({ success: true, data: comment });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Mark all comments on a blog as read
+// @route   PATCH /smartglobal/blogs/:blogId/comments/mark-read
+// @access  Private/Admin
+exports.markCommentsRead = async (req, res) => {
+  try {
+    await Comment.updateMany(
+      { blog: req.params.blogId, read: false },
+      { read: true },
+    );
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Count unread comments, grouped by blog — powers the "new
+//          comment" badges in the dashboard
+// @route   GET /smartglobal/blogs/comments/unread-counts
+// @access  Private/Admin
+exports.getUnreadCommentCounts = async (req, res) => {
+  try {
+    const results = await Comment.aggregate([
+      { $match: { read: false } },
+      { $group: { _id: "$blog", count: { $sum: 1 } } },
+    ]);
+
+    const byBlog = {};
+    let total = 0;
+    results.forEach((r) => {
+      byBlog[r._id.toString()] = r.count;
+      total += r.count;
+    });
+
+    res.status(200).json({ success: true, data: { total, byBlog } });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};

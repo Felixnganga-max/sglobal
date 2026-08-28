@@ -4,13 +4,9 @@ import { blogApi } from "../api/blogApi";
 import { formatDate } from "../lib/blogFormat";
 
 /**
- * Like/dislike + comments for a single blog post. Only wired to the
- * backend for posts actually published through the dashboard (`isLive`) —
- * the curated showcase posts shipped in lib/data.js have no real record to
- * attach reactions or comments to.
+ * Like/dislike + comments for a single blog post.
  */
 export default function BlogEngagement({ blog }) {
-  const isLive = !!blog.isLive;
   const blogId = blog._id;
 
   const [likes, setLikes] = useState(blog.likes || 0);
@@ -19,7 +15,7 @@ export default function BlogEngagement({ blog }) {
   const [disliked, setDisliked] = useState(false);
 
   const [comments, setComments] = useState([]);
-  const [loadingComments, setLoadingComments] = useState(isLive);
+  const [loadingComments, setLoadingComments] = useState(true);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -32,10 +28,6 @@ export default function BlogEngagement({ blog }) {
     setDisliked(false);
     setComments([]);
 
-    if (!isLive) {
-      setLoadingComments(false);
-      return;
-    }
     setLoadingComments(true);
     blogApi
       .getComments(blogId)
@@ -43,10 +35,10 @@ export default function BlogEngagement({ blog }) {
       .catch(() => {})
       .finally(() => setLoadingComments(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blogId, isLive]);
+  }, [blogId]);
 
   const handleLike = async () => {
-    if (!isLive || liked) return;
+    if (liked) return;
     setLiked(true);
     setDisliked(false);
     setLikes((n) => n + 1);
@@ -58,7 +50,7 @@ export default function BlogEngagement({ blog }) {
   };
 
   const handleDislike = async () => {
-    if (!isLive || disliked) return;
+    if (disliked) return;
     setDisliked(true);
     setLiked(false);
     setDislikes((n) => n + 1);
@@ -71,7 +63,7 @@ export default function BlogEngagement({ blog }) {
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!isLive || !name.trim() || !message.trim()) return;
+    if (!name.trim() || !message.trim()) return;
     setSubmitting(true);
     setCommentError(null);
     try {
@@ -98,7 +90,6 @@ export default function BlogEngagement({ blog }) {
       <div className="flex flex-wrap items-center gap-3 mb-10">
         <button
           onClick={handleLike}
-          disabled={!isLive}
           className="flex items-center gap-2 px-4 py-2 rounded-full border font-body text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             borderColor: liked ? "var(--color-red)" : "var(--color-border)",
@@ -111,7 +102,6 @@ export default function BlogEngagement({ blog }) {
         </button>
         <button
           onClick={handleDislike}
-          disabled={!isLive}
           className="flex items-center gap-2 px-4 py-2 rounded-full border font-body text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             borderColor: disliked ? "var(--color-blue)" : "var(--color-border)",
@@ -122,104 +112,122 @@ export default function BlogEngagement({ blog }) {
           <ThumbsDown size={14} />
           {dislikes}
         </button>
-        {!isLive && (
-          <span className="text-xs" style={{ color: "var(--color-muted)" }}>
-            Reactions are available on posts published from the dashboard.
-          </span>
-        )}
       </div>
 
       {/* Comments */}
       <div>
         <p className="text-eyebrow mb-3 flex items-center gap-2">
           <MessageCircle size={13} /> Comments{" "}
-          {isLive && comments.length > 0 && `(${comments.length})`}
+          {comments.length > 0 && `(${comments.length})`}
         </p>
 
-        {!isLive ? (
+        <form onSubmit={handleSubmitComment} className="mb-6 space-y-2">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            required
+            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
+            style={{ border: "1px solid var(--color-border)" }}
+          />
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Share your thoughts..."
+            rows={3}
+            required
+            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none resize-none"
+            style={{ border: "1px solid var(--color-border)" }}
+          />
+          {commentError && (
+            <p className="text-xs" style={{ color: "var(--color-red)" }}>
+              {commentError}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary text-xs disabled:opacity-50"
+          >
+            {submitting ? "Posting..." : "Post Comment"}
+          </button>
+        </form>
+
+        {loadingComments ? (
+          <div className="flex justify-center py-6">
+            <Loader2
+              className="animate-spin"
+              size={18}
+              style={{ color: "var(--color-orange)" }}
+            />
+          </div>
+        ) : comments.length === 0 ? (
           <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-            Comments open once this post is published live from the dashboard.
+            No comments yet — be the first to share your thoughts.
           </p>
         ) : (
-          <>
-            <form onSubmit={handleSubmitComment} className="mb-6 space-y-2">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                required
-                className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
-                style={{ border: "1px solid var(--color-border)" }}
-              />
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Share your thoughts..."
-                rows={3}
-                required
-                className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none resize-none"
-                style={{ border: "1px solid var(--color-border)" }}
-              />
-              {commentError && (
-                <p className="text-xs" style={{ color: "var(--color-red)" }}>
-                  {commentError}
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="btn-primary text-xs disabled:opacity-50"
+          <div className="space-y-4">
+            {comments.map((c) => (
+              <div
+                key={c._id}
+                className="pb-4 border-b"
+                style={{ borderColor: "var(--color-border)" }}
               >
-                {submitting ? "Posting..." : "Post Comment"}
-              </button>
-            </form>
-
-            {loadingComments ? (
-              <div className="flex justify-center py-6">
-                <Loader2
-                  className="animate-spin"
-                  size={18}
-                  style={{ color: "var(--color-orange)" }}
-                />
-              </div>
-            ) : comments.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                No comments yet — be the first to share your thoughts.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {comments.map((c) => (
-                  <div
-                    key={c._id}
-                    className="pb-4 border-b"
-                    style={{ borderColor: "var(--color-border)" }}
+                <div className="flex items-center justify-between mb-1 gap-3">
+                  <span
+                    className="font-body text-sm font-bold"
+                    style={{ color: "var(--color-text)" }}
                   >
-                    <div className="flex items-center justify-between mb-1 gap-3">
-                      <span
-                        className="font-body text-sm font-bold"
-                        style={{ color: "var(--color-text)" }}
-                      >
-                        {c.name}
-                      </span>
-                      <span
-                        className="font-body text-xs flex-shrink-0"
-                        style={{ color: "var(--color-muted)" }}
-                      >
-                        {formatDate(c.createdAt)}
-                      </span>
-                    </div>
+                    {c.name}
+                  </span>
+                  <span
+                    className="font-body text-xs flex-shrink-0"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    {formatDate(c.createdAt)}
+                  </span>
+                </div>
+                <p className="font-body text-sm" style={{ color: "#374151" }}>
+                  {c.message}
+                </p>
+                {c.likes > 0 && (
+                  <span
+                    className="mt-1.5 inline-flex items-center gap-1 font-body text-xs"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    <Heart
+                      size={11}
+                      style={{
+                        fill: "var(--color-red)",
+                        color: "var(--color-red)",
+                      }}
+                    />
+                    {c.likes}
+                  </span>
+                )}
+                {c.adminReply?.message && (
+                  <div
+                    className="mt-3 ml-4 pl-3 py-2 rounded-lg"
+                    style={{
+                      borderLeft: "2px solid var(--color-blue)",
+                      backgroundColor: "var(--color-blue-tint)",
+                    }}
+                  >
                     <p
-                      className="font-body text-sm"
-                      style={{ color: "#374151" }}
+                      className="font-body text-xs font-bold mb-1"
+                      style={{ color: "var(--color-blue)" }}
                     >
-                      {c.message}
+                      Smart Global Team replied
+                    </p>
+                    <p className="font-body text-sm" style={{ color: "#374151" }}>
+                      {c.adminReply.message}
                     </p>
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
       </div>
     </div>

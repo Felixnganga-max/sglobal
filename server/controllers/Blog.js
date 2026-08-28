@@ -8,6 +8,14 @@ const parseArrayField = (value) => {
 
 const isBlankHtml = (html) => !html || !html.replace(/<[^>]*>/g, "").trim();
 
+// Derives a short preview snippet from the post body so admins no longer
+// have to hand-write an excerpt — used whenever one isn't supplied.
+const deriveExcerpt = (html) => {
+  const text = (html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (text.length <= 180) return text;
+  return `${text.slice(0, 177).trimEnd()}...`;
+};
+
 // @desc    Get all blogs with filtering, search, and pagination
 // @route   GET /smartglobal/blogs
 // @access  Public
@@ -122,7 +130,7 @@ exports.createBlog = async (req, res) => {
       published,
     } = req.body;
 
-    if (!title || !category || !excerpt || !content) {
+    if (!title || !category || !content) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
@@ -157,7 +165,7 @@ exports.createBlog = async (req, res) => {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, ""),
       category,
-      excerpt,
+      excerpt: excerpt?.trim() || deriveExcerpt(content),
       content,
       tags: parseArrayField(tags),
       readTime: readTime || "5 min read",
@@ -236,7 +244,10 @@ exports.updateBlog = async (req, res) => {
       title: title || blog.title,
       slug: slug || blog.slug,
       category: category || blog.category,
-      excerpt: excerpt || blog.excerpt,
+      excerpt:
+        excerpt?.trim() ||
+        blog.excerpt ||
+        deriveExcerpt(content !== undefined ? content : blog.content),
       content: content !== undefined ? content : blog.content,
       tags: tags !== undefined ? parseArrayField(tags) : blog.tags,
       readTime: readTime || blog.readTime,
@@ -256,6 +267,35 @@ exports.updateBlog = async (req, res) => {
       data: updated,
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Upload an image for use inline in a blog body — the editor
+//          always uploads from the admin's computer, never links a
+//          remote URL.
+// @route   POST /smartglobal/blogs/upload-image
+// @access  Private/Admin
+exports.uploadBlogImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
+      });
+    }
+    res.status(201).json({
+      success: true,
+      data: { url: req.file.path, publicId: req.file.filename },
+    });
+  } catch (error) {
+    if (req.file) {
+      await deleteImage(req.file.filename);
+    }
     res.status(500).json({
       success: false,
       message: "Server Error",

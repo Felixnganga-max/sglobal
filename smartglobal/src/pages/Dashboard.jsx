@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   User,
+  Activity,
 } from "lucide-react";
 
 // Import tab components
@@ -20,6 +21,7 @@ import DashboardMain from "../components/DashboardMain";
 import DashboardProducts from "../components/DashboardProducts";
 import DashboardRecipes from "../components/Dashboardrecipes";
 import DashboardBlogs from "../components/Dashboardblogs";
+import DashboardActivity from "../components/DashboardActivity";
 import DashboardSettings from "../components/Dashboardsettings";
 import ZoneManager from "../components/ZoneManager";
 import Promos from "../components/Promos";
@@ -32,6 +34,7 @@ const NAV_ITEMS = [
   { id: "promos", label: "Promos", icon: BookOpen },
   { id: "recipes", label: "Recipes", icon: BookOpen },
   { id: "blogs", label: "Blogs", icon: FileText },
+  { id: "activity", label: "User Activity", icon: Activity },
   { id: "zones", label: "Zones", icon: FileText },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -286,6 +289,8 @@ export default function Dashboard() {
         return <ZoneManager />;
       case "blogs":
         return <DashboardBlogs />;
+      case "activity":
+        return <DashboardActivity />;
       case "settings":
         return <DashboardSettings user={user} onUserUpdate={fetchUserData} />;
       default:

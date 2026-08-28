@@ -14,10 +14,11 @@ import {
   ChefHat,
   Utensils,
 } from "lucide-react";
-import blogsData from "../lib/data";
 import { blogApi } from "../api/blogApi";
-import { mergeWithLive, normalizeLiveBlog } from "../lib/mergeLive";
+import { activityApi } from "../api/activityApi";
+import { normalizeLiveBlog } from "../lib/mergeLive";
 import { formatDate, contentToHtml } from "../lib/blogFormat";
+import { BLOG_CATEGORIES } from "../lib/categories";
 import BlogEngagement from "../components/BlogEngagement";
 
 export default function Blogs() {
@@ -27,7 +28,7 @@ export default function Blogs() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [page, setPage] = useState(1);
   const [currentPost, setCurrentPost] = useState(null);
-  const [allBlogs, setAllBlogs] = useState(blogsData.blogs);
+  const [allBlogs, setAllBlogs] = useState([]);
   const perPage = 5;
 
   useEffect(() => {
@@ -38,11 +39,10 @@ export default function Blogs() {
     blogApi
       .getAllBlogs({ limit: 100 })
       .then((response) => {
-        const live = (response.data || []).map(normalizeLiveBlog);
-        setAllBlogs(mergeWithLive(blogsData.blogs, live));
+        setAllBlogs((response.data || []).map(normalizeLiveBlog));
       })
       .catch(() => {
-        // Keep showing the curated posts if the live fetch fails.
+        // Leave the list empty if the live fetch fails.
       });
   }, []);
 
@@ -56,10 +56,7 @@ export default function Blogs() {
       .then((res) => {
         if (res?.data) setCurrentPost(normalizeLiveBlog(res.data));
       })
-      .catch(() => {
-        const dummyMatch = blogsData.blogs.find((b) => b.slug === postSlug);
-        if (dummyMatch) setCurrentPost(dummyMatch);
-      });
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,7 +66,7 @@ export default function Blogs() {
     return Array.from(s);
   }, [allBlogs]);
 
-  const categories = blogsData.categories.map((cat) => cat.name);
+  const categories = BLOG_CATEGORIES;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -109,16 +106,17 @@ export default function Blogs() {
   function openPost(post) {
     setCurrentPost(post);
     window.scrollTo({ top: 0, behavior: "smooth" });
-    // Record a real view server-side for posts published from the
-    // dashboard (the curated showcase posts have no backend record).
-    if (post.isLive) {
-      blogApi
-        .getBlog(post._id)
-        .then((res) => {
-          if (res?.data) setCurrentPost((prev) => ({ ...prev, ...res.data, isLive: true }));
-        })
-        .catch(() => {});
-    }
+    activityApi.log("read_blog", {
+      targetId: post._id || post.id,
+      targetTitle: post.title,
+    });
+    // Refetch by id so the view counter increments server-side.
+    blogApi
+      .getBlog(post._id || post.id)
+      .then((res) => {
+        if (res?.data) setCurrentPost((prev) => ({ ...prev, ...res.data, isLive: true }));
+      })
+      .catch(() => {});
   }
   function closePost() {
     setCurrentPost(null);
@@ -143,20 +141,22 @@ export default function Blogs() {
   if (currentPost) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Post hero */}
-        <div
-          className="w-full h-64 sm:h-80 relative overflow-hidden"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--color-orange) 0%, var(--color-orange-dark) 100%)",
-          }}
-        >
+        {/* Post hero — the featured image itself is the hero, with just
+            enough of a bottom scrim to keep the title legible. */}
+        <div className="w-full h-72 sm:h-[26rem] relative overflow-hidden">
           <img
             loading="lazy"
             decoding="async"
             src={currentPost.featuredImage}
             alt={currentPost.title}
-            className="absolute inset-0 w-full h-full object-cover opacity-20"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.05) 75%, transparent 100%)",
+            }}
           />
           <div className="absolute inset-0 page-x flex flex-col justify-end pb-8">
             <button
@@ -185,7 +185,7 @@ export default function Blogs() {
           </div>
         </div>
 
-        <article className="page-x py-10 max-w-4xl">
+        <article className="page-x py-10 w-full">
           {/* Meta row */}
           <div
             className="flex flex-wrap items-center justify-between gap-4 py-5 border-b mb-8"

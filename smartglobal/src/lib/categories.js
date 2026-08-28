@@ -30,3 +30,14 @@ export function categorySlug(category) {
 export function categoryAnchor(category) {
   return `cat-${categorySlug(category)}`;
 }
+
+// Must match the `category` enum on the backend Blog model
+// (server/models/Blog.js) exactly.
+export const BLOG_CATEGORIES = [
+  "Product Guides",
+  "Recipe Ideas",
+  "Nutrition & Health",
+  "Family Cooking",
+  "Quality Standards",
+  "Shopping Tips",
+];

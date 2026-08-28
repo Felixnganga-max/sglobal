@@ -15,6 +15,7 @@ import React, {
 
 // ── Order API ─────────────────────────────────────────────────────────────────
 import { API_BASE_URL } from "../api/config";
+import { activityApi } from "../api/activityApi";
 const ORDER_API = `${API_BASE_URL}/orders/create-order`;
 
 function getSessionId() {
@@ -48,8 +49,8 @@ export function CartProvider({ children }) {
 
   /** Add a product to cart (or increment qty if already present) */
   const addToCart = (product, qty = 1) => {
+    const id = product._id || product.id;
     setCartItems((prev) => {
-      const id = product._id || product.id;
       const existing = prev.find((item) => (item._id || item.id) === id);
       if (existing) {
         return prev.map((item) =>
@@ -59,6 +60,11 @@ export function CartProvider({ children }) {
         );
       }
       return [...prev, { ...product, cartQty: qty }];
+    });
+    activityApi.log("add_to_cart", {
+      targetId: id,
+      targetTitle: product.title || product.name,
+      meta: { qty },
     });
   };
 

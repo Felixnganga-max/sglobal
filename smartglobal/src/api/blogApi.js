@@ -148,6 +148,55 @@ export const blogApi = {
     });
     return handleResponse(response);
   },
+
+  replyToComment: async (commentId, message) => {
+    const response = await fetch(
+      `${API_BASE_URL}/comments/${commentId}/reply`,
+      {
+        method: "PATCH",
+        headers: createHeaders(),
+        body: JSON.stringify({ message }),
+      },
+    );
+    return handleResponse(response);
+  },
+
+  likeComment: async (commentId) => {
+    const response = await fetch(
+      `${API_BASE_URL}/comments/${commentId}/like`,
+      { method: "PATCH", headers: createHeaders() },
+    );
+    return handleResponse(response);
+  },
+
+  markCommentsRead: async (blogId) => {
+    const response = await fetch(
+      `${API_BASE_URL}/${blogId}/comments/mark-read`,
+      { method: "PATCH", headers: createHeaders() },
+    );
+    return handleResponse(response);
+  },
+
+  getUnreadCommentCounts: async () => {
+    const response = await fetch(`${API_BASE_URL}/comments/unread-counts`, {
+      method: "GET",
+      headers: createHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  // Always uploads a real file to Cloudinary — no image-by-URL path, per
+  // the editor's "always pick from my computer" requirement.
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    const response = await fetch(`${API_BASE_URL}/upload-image`, {
+      method: "POST",
+      headers: createHeaders(true),
+      body: formData,
+    });
+    return handleResponse(response);
+  },
 };
 
 export default blogApi;

@@ -12,6 +12,7 @@ const orderRoutes = require("./routers/Order");
 const zoneRoutes = require("./routers/zone");
 const promoRoutes = require("./routers/Promovideo");
 const blogRoutes = require("./routers/Blog");
+const activityRoutes = require("./routers/Activity");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -71,6 +72,7 @@ app.use("/smartglobal/orders", orderRoutes);
 app.use("/smartglobal/zones", zoneRoutes);
 app.use("/smartglobal/promos", promoRoutes);
 app.use("/smartglobal/blogs", blogRoutes);
+app.use("/smartglobal/activity", activityRoutes);
 
 // ✅ 404 Handler
 app.use((req, res) => {

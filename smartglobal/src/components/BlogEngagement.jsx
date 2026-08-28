@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Heart, ThumbsDown, MessageCircle, Loader2 } from "lucide-react";
 import { blogApi } from "../api/blogApi";
 import { formatDate } from "../lib/blogFormat";
+import { getAnonIdentity } from "../lib/anon";
 
 /**
  * Like/dislike + comments for a single blog post.
@@ -16,7 +17,6 @@ export default function BlogEngagement({ blog }) {
 
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(true);
-  const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [commentError, setCommentError] = useState(null);
@@ -63,16 +63,16 @@ export default function BlogEngagement({ blog }) {
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !message.trim()) return;
+    if (!message.trim()) return;
     setSubmitting(true);
     setCommentError(null);
     try {
+      const { anonName } = getAnonIdentity();
       const res = await blogApi.createComment(blogId, {
-        name: name.trim(),
+        name: anonName,
         message: message.trim(),
       });
       setComments((prev) => [res.data, ...prev]);
-      setName("");
       setMessage("");
     } catch (err) {
       setCommentError(err.message || "Failed to post comment");
@@ -122,15 +122,6 @@ export default function BlogEngagement({ blog }) {
         </p>
 
         <form onSubmit={handleSubmitComment} className="mb-6 space-y-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
-            required
-            className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
-            style={{ border: "1px solid var(--color-border)" }}
-          />
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}

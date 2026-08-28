@@ -30,10 +30,10 @@ exports.createComment = async (req, res) => {
   try {
     const { name, message } = req.body;
 
-    if (!name?.trim() || !message?.trim()) {
+    if (!message?.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Name and comment message are required",
+        message: "Comment message is required",
       });
     }
 
@@ -47,7 +47,7 @@ exports.createComment = async (req, res) => {
 
     const comment = await Comment.create({
       blog: req.params.blogId,
-      name: name.trim(),
+      name: name?.trim() || "Anonymous",
       message: message.trim(),
     });
 

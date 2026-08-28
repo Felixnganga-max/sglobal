@@ -7,11 +7,13 @@ const commentSchema = new mongoose.Schema(
       ref: "Blog",
       required: true,
     },
+    // Auto-filled from the visitor's generated anonymous identity — no
+    // "type your name" prompt slowing down the comment form.
     name: {
       type: String,
-      required: [true, "Name is required"],
       trim: true,
       maxlength: [80, "Name cannot exceed 80 characters"],
+      default: "Anonymous",
     },
     message: {
       type: String,

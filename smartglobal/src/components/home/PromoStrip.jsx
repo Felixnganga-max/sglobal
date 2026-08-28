@@ -6,7 +6,7 @@ const STRIPS = [
   {
     id: "pancake",
     title: "Pancake Mixes",
-    image: assets.kentt,
+    image: assets.pan,
     // Scrim tuned to each photo's own brand tone (not flat black) so the
     // card reads as one cohesive photographic panel, not a sticker on a
     // solid swatch — darkest behind the text, fading out over the image.
@@ -16,7 +16,7 @@ const STRIPS = [
   {
     id: "toppings",
     title: "Topping Sauces",
-    image: assets.toppingg,
+    image: assets.tops,
     overlay:
       "linear-gradient(0deg, rgba(15,107,50,0.94) 0%, rgba(15,107,50,0.62) 42%, rgba(15,107,50,0.08) 78%, rgba(15,107,50,0) 100%)",
   },
@@ -47,7 +47,10 @@ export default function PromoStrip() {
               alt=""
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0" style={{ background: s.overlay }} />
+            <div
+              className="absolute inset-0"
+              style={{ background: s.overlay }}
+            />
             <div className="relative z-10">
               <h3 className="font-heading text-white text-sm sm:text-base font-bold leading-tight drop-shadow-sm">
                 {s.title}

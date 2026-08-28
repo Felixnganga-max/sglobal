@@ -110,11 +110,14 @@ export default function Blogs() {
       targetId: post._id || post.id,
       targetTitle: post.title,
     });
-    // Refetch by id so the view counter increments server-side.
+    // Refetch by id so the view counter increments server-side. The raw
+    // response has featuredImage as {url, publicId} and no author avatar —
+    // normalize it the same way the list fetch does, or merging it in
+    // clobbers the working image/avatar with an unrenderable object.
     blogApi
       .getBlog(post._id || post.id)
       .then((res) => {
-        if (res?.data) setCurrentPost((prev) => ({ ...prev, ...res.data, isLive: true }));
+        if (res?.data) setCurrentPost((prev) => ({ ...prev, ...normalizeLiveBlog(res.data) }));
       })
       .catch(() => {});
   }

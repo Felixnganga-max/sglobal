@@ -14,20 +14,13 @@ export default function Newsletter() {
 
   return (
     <section className="page-x pb-2">
-      <div
-        className="rounded-2xl px-6 py-10 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-6"
-        style={{
-          background:
-            "linear-gradient(120deg, var(--color-red) 0%, var(--color-red-dark) 100%)",
-        }}
-      >
+      <div className="rounded-2xl px-6 py-10 sm:px-12 flex flex-col sm:flex-row bg-[#010028] items-center justify-between gap-6">
         <div className="text-center sm:text-left">
           <h2 className="font-heading text-white text-xl sm:text-2xl font-bold leading-tight">
             Sign Up For Newsletter &amp; Get 10% Off
           </h2>
           <p className="text-white/70 text-xs mt-2 max-w-md">
-            New products, recipes and exclusive offers — straight to your
-            inbox.
+            New products, recipes and exclusive offers — straight to your inbox.
           </p>
         </div>
 
@@ -36,10 +29,7 @@ export default function Newsletter() {
             <Check size={16} /> Thanks — you're subscribed!
           </div>
         ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="flex w-full sm:w-auto gap-2"
-          >
+          <form onSubmit={handleSubmit} className="flex w-full sm:w-auto gap-2">
             <div className="relative flex-1 sm:w-72">
               <Mail
                 size={15}

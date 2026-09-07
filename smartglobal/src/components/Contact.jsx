@@ -233,13 +233,7 @@ export default function Contact() {
 
   return (
     <section className="page-x section-y">
-      <div
-        className="relative w-full rounded-2xl overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(135deg, var(--color-red) 0%, var(--color-red-dark) 60%, #5a0a0a 100%)",
-        }}
-      >
+      <div className="relative w-full rounded-2xl overflow-hidden bg-[#010028]">
         {/* Decorative arc */}
         <div
           className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-end pointer-events-none"
@@ -422,7 +416,10 @@ export default function Contact() {
                     style={{ backgroundColor: "rgba(0,0,0,0.15)" }}
                   >
                     <div className="flex items-center gap-2">
-                      <Mail size={14} style={{ color: "var(--color-blue-light)" }} />
+                      <Mail
+                        size={14}
+                        style={{ color: "var(--color-blue-light)" }}
+                      />
                       <span className="text-white font-body font-bold text-xs uppercase tracking-wider">
                         Email Order
                       </span>

@@ -23,7 +23,7 @@ const STRIPS = [
   {
     id: "spuds",
     title: "SPUDS Chips",
-    image: assets.spudss,
+    image: assets.sps1,
     overlay:
       "linear-gradient(0deg, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.62) 42%, rgba(0,0,0,0.08) 78%, rgba(0,0,0,0) 100%)",
   },

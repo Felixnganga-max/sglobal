@@ -36,6 +36,7 @@ import kentt from "./kentt.jpg";
 import spudss from "./spudss.jpg";
 import toppingg from "./toppingg.jpg";
 import pan from "./pan.png";
+import sps1 from "./sps1.jpeg";
 
 import tops from "./tops.png";
 
@@ -49,6 +50,7 @@ export const assets = {
   toppingg,
   cb,
   kiz,
+  sps1,
   sauces,
   crepes,
   hazelnut,

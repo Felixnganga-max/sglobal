@@ -110,7 +110,7 @@ export default function HeroBanner() {
                 }
                 className="btn-primary text-xs"
               >
-                Shopp Now
+                Shop Now
               </Link>
               <Link
                 to="/recipes"
@@ -120,7 +120,7 @@ export default function HeroBanner() {
                   borderColor: "rgba(255,255,255,0.35)",
                 }}
               >
-                View Recipess
+                View Recipes
               </Link>
             </div>
           </div>

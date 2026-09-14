@@ -93,7 +93,10 @@ export default function HeroBanner() {
             </p>
             <h1
               className="font-heading text-white leading-[1.05] mb-4"
-              style={{ fontSize: "clamp(1.9rem, 4.2vw, 3.2rem)", fontWeight: 700 }}
+              style={{
+                fontSize: "clamp(1.9rem, 4.2vw, 3.2rem)",
+                fontWeight: 700,
+              }}
             >
               {slide.title}
             </h1>
@@ -102,15 +105,20 @@ export default function HeroBanner() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                to={slide.productId ? `/product/${slide.productId}` : "/products"}
+                to={
+                  slide.productId ? `/product/${slide.productId}` : "/products"
+                }
                 className="btn-primary text-xs"
               >
-                Shop Now
+                Shopp Now
               </Link>
               <Link
                 to="/recipes"
                 className="btn-outline text-xs"
-                style={{ color: "white", borderColor: "rgba(255,255,255,0.35)" }}
+                style={{
+                  color: "white",
+                  borderColor: "rgba(255,255,255,0.35)",
+                }}
               >
                 View Recipes
               </Link>

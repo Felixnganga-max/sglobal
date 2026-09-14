@@ -3,7 +3,7 @@ import { Heart, Clock, User, ChefHat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { recipeApi } from "../api/recipeApi";
-import { mergeWithLive, normalizeLiveRecipe } from "../lib/mergeLive";
+import { normalizeLiveRecipe } from "../lib/mergeLive";
 
 const categories = [
   { id: 1, name: "Breakfast", icon: "🥞" },
@@ -29,14 +29,9 @@ const getImageFromAssets = (name) => {
 
 export default function Recipes() {
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [allRecipes, setAllRecipes] = useState(recipesData);
+  const [allRecipes, setAllRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  const filteredRecipes =
-    selectedCategory === "All"
-      ? allRecipes
-      : allRecipes.filter((recipe) => recipe.category === selectedCategory);
-  const featuredRecipe = allRecipes.find((r) => r.id === 2) || allRecipes[0];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -47,12 +42,45 @@ export default function Recipes() {
       .getAllRecipes({ limit: 100 })
       .then((response) => {
         const live = (response.data || []).map(normalizeLiveRecipe);
-        setAllRecipes(mergeWithLive(recipesData, live));
+        setAllRecipes(live);
       })
       .catch(() => {
-        // Keep showing the curated recipes if the live fetch fails.
-      });
+        setAllRecipes([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  const filteredRecipes =
+    selectedCategory === "All"
+      ? allRecipes
+      : allRecipes.filter((recipe) => recipe.category === selectedCategory);
+  const featuredRecipe = allRecipes.find((r) => r.id === 2) || allRecipes[0];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p
+          className="font-body text-sm"
+          style={{ color: "var(--color-muted)" }}
+        >
+          Loading recipes...
+        </p>
+      </div>
+    );
+  }
+
+  if (!featuredRecipe) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p
+          className="font-body text-sm"
+          style={{ color: "var(--color-muted)" }}
+        >
+          No recipes found.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

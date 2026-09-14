@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import {
   Star,
   Clock,
@@ -16,7 +14,6 @@ import {
   TrendingUp,
   ArrowLeft,
 } from "lucide-react";
-import { getRecipeBySlug, getRelatedRecipes } from "../lib/recipesData";
 import { assets } from "../assets/assets";
 import { recipeApi } from "../api/recipeApi";
 import { normalizeLiveRecipe } from "../lib/mergeLive";
@@ -44,33 +41,54 @@ const difficultyColor = {
 export default function RecipeDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const dummyRecipe = getRecipeBySlug(slug);
-  const [liveRecipe, setLiveRecipe] = useState(null);
-  const [liveNotFound, setLiveNotFound] = useState(false);
+  const [recipe, setRecipe] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+  const [related, setRelated] = useState([]);
   const [liked, setLiked] = useState(false);
   const [cookingMode, setCookingMode] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const printRef = useRef(null);
 
-  // The curated recipesData.js list doesn't know about recipes added later
-  // through the dashboard, so fall back to a live lookup by slug.
   useEffect(() => {
-    if (dummyRecipe) return;
+    setRecipe(null);
+    setNotFound(false);
+    setRelated([]);
+
     let cancelled = false;
     recipeApi
       .getRecipe(slug)
       .then((res) => {
-        if (!cancelled) setLiveRecipe(normalizeLiveRecipe(res.data));
+        if (cancelled) return;
+        const normalized = normalizeLiveRecipe(res.data);
+        setRecipe(normalized);
+
+        // Fetch related recipes from the same category.
+        recipeApi
+          .getAllRecipes({ limit: 100 })
+          .then((allRes) => {
+            if (cancelled) return;
+            const others = (allRes.data || [])
+              .map(normalizeLiveRecipe)
+              .filter(
+                (r) =>
+                  r.id !== normalized.id &&
+                  r.category === normalized.category,
+              )
+              .slice(0, 3);
+            setRelated(others);
+          })
+          .catch(() => {
+            if (!cancelled) setRelated([]);
+          });
       })
       .catch(() => {
-        if (!cancelled) setLiveNotFound(true);
+        if (!cancelled) setNotFound(true);
       });
+
     return () => {
       cancelled = true;
     };
-  }, [slug, dummyRecipe]);
-
-  const recipe = dummyRecipe || liveRecipe;
+  }, [slug]);
 
   if (!recipe)
     return (
@@ -80,9 +98,9 @@ export default function RecipeDetail() {
             className="font-heading font-bold text-lg mb-3"
             style={{ color: "var(--color-text)" }}
           >
-            {liveNotFound ? "Recipe not found" : "Loading recipe…"}
+            {notFound ? "Recipe not found" : "Loading recipe…"}
           </p>
-          {liveNotFound && (
+          {notFound && (
             <button
               onClick={() => navigate("/recipes")}
               className="btn-secondary"
@@ -94,8 +112,6 @@ export default function RecipeDetail() {
         </div>
       </div>
     );
-
-  const related = getRelatedRecipes(recipe.id, recipe.category);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -115,7 +131,7 @@ export default function RecipeDetail() {
   // ── PRINT: plain window.print(). The <style> block below fixes the hero image. ──
   const handlePrint = () => window.print();
 
-  // ── DOWNLOAD: html2canvas snapshot → jsPDF ──
+  // ── DOWNLOAD: reuses print for now ──
   const handleDownloadPDF = () => {
     window.print();
   };

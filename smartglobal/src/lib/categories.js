@@ -4,7 +4,7 @@ export const PRODUCT_CATEGORIES = [
   "Craft cooked potato chips",
   "Just fruits",
   "Hazelnuts",
-  "Hum Hum",
+  "Hum Mum",
   "Cakemix",
   "Brownie & Pancake",
   "Whipped creams",

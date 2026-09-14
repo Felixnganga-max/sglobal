@@ -120,7 +120,7 @@ export default function HeroBanner() {
                   borderColor: "rgba(255,255,255,0.35)",
                 }}
               >
-                View Recipes
+                View Recipess
               </Link>
             </div>
           </div>

@@ -15,6 +15,7 @@ export const PRODUCT_CATEGORIES = [
   "Kent sauces",
   "Kent spreads",
   "Water",
+  "Fruit Puree",
 ];
 
 // URL-safe slug for a category, used to deep-link from anywhere on the

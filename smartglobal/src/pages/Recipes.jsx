@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Heart, Clock, User, ChefHat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { recipesData } from "../lib/recipesData";
 import { assets } from "../assets/assets";
 import { recipeApi } from "../api/recipeApi";
 import { mergeWithLive, normalizeLiveRecipe } from "../lib/mergeLive";

@@ -11,6 +11,7 @@ import { next } from "@vercel/functions";
 // browsers it's a no-op (next()). For known link-preview bots it serves a
 // small prerendered HTML document with the real Open Graph / Twitter Card
 // tags — product-specific (title, price, image) for /product/:id pages,
+// recipe-specific (title, description, image) for /recipes/:slug pages,
 // blog-specific (title, excerpt, image) for /blogs/:slug pages,
 // and the site-wide defaults (mirrored from main.jsx) everywhere else.
 export const config = {
@@ -53,6 +54,24 @@ function resolveProductImage(product, origin) {
   return (
     candidates.find((u) => typeof u === "string" && u) || `${origin}/logo.jpg`
   );
+}
+
+// Mirrors getImageFromAssets()/getAbsoluteImageUrl() in
+// src/pages/RecipeDetail.jsx. NOTE: those named keys ("top2", "kent",
+// "spuds", etc.) map to bundled Vite assets that only exist client-side —
+// this edge function has no access to them. If recipe.image comes back as
+// one of those bare keys instead of a real URL, we can't resolve it here
+// and fall back to the logo. Ask the API to return a full image URL per
+// recipe (same as products already do) to fix this properly.
+function resolveRecipeImage(recipe, origin) {
+  const candidate = recipe?.image;
+  if (typeof candidate === "string" && /^https?:\/\//.test(candidate)) {
+    return candidate;
+  }
+  if (typeof candidate === "string" && candidate.startsWith("/")) {
+    return `${origin}${candidate}`;
+  }
+  return `${origin}/logo.jpg`;
 }
 
 // Mirrors normalizeLiveBlog() flattening in src/pages/Blogs.jsx. The raw
@@ -140,6 +159,33 @@ async function buildProductPreview(id, url) {
   });
 }
 
+// Mirrors normalizeLiveRecipe() consumption in src/pages/RecipeDetail.jsx —
+// title, description, image, category, totalTime. Recipes use a real slug
+// field already (unlike blogs), so no id-extraction needed here.
+async function buildRecipePreview(slug, url) {
+  const res = await fetch(`${API_BASE_URL}/recipes/${slug}`, {
+    headers: { accept: "application/json" },
+  });
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const recipe = data?.success ? data.data : data;
+  if (!recipe?.title) return null;
+
+  const description = recipe.description
+    ? recipe.totalTime
+      ? `${recipe.description} — ${recipe.totalTime}`
+      : recipe.description
+    : `${recipe.category || "Recipe"} · ${SITE_NAME}`;
+
+  return renderHtml({
+    title: `${recipe.title} | ${SITE_NAME}`,
+    description,
+    image: resolveRecipeImage(recipe, url.origin),
+    url: `${url.origin}${url.pathname}`,
+  });
+}
+
 // Mirrors what src/pages/Blogs.jsx renders: post.title, post.excerpt,
 // post.featuredImage. slugParam is the human-readable-title + id string
 // built by buildBlogSlug() — the real Mongo id is extracted from its tail.
@@ -173,6 +219,7 @@ export default async function middleware(request) {
 
   const url = new URL(request.url);
   const productMatch = url.pathname.match(/^\/product\/([^/]+)\/?$/);
+  const recipeMatch = url.pathname.match(/^\/recipes\/([^/]+)\/?$/);
   const blogMatch = url.pathname.match(/^\/blogs\/([^/]+)\/?$/);
 
   if (productMatch) {
@@ -186,6 +233,21 @@ export default async function middleware(request) {
       }
     } catch {
       // Backend unreachable or product missing — fall through to the
+      // generic site preview below rather than failing the request.
+    }
+  }
+
+  if (recipeMatch) {
+    try {
+      const html = await buildRecipePreview(recipeMatch[1], url);
+      if (html) {
+        return new Response(html, {
+          status: 200,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
+      }
+    } catch {
+      // Backend unreachable or recipe missing — fall through to the
       // generic site preview below rather than failing the request.
     }
   }

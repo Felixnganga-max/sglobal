@@ -63,13 +63,22 @@ function resolveProductImage(product, origin) {
 // one of those bare keys instead of a real URL, we can't resolve it here
 // and fall back to the logo. Ask the API to return a full image URL per
 // recipe (same as products already do) to fix this properly.
+// Mirrors the Cloudinary response shape from your backend: image is either
+// a plain URL string, or an object like { url, secure_url, public_id }.
+// A short key ("top2", "kent", etc.) is also still supported as a legacy
+// fallback for any older recipes not yet migrated to Cloudinary.
 function resolveRecipeImage(recipe, origin) {
-  const candidate = recipe?.image;
+  const raw = recipe?.image;
+  const candidate = typeof raw === "string" ? raw : raw?.url || raw?.secure_url;
+
   if (typeof candidate === "string" && /^https?:\/\//.test(candidate)) {
     return candidate;
   }
   if (typeof candidate === "string" && candidate.startsWith("/")) {
     return `${origin}${candidate}`;
+  }
+  if (typeof candidate === "string" && RECIPE_FALLBACK_IMAGES[candidate]) {
+    return `${origin}${RECIPE_FALLBACK_IMAGES[candidate]}`;
   }
   return `${origin}/logo.jpg`;
 }

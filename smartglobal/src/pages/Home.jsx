@@ -21,7 +21,7 @@ const Home = () => {
       <DiscountBanners />
       <TrendingThisWeek />
       <RecommendedForYou />
-      <Recipes />
+      {/* <Recipes /> */}
       <CertStrip />
       <Newsletter />
       <Contact />

@@ -20,9 +20,6 @@ function App() {
   const isDashboard = location.pathname.startsWith("/dashboard");
   const isAuth = location.pathname === "/auth";
 
-  // React Router doesn't scroll to top on navigation by default — without
-  // this, clicking a link from partway down one page lands you partway
-  // down the next page too (e.g. Hero/Recipes CTAs, related-recipe links).
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -35,7 +32,7 @@ function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/contact" element={<ContactUs />} />
-        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/blogs/:slug?" element={<Blogs />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/recipes/:slug" element={<RecipeDetail />} />
         <Route path="/dashboard" element={<Dashboard />} />

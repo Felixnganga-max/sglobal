@@ -13,7 +13,7 @@ const SITE_URL = "https://www.smartglobal.co.ke";
 ───────────────────────────────────────────────────────── */
 
 const organizationSchema = {
-  "@context": SITE_URL,
+  "@context": "https://schema.org",
   "@type": "Organization",
   name: "Smart Global Limited",
   alternateName: ["Smart Global", "SMART GLOBAL"],
@@ -48,7 +48,7 @@ const organizationSchema = {
 };
 
 const websiteSchema = {
-  "@context": SITE_URL,
+  "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Smart Global Limited",
   alternateName: "Smart Global Kenya",
@@ -67,7 +67,7 @@ const websiteSchema = {
 };
 
 const localBusinessSchema = {
-  "@context": SITE_URL,
+  "@context": "https://schema.org",
   "@type": "FoodEstablishment",
   name: "Smart Global Limited",
   image: `${SITE_URL}/logo.jpg`,
@@ -136,7 +136,7 @@ const localBusinessSchema = {
 };
 
 const siteNavigationSchema = {
-  "@context": SITE_URL,
+  "@context": "https://schema.org",
   "@type": "ItemList",
   name: "Smart Global Limited — Site Navigation",
   itemListElement: [
@@ -187,9 +187,8 @@ const siteNavigationSchema = {
 
 createRoot(document.getElementById("root")).render(
   <HelmetProvider>
-    {/* Global SEO — applies site-wide. Each page can add its own <Helmet> to override title/description */}
+    {/* Global SEO fallback — every page can override title/description/OG via its own <Helmet> */}
     <Helmet>
-      {/* ── Primary Meta ── */}
       <html lang="en" />
       <title>Smart Global Limited | Premium Foods Kenya Since 2007</title>
       <meta
@@ -204,7 +203,6 @@ createRoot(document.getElementById("root")).render(
       <meta name="robots" content="index, follow" />
       <link rel="canonical" href={SITE_URL} />
 
-      {/* ── Open Graph (Facebook, WhatsApp, LinkedIn previews) ── */}
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Smart Global Limited" />
       <meta
@@ -220,7 +218,6 @@ createRoot(document.getElementById("root")).render(
       <meta property="og:image:alt" content="Smart Global Limited Logo" />
       <meta property="og:locale" content="en_KE" />
 
-      {/* ── Twitter / X Card ── */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@smartglobalke" />
       <meta
@@ -233,13 +230,11 @@ createRoot(document.getElementById("root")).render(
       />
       <meta name="twitter:image" content={`${SITE_URL}/logo.jpg`} />
 
-      {/* ── Geo targeting (boosts Kenyan local search results) ── */}
       <meta name="geo.region" content="KE-110" />
       <meta name="geo.placename" content="Nairobi, Kenya" />
       <meta name="geo.position" content="-1.286389;36.817223" />
       <meta name="ICBM" content="-1.286389, 36.817223" />
 
-      {/* ── Structured Data ── */}
       <script type="application/ld+json">
         {JSON.stringify(organizationSchema)}
       </script>

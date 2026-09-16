@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   Star,
   Clock,
@@ -30,6 +31,14 @@ const getImageFromAssets = (name) => {
       ice: assets.ice,
     }[name] || assets.top2
   );
+};
+
+// Turns a possibly-relative image (bundled asset path, or API path) into an
+// absolute URL, since og:image / twitter:image MUST be absolute.
+const getAbsoluteImageUrl = (image) => {
+  const src = getImageFromAssets(image);
+  if (/^https?:\/\//.test(src)) return src;
+  return `${window.location.origin}${src.startsWith("/") ? "" : "/"}${src}`;
 };
 
 const difficultyColor = {
@@ -71,8 +80,7 @@ export default function RecipeDetail() {
               .map(normalizeLiveRecipe)
               .filter(
                 (r) =>
-                  r.id !== normalized.id &&
-                  r.category === normalized.category,
+                  r.id !== normalized.id && r.category === normalized.category,
               )
               .slice(0, 3);
             setRelated(others);
@@ -113,17 +121,50 @@ export default function RecipeDetail() {
       </div>
     );
 
+  const pageUrl = `${window.location.origin}/recipes/${slug}`;
+  const absoluteImage = getAbsoluteImageUrl(recipe.image);
+
+  const recipeSchema = {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name: recipe.title,
+    image: [absoluteImage],
+    description: recipe.description,
+    author: {
+      "@type": "Person",
+      name: recipe.author?.name || "Smart Global Limited",
+    },
+    datePublished: recipe.date,
+    prepTime: recipe.prepTime,
+    cookTime: recipe.cookTime,
+    totalTime: recipe.totalTime,
+    recipeYield: `${recipe.servings} servings`,
+    recipeCategory: recipe.category,
+    recipeIngredient: recipe.ingredients,
+    recipeInstructions: recipe.directions.map((step) => ({
+      "@type": "HowToStep",
+      text: step,
+    })),
+    aggregateRating: recipe.rating
+      ? {
+          "@type": "AggregateRating",
+          ratingValue: recipe.rating,
+          reviewCount: recipe.reviews || 1,
+        }
+      : undefined,
+  };
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: recipe.title,
           text: recipe.description,
-          url: window.location.href,
+          url: pageUrl,
         });
       } catch (e) {}
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(pageUrl);
       alert("Link copied!");
     }
   };
@@ -138,6 +179,31 @@ export default function RecipeDetail() {
 
   return (
     <>
+      {/* ── Per-recipe SEO / social preview tags ── */}
+      <Helmet>
+        <title>{recipe.title} | Smart Global Limited</title>
+        <meta name="description" content={recipe.description} />
+        <link rel="canonical" href={pageUrl} />
+
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Smart Global Limited" />
+        <meta property="og:title" content={recipe.title} />
+        <meta property="og:description" content={recipe.description} />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:image" content={absoluteImage} />
+        <meta property="og:image:alt" content={recipe.title} />
+        <meta property="og:locale" content="en_KE" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={recipe.title} />
+        <meta name="twitter:description" content={recipe.description} />
+        <meta name="twitter:image" content={absoluteImage} />
+
+        <script type="application/ld+json">
+          {JSON.stringify(recipeSchema)}
+        </script>
+      </Helmet>
+
       {/* ── Print-only styles: ONLY fixes the hero image for window.print() ── */}
       <style>{`
         @media print {

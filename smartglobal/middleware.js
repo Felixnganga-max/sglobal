@@ -11,6 +11,7 @@ import { next } from "@vercel/functions";
 // browsers it's a no-op (next()). For known link-preview bots it serves a
 // small prerendered HTML document with the real Open Graph / Twitter Card
 // tags — product-specific (title, price, image) for /product/:id pages,
+// blog-specific (title, excerpt, image) for /blogs/:slug pages,
 // and the site-wide defaults (mirrored from main.jsx) everywhere else.
 export const config = {
   matcher: [
@@ -49,7 +50,29 @@ function resolveProductImage(product, origin) {
     product?.img,
     product?.photo,
   ];
-  return candidates.find((u) => typeof u === "string" && u) || `${origin}/logo.jpg`;
+  return (
+    candidates.find((u) => typeof u === "string" && u) || `${origin}/logo.jpg`
+  );
+}
+
+// Mirrors normalizeLiveBlog() flattening in src/pages/Blogs.jsx. The raw
+// API response's featuredImage is `{ url, publicId }` (Cloudinary shape) —
+// normalizeLiveBlog() reduces that to a plain string client-side, but this
+// edge function reads the raw JSON directly, so handle both shapes here.
+function resolveBlogImage(post, origin) {
+  const raw = post?.featuredImage;
+  const url = typeof raw === "string" ? raw : raw?.url || raw?.secure_url;
+  if (typeof url === "string" && /^https?:\/\//.test(url)) return url;
+  if (typeof url === "string" && url.startsWith("/")) return `${origin}${url}`;
+  return `${origin}/logo.jpg`;
+}
+
+// Mirrors extractIdFromBlogSlug() in src/lib/blogSlug.js. Duplicated here
+// (rather than imported) since this file runs as a standalone Vercel Edge
+// Function outside the Vite build.
+function extractIdFromBlogSlug(slugParam = "") {
+  const match = slugParam.match(/([a-f0-9]{24})$/i);
+  return match ? match[1] : slugParam;
 }
 
 function renderHtml({ title, description, image, url, extraMeta = "" }) {
@@ -117,6 +140,31 @@ async function buildProductPreview(id, url) {
   });
 }
 
+// Mirrors what src/pages/Blogs.jsx renders: post.title, post.excerpt,
+// post.featuredImage. slugParam is the human-readable-title + id string
+// built by buildBlogSlug() — the real Mongo id is extracted from its tail.
+async function buildBlogPreview(slugParam, url) {
+  const id = extractIdFromBlogSlug(slugParam);
+  const res = await fetch(`${API_BASE_URL}/blogs/${id}`, {
+    headers: { accept: "application/json" },
+  });
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const post = data?.success ? data.data : data;
+  if (!post?.title) return null;
+
+  const description =
+    post.excerpt || `${post.category || "Article"} · ${SITE_NAME}`;
+
+  return renderHtml({
+    title: `${post.title} | ${SITE_NAME}`,
+    description,
+    image: resolveBlogImage(post, url.origin),
+    url: `${url.origin}${url.pathname}`,
+  });
+}
+
 export default async function middleware(request) {
   const ua = request.headers.get("user-agent") || "";
   if (!BOT_UA_RE.test(ua)) {
@@ -125,6 +173,7 @@ export default async function middleware(request) {
 
   const url = new URL(request.url);
   const productMatch = url.pathname.match(/^\/product\/([^/]+)\/?$/);
+  const blogMatch = url.pathname.match(/^\/blogs\/([^/]+)\/?$/);
 
   if (productMatch) {
     try {
@@ -138,6 +187,21 @@ export default async function middleware(request) {
     } catch {
       // Backend unreachable or product missing — fall through to the
       // generic site preview below rather than failing the request.
+    }
+  }
+
+  if (blogMatch) {
+    try {
+      const html = await buildBlogPreview(blogMatch[1], url);
+      if (html) {
+        return new Response(html, {
+          status: 200,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
+      }
+    } catch {
+      // Backend unreachable or post missing — fall through to the generic
+      // site preview below rather than failing the request.
     }
   }
 

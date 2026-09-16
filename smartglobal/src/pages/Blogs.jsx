@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Search,
   Grid as GridIcon,
@@ -19,10 +19,12 @@ import { activityApi } from "../api/activityApi";
 import { normalizeLiveBlog } from "../lib/mergeLive";
 import { formatDate, contentToHtml } from "../lib/blogFormat";
 import { BLOG_CATEGORIES } from "../lib/categories";
+import { buildBlogSlug, extractIdFromBlogSlug } from "../lib/blogSlug";
 import BlogEngagement from "../components/BlogEngagement";
 
 export default function Blogs() {
-  const [searchParams] = useSearchParams();
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [view, setView] = useState("grid");
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -46,19 +48,22 @@ export default function Blogs() {
       });
   }, []);
 
-  // Deep-link support: /blogs?post=<slug> (used by the dashboard's Preview
-  // button, and shareable from anywhere else) opens that post directly.
+  // Deep-link support: /blogs/<slug-with-id> (shareable link, and used by
+  // the dashboard's Preview button) opens that post directly on load or
+  // whenever the slug in the URL changes.
   useEffect(() => {
-    const postSlug = searchParams.get("post");
-    if (!postSlug) return;
+    if (!slug) {
+      setCurrentPost(null);
+      return;
+    }
+    const id = extractIdFromBlogSlug(slug);
     blogApi
-      .getBlog(postSlug)
+      .getBlog(id)
       .then((res) => {
         if (res?.data) setCurrentPost(normalizeLiveBlog(res.data));
       })
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [slug]);
 
   const allTags = useMemo(() => {
     const s = new Set();
@@ -104,6 +109,7 @@ export default function Blogs() {
     setPage(1);
   }
   function openPost(post) {
+    navigate(`/blogs/${buildBlogSlug(post)}`);
     setCurrentPost(post);
     window.scrollTo({ top: 0, behavior: "smooth" });
     activityApi.log("read_blog", {
@@ -122,6 +128,7 @@ export default function Blogs() {
       .catch(() => {});
   }
   function closePost() {
+    navigate("/blogs");
     setCurrentPost(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -144,8 +151,6 @@ export default function Blogs() {
   if (currentPost) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Post hero — the featured image itself is the hero, with just
-            enough of a bottom scrim to keep the title legible. */}
         <div className="w-full h-72 sm:h-[26rem] relative overflow-hidden">
           <img
             loading="lazy"
@@ -189,7 +194,6 @@ export default function Blogs() {
         </div>
 
         <article className="page-x py-10 w-full">
-          {/* Meta row */}
           <div
             className="flex flex-wrap items-center justify-between gap-4 py-5 border-b mb-8"
             style={{ borderColor: "var(--color-border)" }}
@@ -244,7 +248,6 @@ export default function Blogs() {
             </div>
           </div>
 
-          {/* Content */}
           <div
             className="blog-content"
             dangerouslySetInnerHTML={{
@@ -252,7 +255,6 @@ export default function Blogs() {
             }}
           />
 
-          {/* Tags */}
           <div
             className="mt-10 pt-6 border-t"
             style={{ borderColor: "var(--color-border)" }}
@@ -295,7 +297,6 @@ export default function Blogs() {
   // ── Blog listing view ─────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero */}
       <div
         className="w-full py-16 sm:py-20"
         style={{
@@ -331,9 +332,7 @@ export default function Blogs() {
         </div>
       </div>
 
-      {/* Main */}
       <div className="page-x section-y">
-        {/* Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <p
             className="font-body text-sm"
@@ -410,7 +409,6 @@ export default function Blogs() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Posts */}
           <main className="lg:col-span-2">
             {paginated.length === 0 ? (
               <div className="py-20 text-center">
@@ -455,7 +453,6 @@ export default function Blogs() {
                         "var(--color-border)")
                     }
                   >
-                    {/* Image */}
                     <div
                       className={`overflow-hidden ${view === "list" ? "h-44 sm:h-48" : "aspect-[16/10]"}`}
                     >
@@ -525,7 +522,6 @@ export default function Blogs() {
               </div>
             )}
 
-            {/* Pagination */}
             {pageCount > 1 && (
               <div className="mt-8 flex items-center justify-center gap-4">
                 <button
@@ -584,10 +580,8 @@ export default function Blogs() {
             )}
           </main>
 
-          {/* Sidebar */}
           <aside>
             <div className="sticky top-24 space-y-5">
-              {/* Categories */}
               <div
                 className="bg-white rounded-xl p-5 border"
                 style={{ borderColor: "var(--color-border)" }}
@@ -634,7 +628,6 @@ export default function Blogs() {
                 </ul>
               </div>
 
-              {/* Tags */}
               <div
                 className="bg-white rounded-xl p-5 border"
                 style={{ borderColor: "var(--color-border)" }}
@@ -682,7 +675,6 @@ export default function Blogs() {
                 </div>
               </div>
 
-              {/* Newsletter */}
               <div
                 className="rounded-xl p-5 text-white"
                 style={{

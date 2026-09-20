@@ -24,7 +24,6 @@ const Home = () => {
       {/* <Recipes /> */}
       <CertStrip />
       <Newsletter />
-      <Contact />
     </div>
   );
 };

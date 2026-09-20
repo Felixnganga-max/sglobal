@@ -70,12 +70,11 @@ export default function HeroBanner() {
 
   return (
     <section className="page-x pt-6 sm:pt-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* 5-column grid at every breakpoint: main banner 3/5, side panel 2/5.
+          Never collapses to a single stacked column, even on phones. */}
+      <div className="grid grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
         {/* Main rotating banner */}
-        <div
-          className="lg:col-span-2 relative overflow-hidden rounded-2xl bg-gray-950"
-          style={{ minHeight: "360px" }}
-        >
+        <div className="col-span-3 relative overflow-hidden rounded-xl sm:rounded-2xl bg-gray-950 min-h-[190px] sm:min-h-[260px] lg:min-h-[360px]">
           <img
             key={slide.id}
             loading={index === 0 ? undefined : "lazy"}
@@ -87,34 +86,31 @@ export default function HeroBanner() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-gray-950/57 via-gray-950/36 to-transparent" />
 
-          <div className="relative z-10 flex flex-col justify-center h-full min-h-[360px] px-6 sm:px-10 py-10 max-w-xl">
-            <p className="text-eyebrow mb-3" style={{ color: "#FF7F11" }}>
-              {slide.eyebrow}
-            </p>
+          <div className="relative z-10 flex flex-col justify-center h-full min-h-[190px] sm:min-h-[260px] lg:min-h-[360px] px-3.5 sm:px-6 lg:px-10 py-4 sm:py-7 lg:py-10 max-w-xl">
             <h1
-              className="font-heading text-white leading-[1.05] mb-4"
+              className="font-heading text-white leading-[1.08] mb-1.5 sm:mb-3 lg:mb-4"
               style={{
-                fontSize: "clamp(1.9rem, 4.2vw, 3.2rem)",
+                fontSize: "clamp(1.05rem, 4.4vw, 3.2rem)",
                 fontWeight: 700,
               }}
             >
               {slide.title}
             </h1>
-            <p className="font-body text-white/70 text-sm leading-relaxed max-w-md mb-7">
+            <p className="font-body text-white/70 leading-relaxed max-w-md mb-3 sm:mb-5 lg:mb-7 hidden sm:block text-xs sm:text-sm">
               {slide.copy}
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-1.5 sm:gap-3">
               <Link
                 to={
                   slide.productId ? `/product/${slide.productId}` : "/products"
                 }
-                className="btn-primary text-xs"
+                className="btn-primary text-[0.6rem] sm:text-xs px-3.5 py-1.5 sm:px-[1.9rem] sm:py-[0.7rem]"
               >
                 Shop Now
               </Link>
               <Link
                 to="/recipes"
-                className="btn-outline text-xs"
+                className="btn-outline text-[0.6rem] sm:text-xs px-3.5 py-1.5 sm:px-[1.9rem] sm:py-[0.7rem] hidden sm:inline-block"
                 style={{
                   color: "white",
                   borderColor: "rgba(255,255,255,0.35)",
@@ -126,15 +122,15 @@ export default function HeroBanner() {
           </div>
 
           {/* Dot indicators */}
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+          <div className="absolute bottom-2.5 sm:bottom-5 left-1/2 -translate-x-1/2 z-10 flex gap-1.5 sm:gap-2">
             {slides.map((s, i) => (
               <button
                 key={s.id}
                 aria-label={`Show ${s.title}`}
                 onClick={() => setIndex(i)}
-                className="h-1.5 rounded-full transition-all duration-300"
+                className="h-1 sm:h-1.5 rounded-full transition-all duration-300"
                 style={{
-                  width: i === index ? "1.5rem" : "0.4rem",
+                  width: i === index ? "1.1rem" : "0.3rem",
                   backgroundColor:
                     i === index ? "#FF7F11" : "rgba(255,255,255,0.4)",
                 }}
@@ -146,9 +142,8 @@ export default function HeroBanner() {
         {/* Side promo panel */}
         <Link
           to="/products"
-          className="group relative overflow-hidden rounded-2xl"
+          className="group col-span-2 relative overflow-hidden rounded-xl sm:rounded-2xl min-h-[190px] sm:min-h-[260px] lg:min-h-[360px]"
           style={{
-            minHeight: "360px",
             background:
               "linear-gradient(160deg, var(--color-blue) 0%, var(--color-blue-dark) 100%)",
           }}
@@ -161,16 +156,19 @@ export default function HeroBanner() {
             className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/42 via-black/12 to-transparent" />
-          <div className="relative z-10 flex flex-col justify-end h-full min-h-[360px] p-6">
-            <p className="text-eyebrow mb-2" style={{ color: "#fff" }}>
+          <div className="relative z-10 flex flex-col justify-end h-full min-h-[190px] sm:min-h-[260px] lg:min-h-[360px] p-2.5 sm:p-4 lg:p-6">
+            <p
+              className="text-eyebrow mb-1 sm:mb-2 hidden sm:block"
+              style={{ color: "#fff" }}
+            >
               New In
             </p>
-            <h2 className="font-heading text-white text-xl font-bold leading-tight mb-3">
+            <h2 className="font-heading text-white text-[0.8rem] sm:text-lg lg:text-xl font-bold leading-tight mb-1.5 sm:mb-3">
               Explore Kizembe
               <br />
               Spring Water
             </h2>
-            <span className="btn-white text-[0.65rem] self-start">
+            <span className="btn-white text-[0.55rem] sm:text-[0.65rem] px-2.5 py-1 sm:px-[1.9rem] sm:py-[0.7rem] self-start">
               Shop Now
             </span>
           </div>

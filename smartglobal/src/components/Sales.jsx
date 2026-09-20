@@ -21,7 +21,6 @@ const BADGE_COLORS = {
 };
 
 const CATEGORY_CONFIG = [
-  { key: "Kent soups", accent: "#FF0000", image: assets.kent },
   { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.spuds },
   { key: "Just fruits", accent: "#16a34a", image: assets.jst },
   { key: "Hazelnuts", accent: "#7B4019", image: assets.hazelnut },
@@ -113,15 +112,6 @@ function getImage(product) {
 // ─────────────────────────────────────────────────────────────
 // SKELETONS
 // ─────────────────────────────────────────────────────────────
-function CategorySkeleton() {
-  return (
-    <div
-      className="flex-shrink-0 w-[160px] lg:w-auto rounded-xl bg-gray-200 animate-pulse"
-      style={{ height: 200 }}
-    />
-  );
-}
-
 function ProductSkeleton() {
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
@@ -327,45 +317,132 @@ function ProductCard({ prod }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// CATEGORY CARD
+// CATEGORY PROMO GRID
+// Fixed layout: Left col = Hazelnuts / Cakemix stacked.
+// Center col = Kizembe Water full width on top, Kent Sauces + Kent Syrups
+// split below. Right col = Spuds / Just Fruits stacked.
 // ─────────────────────────────────────────────────────────────
-function CategoryCard({ cat }) {
+const CATEGORY_PROMO_CSS = `
+  .sg-cat-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 230px 230px;
+    gap: 1rem;
+  }
+  @media (max-width: 900px) {
+    .sg-cat-block {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(4, 200px);
+    }
+  }
+
+  .sg-cat-tile {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 20px;
+    background-color: var(--color-blue-tint);
+    height: 100%;
+  }
+  .sg-cat-tile-img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transition: transform 0.5s ease;
+  }
+  .sg-cat-tile:hover .sg-cat-tile-img { transform: scale(1.05); }
+  .sg-cat-tile::before {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.6) 32%, rgba(255,255,255,0) 58%);
+  }
+  .sg-cat-copy { position: relative; z-index: 2; padding: 1.25rem 1.4rem; }
+  .sg-cat-title {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    line-height: 1.15;
+    margin: 0 0 10px;
+    max-width: 82%;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .sg-cat-cta {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-red);
+  }
+
+  .sg-cat-left-top     { grid-column: 1; grid-row: 1; }
+  .sg-cat-left-bottom  { grid-column: 1; grid-row: 2; }
+  .sg-cat-center-top   { grid-column: 2 / 4; grid-row: 1; }
+  .sg-cat-center-left  { grid-column: 2; grid-row: 2; }
+  .sg-cat-center-right { grid-column: 3; grid-row: 2; }
+  .sg-cat-right-top    { grid-column: 4; grid-row: 1; }
+  .sg-cat-right-bottom { grid-column: 4; grid-row: 2; }
+
+  @media (max-width: 900px) {
+    .sg-cat-left-top     { grid-column: 1; grid-row: 1; }
+    .sg-cat-left-bottom  { grid-column: 1; grid-row: 2; }
+    .sg-cat-center-top   { grid-column: 1 / 3; grid-row: 3; }
+    .sg-cat-center-left  { grid-column: 1; grid-row: 4; }
+    .sg-cat-center-right { grid-column: 2; grid-row: 4; }
+    .sg-cat-right-top    { grid-column: 2; grid-row: 1; }
+    .sg-cat-right-bottom { grid-column: 2; grid-row: 2; }
+  }
+`;
+
+function CategoryPromoTile({ cat, position }) {
+  if (!cat) return null;
   return (
     <Link
       to={`/products#cat-${categorySlug(cat.id)}`}
-      className="group flex-shrink-0 w-[92px] lg:w-auto flex flex-col items-center gap-2.5 text-center"
+      className={`sg-cat-tile sg-cat-${position}`}
     >
-      <div
-        className="rounded-full flex items-center justify-center overflow-hidden bg-white shadow-md group-hover:shadow-xl transition-all duration-300"
-        style={{
-          width: 84,
-          height: 84,
-          border: `2px solid ${cat.accent}`,
-        }}
-      >
-        {cat.image ? (
-          <img
-            loading="lazy"
-            decoding="async"
-            src={cat.image}
-            alt={cat.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-        ) : (
-          <div
-            className="w-full h-full flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-500"
-            style={{ backgroundColor: `${cat.accent}14` }}
-          >
-            <span role="img" aria-hidden="true">
-              {cat.emoji || "🛒"}
-            </span>
-          </div>
-        )}
+      {cat.image ? (
+        <img
+          loading="lazy"
+          decoding="async"
+          src={cat.image}
+          alt=""
+          className="sg-cat-tile-img"
+        />
+      ) : (
+        <div
+          className="sg-cat-tile-img"
+          style={{ backgroundColor: `${cat.accent}22` }}
+        />
+      )}
+      <div className="sg-cat-copy">
+        <h3 className="sg-cat-title">{cat.title}</h3>
+        <span className="sg-cat-cta">Shop now</span>
       </div>
-      <p className="font-body text-gray-700 text-[0.68rem] font-bold leading-tight">
-        {cat.title}
-      </p>
     </Link>
+  );
+}
+
+function CategoryPromoGrid({ categories }) {
+  const byId = (id) => categories.find((c) => c.id === id);
+
+  return (
+    <>
+      <style>{CATEGORY_PROMO_CSS}</style>
+      <div className="sg-cat-block">
+        <CategoryPromoTile cat={byId("Hazelnuts")} position="left-top" />
+        <CategoryPromoTile cat={byId("Cakemix")} position="left-bottom" />
+
+        <CategoryPromoTile cat={byId("Water")} position="center-top" />
+        <CategoryPromoTile cat={byId("Kent sauces")} position="center-left" />
+        <CategoryPromoTile cat={byId("Kent syrups")} position="center-right" />
+
+        <CategoryPromoTile
+          cat={byId("Craft cooked potato chips")}
+          position="right-top"
+        />
+        <CategoryPromoTile cat={byId("Just fruits")} position="right-bottom" />
+      </div>
+    </>
   );
 }
 
@@ -619,7 +696,6 @@ function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
 // MAIN EXPORT
 // ─────────────────────────────────────────────────────────────
 export default function Sales() {
-  const scrollRef = useRef(null);
   const { products, loading, error, refetch } = useProducts();
   const promoVideo = usePromoVideo();
   const [promoDismissed, setPromoDismissed] = useState(false);
@@ -660,57 +736,17 @@ export default function Sales() {
     ? filteredProducts
     : byCategory.slice(0, 8);
 
-  const scroll = (dir) => {
-    if (scrollRef.current)
-      scrollRef.current.scrollBy({ left: dir * 180, behavior: "smooth" });
-  };
-
   return (
     <main className="w-full bg-white">
-      {/* ── Category Strip ── */}
+      {/* ── Category Promo Grid ── */}
       <section className="section-y page-x">
-        <div className="flex items-end justify-between mb-4">
-          <div>
-            <p className="text-eyebrow mb-1">What We Offer</p>
-            <h2 className="text-section-title text-gray-900">
-              Shop by Category
-            </h2>
-            <div className="section-rule mt-2" />
-          </div>
-          <div className="flex gap-2 lg:hidden">
-            {[
-              [-1, "M15 19l-7-7 7-7"],
-              [1, "M9 5l7 7-7 7"],
-            ].map(([dir, d]) => (
-              <button
-                key={dir}
-                onClick={() => scroll(dir)}
-                aria-label={dir === -1 ? "Scroll left" : "Scroll right"}
-                className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors"
-              >
-                <svg
-                  className="w-3 h-3 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d={d} />
-                </svg>
-              </button>
-            ))}
-          </div>
+        <div className="mb-4">
+          <p className="text-eyebrow mb-1">What We Offer</p>
+          <h2 className="text-section-title text-gray-900">Shop by Category</h2>
+          <div className="section-rule mt-2" />
         </div>
 
-        <div
-          ref={scrollRef}
-          className="flex gap-5 overflow-x-auto pb-1 lg:grid lg:grid-cols-8 lg:justify-items-center lg:overflow-visible"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {STATIC_CATEGORIES.map((cat) => (
-            <CategoryCard key={cat.id} cat={cat} />
-          ))}
-        </div>
+        <CategoryPromoGrid categories={STATIC_CATEGORIES} />
       </section>
 
       {/* ── Best Seller Spotlight — featured once, at the very top ── */}

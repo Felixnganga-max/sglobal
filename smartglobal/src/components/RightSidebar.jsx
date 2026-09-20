@@ -1,402 +1,208 @@
-import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { Plus, Shield } from "lucide-react";
+import CartPanel from "./CartPanel";
+import { useCart } from "../context/Cartcontext";
+import { useCatalog } from "../lib/useCatalog";
+import { useRecentlyViewed } from "../lib/useRecentlyViewed";
+import { getProductImage, FALLBACK_IMG } from "../lib/useProducts";
+import { withTransform } from "../lib/cloudinary";
 
-import { API_BASE_URL } from "../api/config";
-const API_URL = `${API_BASE_URL}/products?limit=200`;
-import { assets } from "../assets/assets";
-import { PRODUCT_CATEGORIES } from "../lib/categories";
-
-const CATEGORY_ICONS = {
-  "Craft cooked potato chips": "🥔",
-  "Just fruits": "🍓",
-  Hazelnuts: "🌰",
-  "Hum Hum": "🌶️",
-  Cakemix: "🎂",
-  "Brownie & Pancake": "🥞",
-  "Whipped creams": "🍦",
-  "Boringer topping sauces": "🍯",
-  "Kent soups": "🍲",
-  "Kent stocks": "🫙",
-  "Kent sauces": "🫕",
-  "Kent syrups": "🍯",
-  "Kent spreads": "🧈",
-  Water: "💧",
-};
-
-const BRANDS = [
-  {
-    logo: assets.logo3,
-    keyword: "Kent",
-    desc: "Soups, stocks & sauces",
-    color: "var(--color-red)",
-  },
-  {
-    logo: assets.spuds1,
-    keyword: "chips",
-    desc: "Craft cooked crisps",
-    color: "var(--color-orange)",
-  },
-  {
-    logo: assets.logo2,
-    keyword: "Water",
-    desc: "Natural spring water",
-    color: "var(--color-blue)",
-  },
-];
-
-export default function ShopByCategory() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const activeCategory = searchParams.get("category") || null;
-
-  useEffect(() => {
-    fetch(API_URL)
-      .then((r) => r.json())
-      .then((data) => {
-        const list = data.success
-          ? data.data || []
-          : Array.isArray(data)
-            ? data
-            : [];
-        const present = new Set(list.map((p) => p.category || "Other"));
-        // Show categories in the canonical (backend) order, filtered down
-        // to only the ones that actually have products right now, with any
-        // unrecognised category appended at the end.
-        const ordered = PRODUCT_CATEGORIES.filter((c) => present.has(c));
-        PRODUCT_CATEGORIES.forEach((c) => present.delete(c));
-        setCategories([...ordered, ...present]);
-      })
-      .catch(() => setCategories([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  function goToFeaturedProducts() {
-    const el = document.getElementById("featured-products");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+const CSS = `
+  .ns-rs { display: flex; flex-direction: column; gap: 1rem; }
+  .ns-rs-card {
+    background: #fff; border-radius: 24px; padding: 1.1rem;
+    box-shadow: 0 1px 2px rgba(1,0,40,0.04), 0 10px 30px rgba(1,0,40,0.05);
   }
+  .ns-rs-title { font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--color-blue); margin: 0 0 0.75rem; }
 
-  function handleCategoryClick(cat) {
-    const params = new URLSearchParams(searchParams);
-    if (activeCategory === cat) {
-      params.delete("category");
-    } else {
-      params.set("category", cat);
-    }
-    params.delete("page");
-    setSearchParams(params);
-    goToFeaturedProducts();
+  .ns-mini { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+  .ns-mini-row { display: flex; align-items: center; gap: 0.75rem; }
+  .ns-mini-thumb { width: 56px; height: 56px; flex-shrink: 0; border-radius: 14px; background: #f3f4f8; object-fit: contain; padding: 4px; }
+  .ns-mini-info { flex: 1; min-width: 0; text-decoration: none; }
+  .ns-mini-name {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    font-family: var(--font-heading); font-size: 0.74rem; font-weight: 700; line-height: 1.25; color: var(--color-text);
   }
+  .ns-mini-meta { display: block; font-family: var(--font-body); font-size: 0.62rem; color: var(--color-muted); margin-top: 1px; }
+  .ns-mini-price { display: block; font-family: var(--font-heading); font-size: 0.85rem; font-weight: 700; color: var(--color-blue); margin-top: 3px; }
+  .ns-mini-add {
+    width: 32px; height: 32px; flex-shrink: 0; border: none; border-radius: 50%; cursor: pointer;
+    background: var(--color-red); color: #fff; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, transform 0.18s;
+  }
+  .ns-mini-add:hover { background: var(--color-red-dark); transform: scale(1.06); }
+  .ns-mini-add:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
 
-  function handleBrandClick(brand) {
-    const params = new URLSearchParams(searchParams);
-    params.delete("category");
-    params.set("q", brand.keyword);
-    params.delete("page");
-    setSearchParams(params);
-    goToFeaturedProducts();
-  }
+  .ns-recent { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+  .ns-recent a { display: block; aspect-ratio: 1 / 1; border-radius: 14px; background: #f3f4f8; overflow: hidden; }
+  .ns-recent img { width: 100%; height: 100%; object-fit: contain; padding: 4px; transition: transform 0.3s ease; }
+  .ns-recent a:hover img { transform: scale(1.08); }
+
+  .ns-rs-promo { position: relative; overflow: hidden; border-radius: 24px; padding: 1.25rem; background: var(--color-blue); color: #fff; min-height: 150px; }
+  .ns-rs-promo h4 { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; line-height: 1.2; margin: 0 0 4px; max-width: 68%; }
+  .ns-rs-promo p { font-family: var(--font-body); font-size: 0.72rem; line-height: 1.5; color: rgba(255,255,255,0.72); margin: 0 0 14px; max-width: 66%; }
+  .ns-rs-promo .c1 { position: absolute; width: 130px; height: 130px; right: -36px; bottom: -44px; border-radius: 50%; background: var(--color-blue-light); opacity: 0.6; pointer-events: none; }
+  .ns-rs-promo .ico { position: absolute; right: 18px; top: 50%; transform: translateY(-50%) rotate(8deg); width: 56px; height: 56px; border-radius: 18px; background: var(--color-orange); color: #fff; display: flex; align-items: center; justify-content: center; }
+`;
+
+/** Two in-stock products that aren't in the cart yet, preferring the categories already in it. */
+function useSuggestions(products, cartItems) {
+  return useMemo(() => {
+    const inCart = new Set(cartItems.map((i) => i._id || i.id));
+    const cartCats = new Set(cartItems.map((i) => i.category).filter(Boolean));
+
+    return products
+      .filter((p) => p.stock > 0 && !inCart.has(p._id || p.id))
+      .map((p) => ({
+        p,
+        score:
+          (cartCats.has(p.category) ? 3 : 0) +
+          (p.isBestSeller ? 2 : 0) +
+          (Number(p.rating) || 0) / 5,
+      }))
+      .sort(
+        (a, b) =>
+          b.score - a.score || (a.p.title || "").localeCompare(b.p.title || ""),
+      )
+      .slice(0, 2)
+      .map((x) => x.p);
+  }, [products, cartItems]);
+}
+
+function AlsoLike({ onClose }) {
+  const { products } = useCatalog();
+  const { cartItems, addToCart } = useCart();
+  const suggestions = useSuggestions(products, cartItems);
+
+  if (suggestions.length === 0) return null;
 
   return (
-    <aside
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "1rem",
-        position: "sticky",
-        top: "1.5rem",
-      }}
-    >
-      {/* ── Shop by Category ── */}
-      <div
-        style={{
-          borderRadius: "14px",
-          overflow: "hidden",
-          border: "1px solid var(--color-border)",
-          background: "#fff",
-        }}
-      >
-        {/* Header — flat navy, no gradient */}
-        <div
-          style={{
-            padding: "0.875rem 1.125rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            backgroundColor: "var(--color-blue)",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "0.55rem",
-                fontWeight: 700,
-                letterSpacing: "0.24em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.65)",
-                marginBottom: "2px",
-              }}
-            >
-              Filter
-            </p>
-            <h4
-              style={{
-                fontFamily: "var(--font-heading)",
-                fontWeight: 700,
-                fontSize: "0.9rem",
-                color: "#fff",
-                margin: 0,
-              }}
-            >
-              Shop by Category
-            </h4>
-          </div>
-          <span
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "0.58rem",
-              fontWeight: 700,
-              padding: "3px 10px",
-              borderRadius: "100px",
-              background: "rgba(255,255,255,0.15)",
-              color: "#fff",
-            }}
-          >
-            {categories.length}
-          </span>
-        </div>
-
-        {/* Category list */}
-        <div style={{ backgroundColor: "#fff" }}>
-          {loading
-            ? [...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    padding: "10px 18px",
-                    borderBottom: "1px solid var(--color-border)",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 8,
-                      background: "var(--color-bg-soft)",
-                      flexShrink: 0,
-                      animation: "sbc-pulse 1.5s ease-in-out infinite",
-                    }}
-                  />
-                  <div
-                    style={{
-                      height: 10,
-                      background: "var(--color-bg-soft)",
-                      borderRadius: 5,
-                      width: "65%",
-                      animation: "sbc-pulse 1.5s ease-in-out infinite",
-                    }}
-                  />
-                </div>
-              ))
-            : categories.map((cat, idx) => {
-                const isActive = activeCategory === cat;
-                const isLast = idx === categories.length - 1;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => handleCategoryClick(cat)}
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      padding: "9px 18px",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      border: "none",
-                      borderBottom: isLast
-                        ? "none"
-                        : "1px solid var(--color-border)",
-                      borderLeft: isActive
-                        ? "3px solid var(--color-orange)"
-                        : "3px solid transparent",
-                      backgroundColor: isActive
-                        ? "rgba(255,127,17,0.06)"
-                        : "transparent",
-                      transition: "all 0.15s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive)
-                        e.currentTarget.style.backgroundColor =
-                          "var(--color-bg-soft)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive)
-                        e.currentTarget.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 8,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "0.9rem",
-                        flexShrink: 0,
-                        backgroundColor: isActive
-                          ? "rgba(255,127,17,0.12)"
-                          : "var(--color-bg-soft)",
-                        border: "1px solid var(--color-border)",
-                        transition: "background 0.15s",
-                      }}
-                    >
-                      {CATEGORY_ICONS[cat] || "🛒"}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: "0.7rem",
-                        fontWeight: 600,
-                        flex: 1,
-                        color: isActive
-                          ? "var(--color-orange)"
-                          : "var(--color-text)",
-                        transition: "color 0.15s",
-                      }}
-                    >
-                      {cat}
-                    </span>
-                    <svg
-                      style={{
-                        width: 12,
-                        height: 12,
-                        flexShrink: 0,
-                        color: isActive
-                          ? "var(--color-orange)"
-                          : "var(--color-muted)",
-                        transition: "color 0.15s",
-                      }}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                );
-              })}
-        </div>
-      </div>
-
-      {/* ── Our Brands ── */}
-      <div
-        style={{
-          borderRadius: "14px",
-          overflow: "hidden",
-          border: "1px solid var(--color-border)",
-          background: "#fff",
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            padding: "0.75rem 1.125rem",
-            backgroundColor: "var(--color-bg-soft)",
-            borderBottom: "1px solid var(--color-border)",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "0.58rem",
-              fontWeight: 700,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: "var(--color-orange)",
-              marginBottom: 2,
-            }}
-          >
-            Trusted names
-          </p>
-          <h4
-            style={{
-              fontFamily: "var(--font-heading)",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              color: "var(--color-text)",
-              margin: 0,
-            }}
-          >
-            Our Brands
-          </h4>
-        </div>
-
-        <div
-          style={{
-            padding: "0.875rem",
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "0.625rem",
-          }}
-        >
-          {BRANDS.map((brand) => (
-            <button
-              key={brand.keyword}
-              onClick={() => handleBrandClick(brand)}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                padding: "8px",
-                borderRadius: "10px",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-bg-soft)",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                overflow: "hidden",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = brand.color;
-                e.currentTarget.style.backgroundColor = "#fff";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--color-border)";
-                e.currentTarget.style.backgroundColor = "var(--color-bg-soft)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
+    <section className="ns-rs-card" aria-label="You might also like">
+      <h3 className="ns-rs-title">You might also like</h3>
+      <ul className="ns-mini">
+        {suggestions.map((p) => {
+          const id = p._id || p.id;
+          const moq = p.minimumOrderQuantity || 1;
+          const packPrice =
+            p.totalPrice != null
+              ? p.totalPrice
+              : parseFloat(((p.price || 0) * moq).toFixed(2));
+          return (
+            <li key={id} className="ns-mini-row">
               <img
+                className="ns-mini-thumb"
+                src={withTransform(getProductImage(p), { w: 160 })}
+                alt=""
                 loading="lazy"
-                decoding="async"
-                src={brand.logo}
-                alt={brand.desc}
-                style={{
-                  width: "100%",
-                  height: "80px",
-                  objectFit: "contain",
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = FALLBACK_IMG;
                 }}
               />
-            </button>
-          ))}
-        </div>
-      </div>
+              <Link
+                to={`/product/${id}`}
+                className="ns-mini-info"
+                onClick={onClose}
+              >
+                <span className="ns-mini-name">{p.title}</span>
+                <span className="ns-mini-meta">
+                  {[p.category, moq > 1 ? `Pack of ${moq}` : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+                <span className="ns-mini-price">
+                  KSh {packPrice.toLocaleString()}
+                </span>
+              </Link>
+              <button
+                type="button"
+                className="ns-mini-add"
+                onClick={() => addToCart({ ...p, quantity: moq })}
+                aria-label={
+                  moq > 1
+                    ? `Add pack of ${moq}: ${p.title}`
+                    : `Add ${p.title} to cart`
+                }
+              >
+                <Plus size={16} />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
 
-      <style>{`
-        @keyframes sbc-pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
-      `}</style>
-    </aside>
+function RecentlyViewed({ onClose }) {
+  const items = useRecentlyViewed().slice(0, 4);
+  if (items.length === 0) return null;
+
+  return (
+    <section className="ns-rs-card" aria-label="Recently viewed">
+      <h3 className="ns-rs-title">Recently viewed</h3>
+      <div className="ns-recent">
+        {items.map((item) => (
+          <Link
+            key={item.id}
+            to={`/product/${item.id}`}
+            title={item.title}
+            aria-label={item.title}
+            onClick={onClose}
+          >
+            <img
+              src={item.image || FALLBACK_IMG}
+              alt=""
+              loading="lazy"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = FALLBACK_IMG;
+              }}
+            />
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Right column: cart, suggestions, recently viewed and a promo card.
+ * `onClose` is only passed when it's shown inside the mobile cart drawer.
+ */
+export default function RightSidebar({ onClose }) {
+  const browseAll = () => {
+    onClose?.();
+    document
+      .getElementById("featured-products")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <div className="ns-rs">
+      <style>{CSS}</style>
+
+      <CartPanel onClose={onClose} />
+      <AlsoLike onClose={onClose} />
+      <RecentlyViewed onClose={onClose} />
+
+      <section className="ns-rs-promo" aria-label="Quality assured">
+        <span className="c1" aria-hidden="true" />
+        <h4>Quality assured</h4>
+        <p>Premium products with authentic flavours.</p>
+        <button
+          type="button"
+          className="btn-primary"
+          style={{ fontSize: "0.65rem", padding: "0.55rem 1.2rem" }}
+          onClick={browseAll}
+        >
+          Browse all
+        </button>
+        <span className="ico" aria-hidden="true">
+          <Shield size={26} />
+        </span>
+      </section>
+    </div>
   );
 }

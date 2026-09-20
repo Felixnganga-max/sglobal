@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useLocation, Link } from "react-router-dom";
-import { Search, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import ProductTile from "./ProductTile";
 import { PRODUCT_CATEGORIES, categoryAnchor } from "../lib/categories";
+import { recordView } from "../lib/useRecentlyViewed";
 
 import { API_BASE_URL } from "../api/config";
 const API_URL = `${API_BASE_URL}/products`;
@@ -39,6 +40,25 @@ function getImage(product) {
     FALLBACK_IMG
   );
 }
+
+const GRID_STYLE = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(156px, 1fr))",
+  gap: "1rem",
+};
+
+const pillButtonStyle = {
+  fontFamily: "var(--font-body)",
+  fontSize: "0.7rem",
+  fontWeight: 700,
+  color: "var(--color-blue)",
+  backgroundColor: "#e9e9f3",
+  padding: "0.4rem 1rem",
+  borderRadius: 999,
+  border: "none",
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
 
 /**
  * Live, filtered, sorted, paginated product grid for the Products page.
@@ -101,10 +121,13 @@ export default function FeaturedProductsGrid() {
   const fetchAllProducts = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}?limit=300&sortBy=createdAt&order=desc`);
+      const res = await fetch(
+        `${API_URL}?limit=300&sortBy=createdAt&order=desc`,
+      );
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
-      if (!data.success) throw new Error(data.message || "Failed to fetch products");
+      if (!data.success)
+        throw new Error(data.message || "Failed to fetch products");
       setAllProducts(data.data || []);
       setError(null);
     } catch (err) {
@@ -133,7 +156,8 @@ export default function FeaturedProductsGrid() {
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
 
-      if (!data.success) throw new Error(data.message || "Failed to fetch products");
+      if (!data.success)
+        throw new Error(data.message || "Failed to fetch products");
       setFlatProducts(data.data || []);
       setTotal(data.total || 0);
       setPages(data.pages || 1);
@@ -165,13 +189,7 @@ export default function FeaturedProductsGrid() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-          gap: "0.875rem",
-        }}
-      >
+      <div style={GRID_STYLE}>
         {[...Array(8)].map((_, i) => (
           <ProductCardSkeleton key={i} />
         ))}
@@ -184,11 +202,13 @@ export default function FeaturedProductsGrid() {
       <div style={{ textAlign: "center", padding: "3rem 0" }}>
         <div
           style={{
-            border: "1px solid var(--color-border)",
-            borderRadius: "16px",
+            backgroundColor: "#fff",
+            borderRadius: 22,
             padding: "2rem",
             maxWidth: 380,
             margin: "0 auto",
+            boxShadow:
+              "0 1px 2px rgba(1,0,40,0.04), 0 10px 30px rgba(1,0,40,0.05)",
           }}
         >
           <p
@@ -229,7 +249,10 @@ export default function FeaturedProductsGrid() {
     if (flatProducts.length === 0) {
       return (
         <div style={{ textAlign: "center", padding: "3rem 0" }}>
-          <Search className="w-8 h-8 mx-auto mb-3" style={{ color: "var(--color-border)" }} />
+          <Search
+            className="w-8 h-8 mx-auto mb-3"
+            style={{ color: "var(--color-border)" }}
+          />
           <p
             style={{
               fontFamily: "var(--font-body)",
@@ -249,7 +272,7 @@ export default function FeaturedProductsGrid() {
         <p
           style={{
             fontFamily: "var(--font-body)",
-            fontSize: "0.7rem",
+            fontSize: "0.72rem",
             color: "var(--color-muted)",
             marginBottom: "0.875rem",
           }}
@@ -257,13 +280,7 @@ export default function FeaturedProductsGrid() {
           {total} product{total !== 1 ? "s" : ""} found
         </p>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-            gap: "0.875rem",
-          }}
-        >
+        <div style={GRID_STYLE}>
           {flatProducts.map((product) => (
             <ProductTile key={product._id} product={product} />
           ))}
@@ -274,10 +291,10 @@ export default function FeaturedProductsGrid() {
             <button
               onClick={() => goToPage(page - 1)}
               disabled={page <= 1}
-              className="w-9 h-9 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-blue hover:text-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-10 h-10 rounded-full bg-white text-gray-500 flex items-center justify-center shadow-sm hover:text-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Previous page"
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={16} />
             </button>
             <span
               style={{
@@ -293,10 +310,10 @@ export default function FeaturedProductsGrid() {
             <button
               onClick={() => goToPage(page + 1)}
               disabled={page >= pages}
-              className="w-9 h-9 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-blue hover:text-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-10 h-10 rounded-full bg-white text-gray-500 flex items-center justify-center shadow-sm hover:text-blue transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Next page"
             >
-              <ChevronRight size={15} />
+              <ChevronRight size={16} />
             </button>
           </div>
         )}
@@ -320,7 +337,10 @@ export default function FeaturedProductsGrid() {
   if (pool.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "3rem 0" }}>
-        <Search className="w-8 h-8 mx-auto mb-3" style={{ color: "var(--color-border)" }} />
+        <Search
+          className="w-8 h-8 mx-auto mb-3"
+          style={{ color: "var(--color-border)" }}
+        />
         <p
           style={{
             fontFamily: "var(--font-body)",
@@ -340,10 +360,11 @@ export default function FeaturedProductsGrid() {
       {bestSeller && (
         <Link
           to={`/product/${bestSeller._id || bestSeller.id}`}
-          className="group relative flex flex-col sm:flex-row items-center gap-5 overflow-hidden rounded-2xl p-5 sm:p-7"
-          style={{ background: "linear-gradient(120deg, #1a1a1a 0%, #3a2410 100%)" }}
+          onClick={() => recordView(bestSeller)}
+          className="group relative flex flex-col sm:flex-row items-center gap-5 overflow-hidden p-5 sm:p-7"
+          style={{ backgroundColor: "var(--color-blue)", borderRadius: 24 }}
         >
-          <div className="flex-shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-xl bg-white/95 flex items-center justify-center overflow-hidden">
+          <div className="flex-shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-white flex items-center justify-center overflow-hidden">
             <img
               loading="lazy"
               decoding="async"
@@ -366,11 +387,15 @@ export default function FeaturedProductsGrid() {
             <h3 className="font-heading text-white text-lg sm:text-xl font-bold leading-tight mb-2">
               {bestSeller.title}
             </h3>
-            <span className="font-heading font-bold text-base" style={{ color: "var(--color-orange)" }}>
-              KSh {(bestSeller.totalPrice ?? bestSeller.price)?.toLocaleString()}
+            <span
+              className="font-heading font-bold text-base"
+              style={{ color: "var(--color-orange)" }}
+            >
+              KSh{" "}
+              {(bestSeller.totalPrice ?? bestSeller.price)?.toLocaleString()}
             </span>
           </div>
-          <span className="btn-secondary text-xs flex-shrink-0">Shop Now</span>
+          <span className="btn-primary text-xs flex-shrink-0">Shop Now</span>
         </Link>
       )}
 
@@ -380,11 +405,14 @@ export default function FeaturedProductsGrid() {
           id={categoryAnchor(cat)}
           style={{ scrollMarginTop: "110px" }}
         >
-          <div className="flex items-end justify-between mb-4 gap-3">
+          <div className="flex items-center justify-between mb-3 gap-3">
             <div>
               <h3
-                className="font-heading font-bold text-[var(--heading)]"
-                style={{ fontSize: "1.1rem" }}
+                className="font-heading font-bold"
+                style={{
+                  fontSize: "1.15rem",
+                  color: "var(--heading, var(--color-blue))",
+                }}
               >
                 {cat}
               </h3>
@@ -401,21 +429,15 @@ export default function FeaturedProductsGrid() {
             {products.length > SECTION_PREVIEW_SIZE && (
               <button
                 onClick={() => viewAllInCategory(cat)}
-                className="inline-flex items-center gap-1 text-xs font-body font-bold whitespace-nowrap"
-                style={{ color: "var(--color-blue)" }}
+                style={pillButtonStyle}
+                aria-label={`View all ${cat}`}
               >
-                View all <ArrowRight size={12} />
+                View all
               </button>
             )}
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: "0.875rem",
-            }}
-          >
+          <div style={GRID_STYLE}>
             {products.slice(0, SECTION_PREVIEW_SIZE).map((product) => (
               <ProductTile key={product._id || product.id} product={product} />
             ))}
@@ -431,16 +453,23 @@ function ProductCardSkeleton() {
     <div
       style={{
         background: "#fff",
-        borderRadius: "12px",
-        border: "1px solid var(--color-border)",
+        borderRadius: 20,
         overflow: "hidden",
         animation: "fpg-pulse 1.5s ease-in-out infinite",
+        boxShadow: "0 1px 2px rgba(1,0,40,0.04), 0 10px 30px rgba(1,0,40,0.05)",
       }}
     >
-      <div style={{ aspectRatio: "1/1", background: "var(--color-bg-soft)" }} />
       <div
         style={{
-          padding: "0.625rem 0.75rem",
+          margin: 8,
+          borderRadius: 14,
+          height: 136,
+          background: "#f3f4f8",
+        }}
+      />
+      <div
+        style={{
+          padding: "0.25rem 0.75rem 0.75rem",
           display: "flex",
           flexDirection: "column",
           gap: 8,
@@ -449,7 +478,7 @@ function ProductCardSkeleton() {
         <div
           style={{
             height: 10,
-            background: "var(--color-border)",
+            background: "#eceef5",
             borderRadius: 4,
             width: "80%",
           }}
@@ -457,7 +486,7 @@ function ProductCardSkeleton() {
         <div
           style={{
             height: 10,
-            background: "var(--color-border)",
+            background: "#eceef5",
             borderRadius: 4,
             width: "55%",
           }}
@@ -467,22 +496,23 @@ function ProductCardSkeleton() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            marginTop: 6,
           }}
         >
           <div
             style={{
               height: 14,
-              background: "var(--color-border)",
+              background: "#eceef5",
               borderRadius: 4,
-              width: "35%",
+              width: "40%",
             }}
           />
           <div
             style={{
-              height: 22,
-              background: "var(--color-border)",
-              borderRadius: 100,
-              width: 52,
+              height: 36,
+              background: "#eceef5",
+              borderRadius: 12,
+              width: 36,
             }}
           />
         </div>

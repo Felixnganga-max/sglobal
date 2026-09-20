@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Heart, ShoppingCart, Check } from "lucide-react";
+import { Heart, ShoppingCart, Check, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
 import { getProductImage, FALLBACK_IMG } from "../lib/useProducts";
 import { withTransform } from "../lib/cloudinary";
-import PackBadge from "./PackBadge";
+import { useWishlist, toggleWishlist } from "../lib/useWishlist";
+import { recordView } from "../lib/useRecentlyViewed";
 
 const BADGE_COLORS = {
   "SPECIAL OFFER": "#16a34a",
@@ -21,12 +22,13 @@ const BADGE_COLORS = {
 export default function ProductTile({ product }) {
   const navigate = useNavigate();
   const { addToCart, cartItems } = useCart();
-  const [wishlisted, setWishlisted] = useState(false);
+  const { isSaved } = useWishlist();
   const [addedFeedback, setAddedFeedback] = useState(false);
 
   const inStock = product.stock > 0;
   const prodId = product._id || product.id;
   const isInCart = cartItems.some((item) => (item._id || item.id) === prodId);
+  const saved = isSaved(prodId);
 
   const moq = product.minimumOrderQuantity || 1;
   const unitPrice = product.price || 0;
@@ -34,6 +36,11 @@ export default function ProductTile({ product }) {
     product.totalPrice != null
       ? product.totalPrice
       : parseFloat((unitPrice * moq).toFixed(2));
+
+  const openProduct = () => {
+    recordView(product);
+    navigate(`/product/${prodId}`);
+  };
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -43,13 +50,26 @@ export default function ProductTile({ product }) {
     setTimeout(() => setAddedFeedback(false), 1500);
   };
 
+  const cartLabel = addedFeedback
+    ? `${product.title} added to cart`
+    : isInCart
+      ? `${product.title} is in your cart. Add another`
+      : moq > 1
+        ? `Add pack of ${moq}: ${product.title}`
+        : `Add ${product.title} to cart`;
+
   return (
     <article
-      onClick={() => navigate(`/product/${prodId}`)}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer"
+      onClick={openProduct}
+      className="group flex flex-col cursor-pointer bg-white overflow-hidden transition-all duration-300 hover:-translate-y-0.5 shadow-[0_1px_2px_rgba(1,0,40,0.04),0_10px_30px_rgba(1,0,40,0.05)] hover:shadow-[0_2px_4px_rgba(1,0,40,0.05),0_16px_36px_rgba(1,0,40,0.1)]"
+      style={{ borderRadius: 20 }}
       aria-labelledby={`tile-${prodId}`}
     >
-      <div className="relative bg-gray-50 overflow-hidden">
+      {/* Image tile */}
+      <div
+        className="relative overflow-hidden"
+        style={{ margin: 8, borderRadius: 14, backgroundColor: "#f3f4f8" }}
+      >
         <img
           loading="lazy"
           decoding="async"
@@ -62,145 +82,154 @@ export default function ProductTile({ product }) {
           }}
         />
 
-        <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start">
-          <span className="bg-white/90 backdrop-blur-sm text-[0.52rem] font-body font-bold text-gray-600 px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
-            {product.category}
-          </span>
+        <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+          {product.badge && (
+            <span
+              className="text-[0.55rem] font-black px-2 py-0.5 rounded-full text-white uppercase tracking-wide"
+              style={{
+                backgroundColor: BADGE_COLORS[product.badge] || "#1a1a1a",
+              }}
+            >
+              {product.badge}
+            </span>
+          )}
           {product.isBestSeller && (
-            <span className="bg-amber-400 text-amber-900 text-[0.52rem] font-black px-1.5 py-0.5 rounded-full shadow-sm uppercase tracking-wide">
+            <span className="bg-amber-400 text-amber-900 text-[0.55rem] font-black px-2 py-0.5 rounded-full uppercase tracking-wide">
               ⭐ Best Seller
             </span>
           )}
         </div>
 
-        <PackBadge moq={moq} />
-
-        {product.badge && (
-          <div
-            className={`absolute ${moq > 1 ? "top-9 right-1.5" : "top-1.5 right-1.5"} text-[0.52rem] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-wide`}
+        <button
+          type="button"
+          aria-label={
+            saved
+              ? `Remove ${product.title} from wishlist`
+              : `Save ${product.title} to wishlist`
+          }
+          aria-pressed={saved}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product);
+          }}
+          className="absolute top-2 right-2 flex items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 hover:scale-110"
+          style={{ width: 28, height: 28 }}
+        >
+          <Heart
+            size={13}
             style={{
-              backgroundColor: BADGE_COLORS[product.badge] || "#1a1a1a",
+              fill: saved ? "var(--color-red)" : "transparent",
+              color: saved ? "var(--color-red)" : "#9ca3af",
             }}
-          >
-            {product.badge}
-          </div>
-        )}
+          />
+        </button>
       </div>
 
-      <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
-        <div>
-          <h3
-            id={`tile-${prodId}`}
-            className="font-heading text-gray-900 text-xs leading-tight font-bold line-clamp-2"
-          >
-            {product.title}
-          </h3>
+      {/* Details */}
+      <div className="px-3 pb-3 pt-1 flex-1 flex flex-col">
+        <h3
+          id={`tile-${prodId}`}
+          className="font-heading text-xs leading-tight font-bold line-clamp-2"
+          style={{ color: "var(--color-text)" }}
+        >
+          {product.title}
+        </h3>
 
-          {product.rating > 0 && (
-            <div className="flex items-center gap-1 mt-1.5">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <svg
-                    key={i}
-                    className="w-2.5 h-2.5"
-                    fill={
-                      i < Math.floor(product.rating) ? "#FF7F11" : "#e5e7eb"
-                    }
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              {product.reviews > 0 && (
-                <span className="text-[0.55rem] text-gray-400">
-                  ({product.reviews})
-                </span>
-              )}
-            </div>
+        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+          {product.category && (
+            <span
+              className="text-[0.6rem] font-body"
+              style={{ color: "var(--color-muted)" }}
+            >
+              {product.category}
+            </span>
+          )}
+          {moq > 1 && (
+            <span
+              className="text-[0.55rem] font-body font-bold px-1.5 py-0.5 rounded-full"
+              style={{
+                backgroundColor: "var(--color-blue-tint)",
+                color: "var(--color-blue)",
+              }}
+            >
+              Pack of {moq}
+            </span>
           )}
         </div>
 
-        <div className="mt-2">
-          <div className="mb-1.5 space-y-0.5">
-            <div className="flex items-baseline gap-1 flex-wrap">
-              <span
-                className="font-heading font-bold"
-                style={{ fontSize: "0.9rem", color: "var(--color-red)" }}
-              >
-                KSh {packPrice.toLocaleString()}
+        {product.rating > 0 && (
+          <div className="flex items-center gap-1 mt-1.5">
+            <Star size={11} fill="#FF7F11" stroke="#FF7F11" />
+            <span
+              className="text-[0.62rem] font-body font-bold"
+              style={{ color: "var(--color-text)" }}
+            >
+              {Number(product.rating).toFixed(1)}
+            </span>
+            {product.reviews > 0 && (
+              <span className="text-[0.58rem] text-gray-400">
+                ({product.reviews})
               </span>
-            </div>
+            )}
+          </div>
+        )}
 
+        <div className="mt-auto pt-2.5 flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            <div
+              className="font-heading font-bold leading-none"
+              style={{ fontSize: "0.95rem", color: "var(--color-blue)" }}
+            >
+              KSh {packPrice.toLocaleString()}
+            </div>
             {moq > 1 && (
               <p
-                className="text-[0.6rem] font-semibold"
+                className="text-[0.6rem] font-semibold mt-1"
                 style={{ color: "#16a34a" }}
               >
                 KSh {unitPrice.toLocaleString()} per piece
               </p>
             )}
+            <p
+              className="text-[0.58rem] font-semibold mt-1"
+              style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
+            >
+              {inStock ? "● In Stock" : "● Out of Stock"}
+            </p>
           </div>
 
-          <p
-            className="text-[0.55rem] font-semibold mb-1.5"
-            style={{ color: inStock ? "#16a34a" : "var(--color-red)" }}
+          <button
+            type="button"
+            disabled={!inStock}
+            aria-label={cartLabel}
+            title={moq > 1 ? `Add pack of ${moq}` : "Add to cart"}
+            onClick={handleAddToCart}
+            className="relative flex-shrink-0 flex items-center justify-center text-white transition-all duration-300 hover:opacity-90 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              backgroundColor: addedFeedback
+                ? "#16a34a"
+                : isInCart
+                  ? "var(--color-red-dark)"
+                  : "var(--color-red)",
+            }}
           >
-            {inStock ? "● In Stock" : "● Out of Stock"}
-          </p>
-
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              aria-label={`Save ${product.title}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setWishlisted((v) => !v);
-              }}
-              className="p-1.5 rounded-lg bg-gray-50 border border-gray-100 hover:border-gray-300 transition-all duration-200"
-            >
-              <Heart
-                size={11}
+            {addedFeedback ? <Check size={16} /> : <ShoppingCart size={16} />}
+            {isInCart && !addedFeedback && (
+              <span
+                className="absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-white"
                 style={{
-                  fill: wishlisted ? "var(--color-blue)" : "transparent",
-                  color: wishlisted ? "var(--color-blue)" : "#9ca3af",
+                  width: 14,
+                  height: 14,
+                  color: "var(--color-red-dark)",
                 }}
-              />
-            </button>
-
-            <button
-              type="button"
-              disabled={!inStock}
-              aria-label={`Add ${product.title} to cart`}
-              onClick={handleAddToCart}
-              className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-white text-[0.6rem] font-body font-bold transition-all duration-300 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: addedFeedback
-                  ? "#16a34a"
-                  : isInCart
-                    ? "var(--color-red-dark)"
-                    : "var(--color-red)",
-              }}
-            >
-              {addedFeedback ? (
-                <>
-                  <Check size={10} /> Added!
-                </>
-              ) : isInCart ? (
-                <>
-                  <ShoppingCart size={10} /> In Cart
-                </>
-              ) : moq > 1 ? (
-                <>
-                  <ShoppingCart size={10} /> Add Pack ({moq})
-                </>
-              ) : (
-                <>
-                  <ShoppingCart size={10} /> Add to Cart
-                </>
-              )}
-            </button>
-          </div>
+              >
+                <Check size={9} strokeWidth={3.5} />
+              </span>
+            )}
+          </button>
         </div>
       </div>
     </article>

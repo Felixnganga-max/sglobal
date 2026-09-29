@@ -43,6 +43,36 @@ const STATIC_CATEGORIES = CATEGORY_CONFIG.map((c) => ({
 }));
 
 // ─────────────────────────────────────────────────────────────
+// PRIORITY MIX — Kent + Spuds fill ~90% of the trending grid
+// ─────────────────────────────────────────────────────────────
+const PRIORITY_SHARE = 0.9;
+const GRID_SIZE = 12; // 3 full rows of 4
+const isKent = (p) => /kent/i.test(p.category || "");
+const isSpuds = (p) => /potato chips|spuds/i.test(p.category || "");
+const isPriority = (p) => isKent(p) || isSpuds(p);
+
+function interleave(a, b) {
+  const out = [];
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (a[i]) out.push(a[i]);
+    if (b[i]) out.push(b[i]);
+  }
+  return out;
+}
+
+function mixPriority(list, total) {
+  const kent = list.filter(isKent);
+  const spuds = list.filter(isSpuds);
+  const others = list.filter((p) => !isPriority(p));
+
+  const want = Math.round(total * PRIORITY_SHARE);
+  const priority = interleave(kent, spuds).slice(0, want);
+  // If there aren't enough Kent/Spuds products, others fill the gap
+  const rest = others.slice(0, total - priority.length);
+  return [...priority, ...rest];
+}
+
+// ─────────────────────────────────────────────────────────────
 // DATA HOOKS
 // ─────────────────────────────────────────────────────────────
 function useProducts() {
@@ -318,21 +348,21 @@ function ProductCard({ prod }) {
 
 // ─────────────────────────────────────────────────────────────
 // CATEGORY PROMO GRID
-// Fixed layout: Left col = Hazelnuts / Cakemix stacked.
-// Center col = Kizembe Water full width on top, Kent Sauces + Kent Syrups
-// split below. Right col = Spuds / Just Fruits stacked.
+// Spuds + Kent (sauces, syrups) get the big tiles; Just Fruits is the
+// 4th big tile. Hazelnuts / Cakemix / Water sit in a slim bottom row.
 // ─────────────────────────────────────────────────────────────
 const CATEGORY_PROMO_CSS = `
   .sg-cat-block {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-template-rows: 230px 230px;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: 260px 260px 170px;
     gap: 1rem;
   }
   @media (max-width: 900px) {
     .sg-cat-block {
       grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(4, 200px);
+      grid-template-rows: none;
+      grid-auto-rows: 190px;
     }
   }
 
@@ -365,6 +395,7 @@ const CATEGORY_PROMO_CSS = `
     text-transform: uppercase;
     letter-spacing: 0.02em;
   }
+  .sg-cat-small .sg-cat-title { font-size: 0.95rem; }
   .sg-cat-cta {
     font-family: var(--font-body);
     font-size: 0.7rem;
@@ -374,31 +405,30 @@ const CATEGORY_PROMO_CSS = `
     color: var(--color-red);
   }
 
-  .sg-cat-left-top     { grid-column: 1; grid-row: 1; }
-  .sg-cat-left-bottom  { grid-column: 1; grid-row: 2; }
-  .sg-cat-center-top   { grid-column: 2 / 4; grid-row: 1; }
-  .sg-cat-center-left  { grid-column: 2; grid-row: 2; }
-  .sg-cat-center-right { grid-column: 3; grid-row: 2; }
-  .sg-cat-right-top    { grid-column: 4; grid-row: 1; }
-  .sg-cat-right-bottom { grid-column: 4; grid-row: 2; }
+  .sg-cat-spuds   { grid-column: 1 / 7;  grid-row: 1; }
+  .sg-cat-sauces  { grid-column: 7 / 13; grid-row: 1; }
+  .sg-cat-syrups  { grid-column: 1 / 7;  grid-row: 2; }
+  .sg-cat-fruits  { grid-column: 7 / 13; grid-row: 2; }
+  .sg-cat-nuts    { grid-column: 1 / 5;  grid-row: 3; }
+  .sg-cat-cake    { grid-column: 5 / 9;  grid-row: 3; }
+  .sg-cat-water   { grid-column: 9 / 13; grid-row: 3; }
 
   @media (max-width: 900px) {
-    .sg-cat-left-top     { grid-column: 1; grid-row: 1; }
-    .sg-cat-left-bottom  { grid-column: 1; grid-row: 2; }
-    .sg-cat-center-top   { grid-column: 1 / 3; grid-row: 3; }
-    .sg-cat-center-left  { grid-column: 1; grid-row: 4; }
-    .sg-cat-center-right { grid-column: 2; grid-row: 4; }
-    .sg-cat-right-top    { grid-column: 2; grid-row: 1; }
-    .sg-cat-right-bottom { grid-column: 2; grid-row: 2; }
+    .sg-cat-spuds, .sg-cat-sauces, .sg-cat-syrups {
+      grid-column: 1 / 3; grid-row: auto;
+    }
+    .sg-cat-fruits, .sg-cat-nuts, .sg-cat-cake, .sg-cat-water {
+      grid-column: auto; grid-row: auto;
+    }
   }
 `;
 
-function CategoryPromoTile({ cat, position }) {
+function CategoryPromoTile({ cat, position, small }) {
   if (!cat) return null;
   return (
     <Link
       to={`/products#cat-${categorySlug(cat.id)}`}
-      className={`sg-cat-tile sg-cat-${position}`}
+      className={`sg-cat-tile sg-cat-${position}${small ? " sg-cat-small" : ""}`}
     >
       {cat.image ? (
         <img
@@ -429,18 +459,16 @@ function CategoryPromoGrid({ categories }) {
     <>
       <style>{CATEGORY_PROMO_CSS}</style>
       <div className="sg-cat-block">
-        <CategoryPromoTile cat={byId("Hazelnuts")} position="left-top" />
-        <CategoryPromoTile cat={byId("Cakemix")} position="left-bottom" />
-
-        <CategoryPromoTile cat={byId("Water")} position="center-top" />
-        <CategoryPromoTile cat={byId("Kent sauces")} position="center-left" />
-        <CategoryPromoTile cat={byId("Kent syrups")} position="center-right" />
-
         <CategoryPromoTile
           cat={byId("Craft cooked potato chips")}
-          position="right-top"
+          position="spuds"
         />
-        <CategoryPromoTile cat={byId("Just fruits")} position="right-bottom" />
+        <CategoryPromoTile cat={byId("Kent sauces")} position="sauces" />
+        <CategoryPromoTile cat={byId("Kent syrups")} position="syrups" />
+        <CategoryPromoTile cat={byId("Just fruits")} position="fruits" />
+        <CategoryPromoTile cat={byId("Hazelnuts")} position="nuts" small />
+        <CategoryPromoTile cat={byId("Cakemix")} position="cake" small />
+        <CategoryPromoTile cat={byId("Water")} position="water" small />
       </div>
     </>
   );
@@ -722,19 +750,29 @@ export default function Sales() {
       })
     : rankAndFile;
 
-  const trendingCategories = [
-    "all",
-    ...Array.from(new Set(rankAndFile.map((p) => p.category).filter(Boolean))),
-  ].slice(0, 6);
+  // Kent + Spuds tabs sort first so .slice(0, 6) never cuts them
+  const allCategories = Array.from(
+    new Set(rankAndFile.map((p) => p.category).filter(Boolean)),
+  ).sort(
+    (a, b) =>
+      Number(isPriority({ category: b })) - Number(isPriority({ category: a })),
+  );
+
+  const trendingCategories = ["all", ...allCategories].slice(0, 6);
 
   const byCategory =
     activeCategory === "all"
-      ? rankAndFile
-      : rankAndFile.filter((p) => p.category === activeCategory);
+      ? mixPriority(rankAndFile, GRID_SIZE)
+      : rankAndFile
+          .filter((p) => p.category === activeCategory)
+          .slice(0, GRID_SIZE);
 
+  // Search: nothing hidden, Kent/Spuds matches rank first
   const displayProducts = searchQuery.trim()
-    ? filteredProducts
-    : byCategory.slice(0, 8);
+    ? [...filteredProducts].sort(
+        (a, b) => Number(isPriority(b)) - Number(isPriority(a)),
+      )
+    : byCategory;
 
   return (
     <main className="w-full bg-white">
@@ -889,7 +927,7 @@ export default function Sales() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {loading
-            ? [...Array(8)].map((_, i) => <ProductSkeleton key={i} />)
+            ? [...Array(GRID_SIZE)].map((_, i) => <ProductSkeleton key={i} />)
             : displayProducts.map((prod) => (
                 <ProductCard key={prod._id || prod.id} prod={prod} />
               ))}

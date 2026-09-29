@@ -2,12 +2,22 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Flame } from "lucide-react";
 import { useProducts } from "../../lib/useProducts";
+import { isPriority, mixPriority } from "../../lib/priorityMix";
 import ProductTile from "../ProductTile";
+
+const DEALS_COUNT = 6; // 5 Kent/Spuds + 1 other (~90%)
 
 export default function BestDeals() {
   const { products, loading } = useProducts();
 
-  const deals = products.filter((p) => p.badge).slice(0, 8);
+  // Badged products first; unbadged Kent/Spuds follow so the grid
+  // still fills with Kent/Spuds when few of them carry a badge.
+  const pool = [
+    ...products.filter((p) => p.badge),
+    ...products.filter((p) => !p.badge && isPriority(p)),
+  ];
+  const deals = mixPriority(pool, DEALS_COUNT);
+
   if (!loading && deals.length === 0) return null;
 
   return (
@@ -37,8 +47,8 @@ export default function BestDeals() {
               This Week
             </h3>
             <p className="text-white/70 text-xs mt-2 leading-relaxed">
-              Fresh markdowns on soups, sauces &amp; snacks — while stocks
-              last.
+              Fresh markdowns on Kent sauces, syrups &amp; craft chips — while
+              stocks last.
             </p>
           </div>
           <span className="mt-4 inline-flex items-center gap-1 text-white text-[0.68rem] font-body font-bold uppercase tracking-widest">
@@ -62,16 +72,16 @@ export default function BestDeals() {
         {/* Deals grid */}
         <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           {loading
-            ? [...Array(6)].map((_, i) => (
+            ? [...Array(DEALS_COUNT)].map((_, i) => (
                 <div
                   key={i}
                   className="bg-white rounded-xl border border-gray-100 animate-pulse"
                   style={{ height: 220 }}
                 />
               ))
-            : deals
-                .slice(0, 6)
-                .map((p) => <ProductTile key={p._id || p.id} product={p} />)}
+            : deals.map((p) => (
+                <ProductTile key={p._id || p.id} product={p} />
+              ))}
         </div>
       </div>
     </section>

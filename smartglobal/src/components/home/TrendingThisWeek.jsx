@@ -1,14 +1,19 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useProducts } from "../../lib/useProducts";
+import { mixPriority } from "../../lib/priorityMix";
 import ProductTile from "../ProductTile";
+
+const TRENDING_COUNT = 10; // 2 rows of 5: 9 Kent/Spuds + 1 other (90%)
 
 export default function TrendingThisWeek() {
   const { products, loading } = useProducts();
 
-  const trending = [...products]
-    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-    .slice(0, 5);
+  // Best-rated first; mixPriority keeps that order inside each group
+  const byRating = [...products].sort(
+    (a, b) => (b.rating || 0) - (a.rating || 0),
+  );
+  const trending = mixPriority(byRating, TRENDING_COUNT);
 
   if (!loading && trending.length === 0) return null;
 
@@ -31,9 +36,9 @@ export default function TrendingThisWeek() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {loading
-          ? [...Array(5)].map((_, i) => (
+          ? [...Array(TRENDING_COUNT)].map((_, i) => (
               <div
                 key={i}
                 className="bg-white rounded-xl border border-gray-100 animate-pulse"

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import HeroPromo from "../components/HeroPromo";
-import CategoryStrip from "../components/CategoryStrip";
 import PromoTrio from "../components/PromoTrio";
 import TrustBar from "../components/TrustBar";
 import ProductToolbar from "../components/ProductToolbar";
@@ -128,7 +127,7 @@ export default function Products() {
           <div className="ns-area-main space-y-5">
             <HeroPromo />
 
-            <CategoryStrip />
+         
 
             <PromoTrio />
 

@@ -11,79 +11,73 @@ function scrollToProducts() {
   }
 }
 
-// Static hero slides — image + caption, cycled on a timer.
 const HERO_SLIDES = [
   { image: assets.just, caption: "A taste of greatness" },
   { image: assets.kent1, caption: "We all love good tastes" },
   { image: assets.kent2, caption: "Enjoy testier, flavoured meals" },
-  {
-    image: assets.spudss,
-    caption: "Sponsoring premium tastes",
-  },
+  { image: assets.spudss, caption: "Sponsoring premium tastes" },
 ];
 
 const CSS = `
   .ns-hero {
     position: relative; overflow: hidden; display: flex; align-items: center;
-    min-height: 300px; border-radius: 24px;
+    min-height: clamp(380px, 52vw, 560px); border-radius: 24px;
     background-color: var(--color-blue);
     box-shadow: 0 12px 32px rgba(1,0,40,0.22);
   }
-  @media (max-width: 640px) { .ns-hero { min-height: 250px; border-radius: 20px; } }
+  @media (max-width: 640px) { .ns-hero { min-height: 340px; border-radius: 20px; } }
 
-  .ns-hero-dots {
-    position: absolute; inset: 0; pointer-events: none;
-    background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
-    background-size: 22px 22px;
-  }
-  .ns-blob { position: absolute; border-radius: 50%; pointer-events: none; }
-  .ns-blob.b1 { width: 380px; height: 380px; left: -70px; bottom: -150px; background: var(--color-blue-light); opacity: 0.55; }
-  .ns-blob.b2 { width: 96px; height: 96px; left: 22%; bottom: -30px; background: var(--color-red); }
-  .ns-blob.b3 { width: 44px; height: 44px; left: 8%; top: 26px; background: var(--color-orange); }
-  @media (max-width: 640px) { .ns-blob.b2 { display: none; } }
-
-  /* Image fills the entire right half — full height, no padding, curve matches the card */
-  .ns-hero-img-wrap {
-    position: absolute; right: 0; top: 0; bottom: 0; width: 50%; z-index: 1;
-    overflow: hidden;
-    border-radius: 0 24px 24px 0;
-  }
-  @media (max-width: 640px) { .ns-hero-img-wrap { border-radius: 0 20px 20px 0; } }
+  /* Full-bleed image */
   .ns-hero-img {
-    display: block; width: 100%; height: 100%; object-fit: cover;
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%; object-fit: cover;
     transition: opacity 0.35s ease, transform 0.35s ease;
   }
   .ns-hero-img.fade-out { opacity: 0; transform: scale(1.03); }
   @media (prefers-reduced-motion: reduce) { .ns-hero-img { transition: none; } }
 
-  /* Text sits on the left, clear of the image */
-  .ns-hero-content {
-    position: relative; z-index: 2; max-width: 46%;
-    padding: clamp(1.25rem, 3vw, 2.25rem) clamp(1.25rem, 3vw, 2.5rem) 2.75rem;
+  /* Overlay: dark on the left for text, fading out to the right */
+  .ns-hero-overlay {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(90deg,
+      rgba(1,0,40,0.88) 0%,
+      rgba(1,0,40,0.65) 35%,
+      rgba(1,0,40,0.2) 65%,
+      rgba(1,0,40,0) 100%);
   }
-  @media (max-width: 640px) { .ns-hero-content { max-width: 50%; padding-right: 0.5rem; } }
+  @media (max-width: 640px) {
+    .ns-hero-overlay { background: linear-gradient(180deg, rgba(1,0,40,0.35) 0%, rgba(1,0,40,0.85) 100%); }
+  }
+
+  .ns-hero-content {
+    position: relative; z-index: 2; max-width: 55%;
+    padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1.25rem, 4vw, 3.5rem) 3.25rem;
+  }
+  @media (max-width: 640px) { .ns-hero-content { max-width: 100%; align-self: flex-end; } }
 
   .ns-hero-title {
     font-family: var(--font-heading); font-weight: 700; color: #fff;
-    font-size: clamp(1.5rem, 3.4vw, 2.4rem); line-height: 1.15; margin: 0 0 20px;
+    font-size: clamp(1.9rem, 4.6vw, 3.4rem); line-height: 1.1; margin: 0 0 24px;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.35);
   }
 
   .ns-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .ns-btn-ghost {
     display: inline-flex; align-items: center; padding: 0.65rem 1.3rem; border-radius: 9999px;
-    background: transparent; border: 1px solid rgba(255,255,255,0.32); color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.4); color: #fff;
     font-family: var(--font-body); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
-    text-transform: uppercase; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+    text-transform: uppercase; cursor: pointer; backdrop-filter: blur(6px);
+    transition: background 0.2s, border-color 0.2s;
   }
-  .ns-btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.55); }
+  .ns-btn-ghost:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.7); }
 
   .ns-hero-dotnav {
-    position: absolute; left: 0; right: 0; bottom: 14px; z-index: 3;
+    position: absolute; left: 0; right: 0; bottom: 16px; z-index: 3;
     display: flex; justify-content: center; gap: 6px;
   }
   .ns-hero-dot {
     width: 8px; height: 8px; border-radius: 999px; border: none; padding: 0; cursor: pointer;
-    background: rgba(255,255,255,0.35); transition: all 0.3s ease;
+    background: rgba(255,255,255,0.45); transition: all 0.3s ease;
   }
   .ns-hero-dot.active { width: 24px; background: var(--color-orange); }
 `;
@@ -113,15 +107,18 @@ export default function HeroPromo() {
   return (
     <section aria-label="Hero promo" className="ns-hero">
       <style>{CSS}</style>
-      <div className="ns-hero-dots" aria-hidden="true" />
-      <div className="ns-blob b1" aria-hidden="true" />
-      <div className="ns-blob b2" aria-hidden="true" />
-      <div className="ns-blob b3" aria-hidden="true" />
 
-      {/* Text: caption, left half */}
+      <img
+        key={heroIdx}
+        src={slide.image}
+        alt=""
+        decoding="async"
+        className={`ns-hero-img${animating ? " fade-out" : ""}`}
+      />
+      <div className="ns-hero-overlay" aria-hidden="true" />
+
       <div className="ns-hero-content">
         <h2 className="ns-hero-title">{slide.caption}</h2>
-
         <div className="ns-hero-actions">
           <button
             type="button"
@@ -137,26 +134,10 @@ export default function HeroPromo() {
           >
             Shop now <ArrowRight size={13} />
           </button>
-          <button
-            type="button"
-            onClick={scrollToProducts}
-            className="ns-btn-ghost"
-          >
+          <button type="button" onClick={scrollToProducts} className="ns-btn-ghost">
             Browse all
           </button>
         </div>
-      </div>
-
-      {/* Image: full-height, full-width-of-right-half, curved with the card */}
-      <div className="ns-hero-img-wrap">
-        <img
-          loading="lazy"
-          decoding="async"
-          key={heroIdx}
-          src={slide.image}
-          alt=""
-          className={`ns-hero-img${animating ? " fade-out" : ""}`}
-        />
       </div>
 
       <div className="ns-hero-dotnav">

@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { useProducts } from "../../lib/useProducts";
+import { isPriority, mixPriority } from "../../lib/priorityMix";
 import ProductTile from "../ProductTile";
 
+const ITEMS_COUNT = 9; // 3x3: 8 Kent/Spuds + 1 other on the default tab (~90%)
+
+// "Top Picks" is the default tab and carries the Kent + Spuds mix.
+// categories: null = all products.
 const TABS = [
+  { label: "Top Picks", categories: null },
   {
     label: "Snacks",
     categories: ["Craft cooked potato chips", "Just fruits", "Hum Hum"],
@@ -30,9 +36,15 @@ export default function RecommendedForYou() {
   const { products, loading } = useProducts();
   const [activeTab, setActiveTab] = useState(0);
 
-  const items = products
-    .filter((p) => TABS[activeTab].categories.includes(p.category))
-    .slice(0, 6);
+  const tab = TABS[activeTab];
+
+  const items = tab.categories
+    ? products
+        .filter((p) => tab.categories.includes(p.category))
+        // Kent/Spuds first inside every tab
+        .sort((a, b) => Number(isPriority(b)) - Number(isPriority(a)))
+        .slice(0, ITEMS_COUNT)
+    : mixPriority(products, ITEMS_COUNT);
 
   return (
     <section className="page-x section-y bg-soft">
@@ -45,9 +57,9 @@ export default function RecommendedForYou() {
           <div className="section-rule mt-2" />
         </div>
         <div className="flex flex-wrap gap-2">
-          {TABS.map((tab, i) => (
+          {TABS.map((t, i) => (
             <button
-              key={tab.label}
+              key={t.label}
               onClick={() => setActiveTab(i)}
               className={`px-4 py-2 rounded-full text-xs font-body font-bold uppercase tracking-wide transition-all border ${
                 activeTab === i
@@ -60,7 +72,7 @@ export default function RecommendedForYou() {
                   : undefined
               }
             >
-              {tab.label}
+              {t.label}
             </button>
           ))}
         </div>
@@ -68,7 +80,7 @@ export default function RecommendedForYou() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {loading ? (
-          [...Array(6)].map((_, i) => (
+          [...Array(ITEMS_COUNT)].map((_, i) => (
             <div
               key={i}
               className="bg-white rounded-xl border border-gray-100 animate-pulse"

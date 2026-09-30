@@ -11,30 +11,57 @@ function scrollToProducts() {
   }
 }
 
+// pos = focal point (object-position). Tune per image so the subject stays in frame.
 const HERO_SLIDES = [
-  { image: assets.just, caption: "A taste of greatness" },
-  { image: assets.kent1, caption: "We all love good tastes" },
-  { image: assets.kent2, caption: "Enjoy testier, flavoured meals" },
-  { image: assets.spudss, caption: "Sponsoring premium tastes" },
+  { image: assets.just,   caption: "A taste of greatness",           pos: "center 40%" },
+  { image: assets.kent1,  caption: "We all love good tastes",        pos: "center center" },
+  { image: assets.kent2,  caption: "Enjoy testier, flavoured meals", pos: "center center" },
+  { image: assets.spudss, caption: "Sponsoring premium tastes",      pos: "center center" },
 ];
 
 const CSS = `
   .ns-hero {
     position: relative; overflow: hidden; display: flex; align-items: center;
-    min-height: clamp(380px, 52vw, 560px); border-radius: 24px;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    min-height: 380px;
+    max-height: min(640px, 80vh);
+    max-height: min(640px, 80dvh);
+    border-radius: 24px;
     background-color: var(--color-blue);
     box-shadow: 0 12px 32px rgba(1,0,40,0.22);
   }
-  @media (max-width: 640px) { .ns-hero { min-height: 340px; border-radius: 20px; } }
+  @media (max-width: 1024px) {
+    .ns-hero { aspect-ratio: 16 / 9; }
+  }
+  @media (max-width: 640px) {
+    .ns-hero {
+      aspect-ratio: 1 / 1;
+      min-height: 0;
+      max-height: 78vh;
+      max-height: 78dvh;
+      border-radius: 20px;
+    }
+  }
 
-  /* Full-bleed image */
+  /* Blurred copy fills any space the full image doesn't cover */
+  .ns-hero-bg {
+    position: absolute; inset: -30px; z-index: 0;
+    width: calc(100% + 60px); height: calc(100% + 60px);
+    object-fit: cover; filter: blur(28px) saturate(1.2); opacity: 0.9;
+  }
+
+  /* Full image, never cropped */
   .ns-hero-img {
     position: absolute; inset: 0; z-index: 0;
-    width: 100%; height: 100%; object-fit: cover;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    object-position: center;
     transition: opacity 0.35s ease, transform 0.35s ease;
   }
   .ns-hero-img.fade-out { opacity: 0; transform: scale(1.03); }
   @media (prefers-reduced-motion: reduce) { .ns-hero-img { transition: none; } }
+  @media (max-width: 640px) { .ns-hero-img { object-position: center top; } }
 
   /* Overlay: dark on the left for text, fading out to the right */
   .ns-hero-overlay {
@@ -53,7 +80,9 @@ const CSS = `
     position: relative; z-index: 2; max-width: 55%;
     padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1.25rem, 4vw, 3.5rem) 3.25rem;
   }
-  @media (max-width: 640px) { .ns-hero-content { max-width: 100%; align-self: flex-end; } }
+  @media (max-width: 640px) {
+    .ns-hero-content { max-width: 100%; align-self: flex-end; width: 100%; }
+  }
 
   .ns-hero-title {
     font-family: var(--font-heading); font-weight: 700; color: #fff;
@@ -88,6 +117,14 @@ export default function HeroPromo() {
   const intervalRef = useRef(null);
   const timeoutRef = useRef(null);
 
+  // Preload all slides so transitions never flash
+  useEffect(() => {
+    HERO_SLIDES.forEach((s) => {
+      const img = new Image();
+      img.src = s.image;
+    });
+  }, []);
+
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setAnimating(true);
@@ -108,11 +145,13 @@ export default function HeroPromo() {
     <section aria-label="Hero promo" className="ns-hero">
       <style>{CSS}</style>
 
+      <img src={slide.image} alt="" aria-hidden="true" className="ns-hero-bg" />
       <img
         key={heroIdx}
         src={slide.image}
         alt=""
         decoding="async"
+        fetchpriority={heroIdx === 0 ? "high" : "auto"}
         className={`ns-hero-img${animating ? " fade-out" : ""}`}
       />
       <div className="ns-hero-overlay" aria-hidden="true" />

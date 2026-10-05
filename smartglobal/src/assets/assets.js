@@ -8,6 +8,9 @@ import top2 from "./top2.jpg";
 import topping from "./topping.jpg";
 import top3 from "./top3.jpg";
 import top1 from "./top1.jpeg";
+import best from "./best.png";
+import bst from "./bst.jpeg";
+import st from "./st.jpeg";
 // import spuds from "./spuds 1.jpg";
 import spuds1 from "./spuds-1.png";
 import spuds2 from "./spuds-2.png";
@@ -85,4 +88,7 @@ export const assets = {
   cara,
   jst,
   water,
+  best,
+  bst,
+  st,
 };

@@ -2,19 +2,21 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Flame } from "lucide-react";
 import { useProducts } from "../../lib/useProducts";
-import { isPriority, mixPriority } from "../../lib/priorityMix";
+import { isPriority, isCubes, mixPriority } from "../../lib/priorityMix";
 import ProductTile from "../ProductTile";
+import {assets} from "../../assets/assets";
 
-const DEALS_COUNT = 6; // 5 Kent/Spuds + 1 other (~90%)
+const DEALS_COUNT = 6; // ~50% cubes (3), the rest Kent/Spuds first
 
 export default function BestDeals() {
   const { products, loading } = useProducts();
 
-  // Badged products first; unbadged Kent/Spuds follow so the grid
-  // still fills with Kent/Spuds when few of them carry a badge.
+  // Badged products first; unbadged cubes and Kent/Spuds follow so the grid
+  // still fills with them when few carry a badge. mixPriority then puts
+  // cubes at ~50% of the slots and fills the rest with Kent/Spuds.
   const pool = [
     ...products.filter((p) => p.badge),
-    ...products.filter((p) => !p.badge && isPriority(p)),
+    ...products.filter((p) => !p.badge && (isCubes(p) || isPriority(p))),
   ];
   const deals = mixPriority(pool, DEALS_COUNT);
 
@@ -51,7 +53,35 @@ export default function BestDeals() {
               stocks last.
             </p>
           </div>
-          <span className="mt-4 inline-flex items-center gap-1 text-white text-[0.68rem] font-body font-bold uppercase tracking-widest">
+
+          {/* Deal images */}
+          <div className="my-4 flex flex-col gap-3 items-center">
+            <img
+              loading="lazy"
+              decoding="async"
+              src={assets.best}
+              alt="Best deals"
+              className="w-full h-28 object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="w-full grid grid-cols-2 gap-3">
+              <img
+                loading="lazy"
+                decoding="async"
+                src={assets.bst}
+                alt=""
+                className="w-full h-20 object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-500"
+              />
+              <img
+                loading="lazy"
+                decoding="async"
+                src={assets.st}
+                alt=""
+                className="w-full h-20 object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+          </div>
+
+          <span className="mt-2 inline-flex items-center gap-1 text-white text-[0.68rem] font-body font-bold uppercase tracking-widest">
             Shop All Deals
             <svg
               className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"

@@ -44,12 +44,15 @@ const STATIC_CATEGORIES = CATEGORY_CONFIG.map((c) => ({
 
 // ─────────────────────────────────────────────────────────────
 // PRIORITY MIX — Kent + Spuds fill ~90% of the trending grid
+// CUBES FIRST — Kent Cubes take ~50% of the trending grid
 // ─────────────────────────────────────────────────────────────
 const PRIORITY_SHARE = 0.9;
+const CUBE_SHARE = 0.5;
 const GRID_SIZE = 12; // 3 full rows of 4
 const isKent = (p) => /kent/i.test(p.category || "");
 const isSpuds = (p) => /potato chips|spuds/i.test(p.category || "");
 const isPriority = (p) => isKent(p) || isSpuds(p);
+const isCubes = (p) => /cube/i.test(`${p.title || ""} ${p.name || ""}`);
 
 function interleave(a, b) {
   const out = [];
@@ -70,6 +73,16 @@ function mixPriority(list, total) {
   // If there aren't enough Kent/Spuds products, others fill the gap
   const rest = others.slice(0, total - priority.length);
   return [...priority, ...rest];
+}
+
+function mixCubes(list, total) {
+  const cubes = list.filter(isCubes).slice(0, Math.round(total * CUBE_SHARE));
+  // Remaining slots keep the existing Kent + Spuds priority mix
+  const rest = mixPriority(
+    list.filter((p) => !isCubes(p)),
+    total - cubes.length,
+  );
+  return [...cubes, ...rest];
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -733,10 +746,10 @@ export default function Sales() {
 
   const searchQuery = searchParams.get("q") || "";
 
-  // Kent Cubes (or whichever product is flagged) is spotlighted separately
-  // below, so it's excluded here to avoid showing it twice on the page.
+  // The best seller is spotlighted separately below, so it's excluded from
+  // the grid — except cubes, which stay in so they can dominate the grid.
   const bestSeller = products.find((p) => p.isBestSeller) || null;
-  const rankAndFile = products.filter((p) => !p.isBestSeller);
+  const rankAndFile = products.filter((p) => !p.isBestSeller || isCubes(p));
 
   const filteredProducts = searchQuery.trim()
     ? rankAndFile.filter((p) => {
@@ -762,15 +775,17 @@ export default function Sales() {
 
   const byCategory =
     activeCategory === "all"
-      ? mixPriority(rankAndFile, GRID_SIZE)
+      ? mixCubes(rankAndFile, GRID_SIZE)
       : rankAndFile
           .filter((p) => p.category === activeCategory)
           .slice(0, GRID_SIZE);
 
-  // Search: nothing hidden, Kent/Spuds matches rank first
+  // Search: nothing hidden, cubes rank first, then Kent/Spuds matches
   const displayProducts = searchQuery.trim()
     ? [...filteredProducts].sort(
-        (a, b) => Number(isPriority(b)) - Number(isPriority(a)),
+        (a, b) =>
+          Number(isCubes(b)) - Number(isCubes(a)) ||
+          Number(isPriority(b)) - Number(isPriority(a)),
       )
     : byCategory;
 

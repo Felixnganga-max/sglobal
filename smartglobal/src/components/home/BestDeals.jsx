@@ -4,10 +4,10 @@ import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProducts } from "../../lib/useProducts";
 import { isPriority, isCubes, mixPriority } from "../../lib/priorityMix";
 import ProductTile from "../ProductTile";
-import assets from "../../assets/assets";
+import {assets} from "../../assets/assets";
 
 const DEALS_COUNT = 6; // ~50% cubes (3), the rest Kent/Spuds first
-const SLIDE_MS = 3500;
+const SLIDE_MS = 6000; // each new slide appears after 6 seconds
 
 // Each asset is a full-size slide in the red panel carousel
 const SLIDES = [

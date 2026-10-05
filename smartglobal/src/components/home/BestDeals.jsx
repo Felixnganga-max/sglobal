@@ -85,14 +85,24 @@ export default function BestDeals() {
                     pointerEvents: i === slide ? "auto" : "none",
                   }}
                 >
+                  {/* Blurred copy fills the whole slide so no red gaps show */}
                   <img
-                    loading={i === 0 ? "eager" : "lazy"}
-                    decoding="async"
+                    aria-hidden="true"
                     src={s.img}
-                    alt={s.alt}
-                    className="w-full h-full object-cover transition-transform duration-[4000ms] ease-out"
-                    style={{ transform: i === slide ? "scale(1.08)" : "scale(1)" }}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 opacity-70"
                   />
+                  {/* The poster itself: as big as possible, never cropped */}
+                  <div className="absolute inset-0 pt-11 pb-24 px-4 flex items-center justify-center">
+                    <img
+                      loading={i === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                      src={s.img}
+                      alt={s.alt}
+                      className="w-full h-full object-contain rounded-lg drop-shadow-2xl transition-transform duration-[4000ms] ease-out"
+                      style={{ transform: i === slide ? "scale(1.04)" : "scale(0.98)" }}
+                    />
+                  </div>
                   {/* Salesy overlay */}
                   <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/75 via-black/30 to-transparent">
                     <p className="font-heading text-white text-sm font-bold leading-tight">

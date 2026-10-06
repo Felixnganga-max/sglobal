@@ -21,7 +21,7 @@ const BADGE_COLORS = {
 };
 
 const CATEGORY_CONFIG = [
-  { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.news},
+  { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.news },
   { key: "Just fruits", accent: "#16a34a", image: assets.newjsts },
   { key: "Hazelnuts", accent: "#7B4019", image: assets.hazelnut },
   { key: "Cakemix", accent: "#FF7F11", image: assets.cake },
@@ -360,7 +360,7 @@ function ProductCard({ prod }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// CATEGORY PROMO GRID
+// CATEGORY PROMO GRID — image-only tiles, navy ↔ red gradient wash
 // Spuds + Kent (sauces, syrups) get the big tiles; Just Fruits is the
 // 4th big tile. Hazelnuts / Cakemix / Water sit in a slim bottom row.
 // ─────────────────────────────────────────────────────────────
@@ -384,39 +384,54 @@ const CATEGORY_PROMO_CSS = `
     display: block;
     overflow: hidden;
     border-radius: 20px;
-    background-color: var(--color-blue-tint);
     height: 100%;
+    isolation: isolate;
+    background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue) 45%, var(--color-red-dark) 100%);
+    box-shadow: 0 6px 18px rgba(1, 0, 40, 0.28);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
   }
+  .sg-cat-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(28, 28, 92, 0.4), 0 6px 16px rgba(255, 0, 0, 0.28);
+  }
+  .sg-cat-tile:focus-visible {
+    outline: 3px solid var(--color-orange);
+    outline-offset: 3px;
+  }
+
+  /* Image fills the whole tile */
   .sg-cat-tile-img {
     position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover; transition: transform 0.5s ease;
+    object-fit: cover; object-position: center;
+    transition: transform 0.6s ease;
+    z-index: 0;
   }
-  .sg-cat-tile:hover .sg-cat-tile-img { transform: scale(1.05); }
+  .sg-cat-tile:hover .sg-cat-tile-img { transform: scale(1.07); }
+
+  /* Navy corner -> red corner wash, clear middle keeps the product vivid */
   .sg-cat-tile::before {
     content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.6) 32%, rgba(255,255,255,0) 58%);
+    background: linear-gradient(
+      135deg,
+      rgba(28, 28, 92, 0.6) 0%,
+      rgba(28, 28, 92, 0.08) 38%,
+      rgba(255, 0, 0, 0.08) 62%,
+      rgba(204, 0, 0, 0.6) 100%
+    );
+    mix-blend-mode: multiply;
+    transition: opacity 0.35s ease;
   }
-  .sg-cat-copy { position: relative; z-index: 2; padding: 1.25rem 1.4rem; }
-  .sg-cat-title {
-    font-family: var(--font-heading);
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--color-blue);
-    line-height: 1.15;
-    margin: 0 0 10px;
-    max-width: 82%;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
+  .sg-cat-tile:hover::before { opacity: 0.75; }
+
+  /* Shine sweep on hover */
+  .sg-cat-tile::after {
+    content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+    z-index: 2; pointer-events: none;
+    background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+    transform: skewX(-18deg);
+    transition: left 0.8s ease;
   }
-  .sg-cat-small .sg-cat-title { font-size: 0.95rem; }
-  .sg-cat-cta {
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-red);
-  }
+  .sg-cat-tile:hover::after { left: 130%; }
 
   .sg-cat-spuds   { grid-column: 1 / 7;  grid-row: 1; }
   .sg-cat-sauces  { grid-column: 7 / 13; grid-row: 1; }
@@ -426,6 +441,20 @@ const CATEGORY_PROMO_CSS = `
   .sg-cat-cake    { grid-column: 5 / 9;  grid-row: 3; }
   .sg-cat-water   { grid-column: 9 / 13; grid-row: 3; }
 
+  /* Flipped: red corner -> navy corner, so the grid feels lively */
+  .sg-cat-sauces, .sg-cat-fruits, .sg-cat-cake {
+    background: linear-gradient(225deg, var(--color-red) 0%, var(--color-red-dark) 40%, var(--color-blue) 100%);
+  }
+  .sg-cat-sauces::before, .sg-cat-fruits::before, .sg-cat-cake::before {
+    background: linear-gradient(
+      225deg,
+      rgba(204, 0, 0, 0.6) 0%,
+      rgba(255, 0, 0, 0.08) 38%,
+      rgba(28, 28, 92, 0.08) 62%,
+      rgba(28, 28, 92, 0.6) 100%
+    );
+  }
+
   @media (max-width: 900px) {
     .sg-cat-spuds, .sg-cat-sauces, .sg-cat-syrups {
       grid-column: 1 / 3; grid-row: auto;
@@ -434,33 +463,31 @@ const CATEGORY_PROMO_CSS = `
       grid-column: auto; grid-row: auto;
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sg-cat-tile, .sg-cat-tile-img, .sg-cat-tile::after { transition: none; }
+    .sg-cat-tile:hover { transform: none; }
+    .sg-cat-tile:hover .sg-cat-tile-img { transform: none; }
+  }
 `;
 
-function CategoryPromoTile({ cat, position, small }) {
+function CategoryPromoTile({ cat, position }) {
   if (!cat) return null;
   return (
     <Link
       to={`/products#cat-${categorySlug(cat.id)}`}
-      className={`sg-cat-tile sg-cat-${position}${small ? " sg-cat-small" : ""}`}
+      aria-label={`Shop ${cat.title}`}
+      className={`sg-cat-tile sg-cat-${position}`}
     >
-      {cat.image ? (
+      {cat.image && (
         <img
           loading="lazy"
           decoding="async"
           src={cat.image}
-          alt=""
+          alt={cat.title}
           className="sg-cat-tile-img"
-        />
-      ) : (
-        <div
-          className="sg-cat-tile-img"
-          style={{ backgroundColor: `${cat.accent}22` }}
         />
       )}
-      <div className="sg-cat-copy">
-        <h3 className="sg-cat-title">{cat.title}</h3>
-        <span className="sg-cat-cta">Shop now</span>
-      </div>
     </Link>
   );
 }
@@ -479,9 +506,9 @@ function CategoryPromoGrid({ categories }) {
         <CategoryPromoTile cat={byId("Kent sauces")} position="sauces" />
         <CategoryPromoTile cat={byId("Kent syrups")} position="syrups" />
         <CategoryPromoTile cat={byId("Just fruits")} position="fruits" />
-        <CategoryPromoTile cat={byId("Hazelnuts")} position="nuts" small />
-        <CategoryPromoTile cat={byId("Cakemix")} position="cake" small />
-        <CategoryPromoTile cat={byId("Water")} position="water" small />
+        <CategoryPromoTile cat={byId("Hazelnuts")} position="nuts" />
+        <CategoryPromoTile cat={byId("Cakemix")} position="cake" />
+        <CategoryPromoTile cat={byId("Water")} position="water" />
       </div>
     </>
   );

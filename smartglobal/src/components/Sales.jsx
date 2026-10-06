@@ -399,18 +399,18 @@ const CATEGORY_PROMO_CSS = `
     outline-offset: 3px;
   }
 
-  /* Image fills the whole tile */
+  /* Whole image always visible (contain) — never cropped */
   .sg-cat-tile-img {
     position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover; object-position: center;
+    object-fit: contain; object-position: center;
     transition: transform 0.6s ease;
-    z-index: 0;
+    z-index: 1;
   }
-  .sg-cat-tile:hover .sg-cat-tile-img { transform: scale(1.07); }
+  .sg-cat-tile:hover .sg-cat-tile-img { transform: scale(1.03); }
 
-  /* Navy corner -> red corner wash, clear middle keeps the product vivid */
+  /* Navy corner -> red corner wash, sits behind the image so the image is never tinted */
   .sg-cat-tile::before {
-    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
     background: linear-gradient(
       135deg,
       rgba(28, 28, 92, 0.6) 0%,

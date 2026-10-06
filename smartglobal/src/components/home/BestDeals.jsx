@@ -4,46 +4,49 @@ import { ArrowRight } from "lucide-react";
 import { useProducts } from "../../lib/useProducts";
 import { isPriority, isCubes, mixPriority } from "../../lib/priorityMix";
 import ProductTile from "../ProductTile";
-import {assets} from "../../assets/assets";
+import { assets } from "../../assets/assets";
 
 const DEALS_COUNT = 6; // ~50% cubes (3), the rest Kent/Spuds first
 const SLIDE_MS = 6000; // each new slide appears after 6 seconds
 const FADE_MS = 350;
 
-// One poster per slide, shown big and uncropped (same approach as HeroPromo)
+// One poster per slide, filling the whole panel
 const SLIDES = [
-  { image: assets. newcubs, caption: "Hot deals this week" },
+  { image: assets.newcubs, caption: "Hot deals this week" },
   { image: assets.bst, caption: "Best picks, best prices" },
   { image: assets.st, caption: "Grab yours while stocks last" },
 ].filter((s) => s.image);
+
+// Poster fit inside the panel:
+//   "contain" = whole poster visible, edge to edge on its long side (nothing cut)
+//   "cover"   = poster fills every pixel of the panel (edges may be cropped)
+const IMAGE_FIT = "contain";
 
 const CSS = `
   .bd-panel {
     position: relative; overflow: hidden;
     min-height: 380px; height: 100%;
     border-radius: 20px;
-    background: linear-gradient(160deg, var(--color-red) 0%, var(--color-red-dark) 100%);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    background: linear-gradient(160deg, var(--color-orange) 0%, var(--color-orange-dark) 100%);
+    box-shadow: 0 12px 32px rgba(217, 104, 0, 0.3);
   }
 
-  /* Blurred copy fills any space the full poster doesn't cover */
+  /* Blurred copy fills any space the poster doesn't cover */
   .bd-bg {
     position: absolute; inset: -30px; z-index: 0;
     width: calc(100% + 60px); height: calc(100% + 60px);
-    object-fit: cover; filter: blur(28px) saturate(1.2); opacity: 0.9;
+    object-fit: cover; filter: blur(28px) saturate(1.25); opacity: 0.9;
     transition: opacity 0.35s ease;
   }
   .bd-bg.fade-out { opacity: 0; }
 
-  /* Full poster, never cropped, as big as the panel allows */
+  /* Poster takes the entire panel — no padding */
   .bd-img-wrap {
     position: absolute; inset: 0; z-index: 0;
-    padding: 3.25rem 1.25rem 8rem;
-    display: flex; align-items: center; justify-content: center;
   }
   .bd-img {
-    width: 100%; height: 100%; object-fit: contain; border-radius: 12px;
-    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.45));
+    width: 100%; height: 100%; object-fit: ${IMAGE_FIT}; object-position: center;
+    display: block;
     transition: opacity 0.35s ease, transform 0.35s ease;
   }
   .bd-img.fade-out { opacity: 0; transform: scale(1.03); }
@@ -51,13 +54,13 @@ const CSS = `
     .bd-img, .bd-bg { transition: none; }
   }
 
-  /* Dark fade at the bottom so the caption and button stay readable */
+  /* Warm fade at the bottom so the caption and button stay readable */
   .bd-overlay {
     position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background: linear-gradient(180deg,
-      rgba(60,0,0,0) 45%,
-      rgba(60,0,0,0.55) 70%,
-      rgba(60,0,0,0.9) 100%);
+      rgba(70,30,0,0) 55%,
+      rgba(70,30,0,0.5) 78%,
+      rgba(70,30,0,0.85) 100%);
   }
 
   .bd-badge {
@@ -77,7 +80,7 @@ const CSS = `
   .bd-title {
     font-family: var(--font-heading); font-weight: 700; color: #fff;
     font-size: clamp(1.3rem, 2.2vw, 1.7rem); line-height: 1.15; margin: 0 0 12px;
-    text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+    text-shadow: 0 2px 16px rgba(0,0,0,0.4);
   }
 
   .bd-dotnav {
@@ -86,7 +89,7 @@ const CSS = `
   }
   .bd-dot {
     width: 8px; height: 8px; border-radius: 999px; border: none; padding: 0; cursor: pointer;
-    background: rgba(255,255,255,0.45); transition: all 0.3s ease;
+    background: rgba(255,255,255,0.55); transition: all 0.3s ease;
   }
   .bd-dot.active { width: 24px; background: #FFD41D; }
 `;

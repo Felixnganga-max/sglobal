@@ -21,8 +21,8 @@ const BADGE_COLORS = {
 };
 
 const CATEGORY_CONFIG = [
-  { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.spuds },
-  { key: "Just fruits", accent: "#16a34a", image: assets.jst },
+  { key: "Craft cooked potato chips", accent: "#7B4019", image: assets.news},
+  { key: "Just fruits", accent: "#16a34a", image: assets.newjsts },
   { key: "Hazelnuts", accent: "#7B4019", image: assets.hazelnut },
   { key: "Cakemix", accent: "#FF7F11", image: assets.cake },
   { key: "Kent syrups", accent: "#FF0000", image: assets.top },

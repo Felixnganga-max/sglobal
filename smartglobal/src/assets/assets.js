@@ -45,8 +45,22 @@ import tops from "./tops.png";
 import kent1 from "./kent1.png";
 import kent2 from "./kent2.png";
 import just from "./just.png";
+import newcubs from "./newcubs.jpeg";
+import newfr from "./newfr.jpeg";
+import newhum from "./newhum.jpeg";
+import newjsts from "./newjsts.jpeg";
+import news from "./news.jpeg";
+import newsp from "./newsp.jpeg";
+import newwtr from "./newwtr.jpeg";
 
 export const assets = {
+  newcubs,
+  newfr,
+  newhum, newjsts,
+  news,
+  newsp,
+  newwtr,
+  ice,
   pan,
   kent1,
   kent2,

@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { useProducts } from "../../lib/useProducts";
 import { isPriority, isCubes, mixPriority } from "../../lib/priorityMix";
 import ProductTile from "../ProductTile";
-import assets from "../../assets/assets";
+import {assets} from "../../assets/assets";
 
 const DEALS_COUNT = 6; // ~50% cubes (3), the rest Kent/Spuds first
 const SLIDE_MS = 6000; // each new slide appears after 6 seconds
@@ -12,7 +12,7 @@ const FADE_MS = 350;
 
 // One poster per slide, shown big and uncropped (same approach as HeroPromo)
 const SLIDES = [
-  { image: assets.best, caption: "Hot deals this week" },
+  { image: assets. newcubs, caption: "Hot deals this week" },
   { image: assets.bst, caption: "Best picks, best prices" },
   { image: assets.st, caption: "Grab yours while stocks last" },
 ].filter((s) => s.image);

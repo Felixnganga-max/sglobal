@@ -206,12 +206,13 @@ function ProductCard({ prod }) {
       aria-labelledby={`prod-${prodId}`}
     >
       <div className="relative bg-gray-50 overflow-hidden">
+        {/* Image fills the whole container edge to edge — no padding, no gaps */}
         <img
           loading="lazy"
           decoding="async"
           src={getImage(prod)}
           alt={prod.title}
-          className="w-full h-32 sm:h-36 object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+          className="block w-full h-32 sm:h-36 object-cover object-center group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = FALLBACK_IMG;
@@ -399,10 +400,10 @@ const CATEGORY_PROMO_CSS = `
     outline-offset: 3px;
   }
 
-  /* Whole image always visible (contain) — never cropped */
+  /* Image fills the tile 100% edge to edge (cover) — no empty space around it */
   .sg-cat-tile-img {
     position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: contain; object-position: center;
+    object-fit: cover; object-position: center;
     transition: transform 0.6s ease;
     z-index: 1;
   }
@@ -839,13 +840,14 @@ export default function Sales() {
               background: "linear-gradient(120deg, #1a1a1a 0%, #3a2410 100%)",
             }}
           >
-            <div className="flex-shrink-0 w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-white/95 flex items-center justify-center overflow-hidden">
+            {/* Image fills the box edge to edge — no padding, no gaps */}
+            <div className="flex-shrink-0 w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-white/95 overflow-hidden">
               <img
                 loading="lazy"
                 decoding="async"
                 src={getImage(bestSeller)}
                 alt={bestSeller.title}
-                className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
+                className="block w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = FALLBACK_IMG;

@@ -3,8 +3,8 @@ import { Heart, ShoppingCart, MapPin, Search, Check } from "lucide-react";
 import { assets } from "../assets/assets";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
-import { categorySlug } from "../lib/categories";
 import PackBadge from "./PackBadge";
+import CategoryScroller from "./CategoryScroller";
 
 import { API_BASE_URL } from "../api/config";
 const API_URL = `${API_BASE_URL}/products`;
@@ -361,6 +361,7 @@ function ProductCard({ prod }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+<<<<<<< HEAD
 // CATEGORY PROMO GRID — image-only tiles, navy ↔ red gradient wash
 // Spuds + Kent (sauces, syrups) get the big tiles; Just Fruits is the
 // 4th big tile. Hazelnuts / Cakemix / Water sit in a slim bottom row.
@@ -516,6 +517,8 @@ function CategoryPromoGrid({ categories }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+=======
+>>>>>>> 3002a13 (new)
 // PROMO VIDEO SECTION
 // ─────────────────────────────────────────────────────────────
 function PromoVideoSection({ video, onDismiss, onMinimize, isMinimized }) {
@@ -819,15 +822,9 @@ export default function Sales() {
 
   return (
     <main className="w-full bg-white">
-      {/* ── Category Promo Grid ── */}
+      {/* ── Shop by category (Food Plus style scroller) ── */}
       <section className="section-y page-x">
-        <div className="mb-4">
-          <p className="text-eyebrow mb-1">What We Offer</p>
-          <h2 className="text-section-title text-gray-900">Shop by Category</h2>
-          <div className="section-rule mt-2" />
-        </div>
-
-        <CategoryPromoGrid categories={STATIC_CATEGORIES} />
+        <CategoryScroller categories={STATIC_CATEGORIES} />
       </section>
 
       {/* ── Best Seller Spotlight — featured once, at the very top ── */}

@@ -205,14 +205,14 @@ function ProductCard({ prod }) {
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer"
       aria-labelledby={`prod-${prodId}`}
     >
-      <div className="relative bg-gray-50 overflow-hidden">
-        {/* Image fills the whole container edge to edge — no padding, no gaps */}
+      <div className="relative bg-white overflow-hidden">
+        {/* Whole image visible inside the frame — scaled to fit, never cropped */}
         <img
           loading="lazy"
           decoding="async"
           src={getImage(prod)}
           alt={prod.title}
-          className="block w-full h-32 sm:h-36 object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          className="block w-full h-32 sm:h-36 object-contain object-center"
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = FALLBACK_IMG;
@@ -679,14 +679,14 @@ export default function Sales() {
               background: "linear-gradient(120deg, #1a1a1a 0%, #3a2410 100%)",
             }}
           >
-            {/* Image fills the box edge to edge — no padding, no gaps */}
-            <div className="flex-shrink-0 w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-white/95 overflow-hidden">
+            {/* Whole image visible inside the box — scaled to fit, never cropped */}
+            <div className="flex-shrink-0 w-36 h-36 sm:w-44 sm:h-44 rounded-xl bg-white overflow-hidden">
               <img
                 loading="lazy"
                 decoding="async"
                 src={getImage(bestSeller)}
                 alt={bestSeller.title}
-                className="block w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                className="block w-full h-full object-contain object-center"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = FALLBACK_IMG;

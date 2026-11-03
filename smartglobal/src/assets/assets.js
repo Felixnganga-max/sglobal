@@ -43,6 +43,8 @@ import sps1 from "./sps1.jpeg";
 
 import tops from "./tops.png";
 import kent1 from "./kent1.png";
+import c from "./c.png";
+import c1 from "./c1.png";
 import kent2 from "./kent2.png";
 import just from "./just.png";
 import newcubs from "./newcubs.jpeg";
@@ -61,6 +63,7 @@ export const assets = {
   newsp,
   newwtr,
   ice,
+  c,c1,
   pan,
   kent1,
   kent2,

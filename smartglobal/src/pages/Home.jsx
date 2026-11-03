@@ -10,10 +10,12 @@ import Recipes from "../components/Recipes";
 import CertStrip from "../components/home/CertStrip";
 import Newsletter from "../components/home/Newsletter";
 import Contact from "../components/Contact";
+import FollowBanner from "../components/home/FollowBanner";
 
 const Home = () => {
   return (
     <div>
+      <FollowBanner />
       <HeroBanner />
       <PromoStrip />
       <Sales />

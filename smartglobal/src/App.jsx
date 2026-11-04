@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import About from "./pages/About";
 import PlaceOrder from "./pages/PlaceOrder";
 import Orders from "./pages/Orders";
+import CookWithKent from "./pages/CookWithKent";
 
 function App() {
   const location = useLocation();
@@ -29,6 +30,7 @@ function App() {
       {!isDashboard && !isAuth && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/cook-with-kent" element= {<CookWithKent />} />
         <Route path="/products" element={<Products />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/contact" element={<ContactUs />} />

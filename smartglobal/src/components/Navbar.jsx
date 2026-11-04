@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Search,
   ShoppingCart,
@@ -9,795 +9,581 @@ import {
   History,
   UserCircle,
   LogOut,
+  LayoutGrid,
+  Gift,
+  RotateCcw,
+  Phone,
+  LayoutDashboard,
 } from "lucide-react";
 import { assets } from "../assets/assets";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/Cartcontext";
-
+import { useProducts } from "../lib/useProducts";
 import { API_BASE_URL } from "../api/config";
+
 const API_URL = `${API_BASE_URL}/products`;
+const PHONE = ""; // e.g. "+254 7XX XXX XXX" — shows in the top bar when set
+const TOP_H = 36; // top bar height (px); header slides up by this on scroll
 
-export default function Navbar() {
+const NAV_LINKS = [
+  { name: "Products", href: "/products" },
+  { name: "Recipes", href: "/recipes" },
+  { name: "Blogs", href: "/blogs" },
+  { name: "About Us", href: "/about" },
+  { name: "Contact", href: "/contact" },
+];
+
+/* ── one shared product list for live search (fetched once) ── */
+let productCache = null;
+const loadAllProducts = () => {
+  if (!productCache) {
+    productCache = fetch(`${API_URL}?page=1&limit=100`)
+      .then((r) => r.json())
+      .then((d) => (d.success ? d.data || [] : Array.isArray(d) ? d : []))
+      .catch((e) => {
+        productCache = null;
+        throw e;
+      });
+  }
+  return productCache;
+};
+
+const imgOf = (p) =>
+  p.image?.url || p.imageUrl || p.img || p.photo || "https://via.placeholder.com/300?text=No+Image";
+
+/* ───────────────────────── Search box ───────────────────────── */
+function SearchBox({ className = "", onPick }) {
   const navigate = useNavigate();
-  const { totalItems } = useCart();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [scrolled, setScrolled] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [hoverPosition, setHoverPosition] = useState({ x: 0, width: 0 });
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-
-  // Mobile search state
-  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
-  const [mobileResults, setMobileResults] = useState([]);
-  const [mobileSearching, setMobileSearching] = useState(false);
-  const [showMobileResults, setShowMobileResults] = useState(false);
-
-  // Desktop search state
-  const [desktopResults, setDesktopResults] = useState([]);
-  const [desktopSearching, setDesktopSearching] = useState(false);
-  const [showDesktopResults, setShowDesktopResults] = useState(false);
-
-  const navRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const searchInputRef = useRef(null);
-  const mobileSearchRef = useRef(null);
-  const mobileResultsRef = useRef(null);
-  const desktopSearchRef = useRef(null);
-  const desktopResultsRef = useRef(null);
-  const searchTimerRef = useRef(null);
-  const desktopTimerRef = useRef(null);
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
+  const wrapRef = useRef(null);
+  const timer = useRef(null);
 
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = () => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-    } else {
-      setIsAuthenticated(false);
-      setUser(null);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setIsAuthenticated(false);
-    setUser(null);
-    setUserDropdownOpen(false);
-    navigate("/");
-  };
-
-  const navLinks = [
-    { name: "Products", href: "/products", hasDropdown: true },
-    { name: "Recipes", href: "/recipes" },
-    { name: "Blogs", href: "/blogs" },
-    { name: "About Us", href: "/about" },
-    { name: "Contact", href: "/contact" },
-  ];
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-        setUserDropdownOpen(false);
+    const out = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setShow(false);
     };
-    if (userDropdownOpen)
-      document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [userDropdownOpen]);
-
-  // Close mobile results on outside click
-  useEffect(() => {
-    const handleOutside = (e) => {
-      if (
-        mobileResultsRef.current &&
-        !mobileResultsRef.current.contains(e.target) &&
-        mobileSearchRef.current &&
-        !mobileSearchRef.current.contains(e.target)
-      )
-        setShowMobileResults(false);
-    };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
+    document.addEventListener("mousedown", out);
+    return () => document.removeEventListener("mousedown", out);
   }, []);
 
-  // Close desktop results on outside click
-  useEffect(() => {
-    const handleOutside = (e) => {
-      if (
-        desktopResultsRef.current &&
-        !desktopResultsRef.current.contains(e.target) &&
-        desktopSearchRef.current &&
-        !desktopSearchRef.current.contains(e.target)
-      )
-        setShowDesktopResults(false);
-    };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, []);
-
-  useEffect(() => {
-    if (searchOpen) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    } else {
-      setDesktopResults([]);
-      setShowDesktopResults(false);
-      setSearchQuery("");
-    }
-  }, [searchOpen]);
-
-  const handleMouseEnter = (e, index) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const navRect = navRef.current?.getBoundingClientRect();
-    setHoveredIndex(index);
-    setHoverPosition({
-      x: rect.left - (navRect?.left || 0),
-      width: rect.width,
-    });
-  };
-
-  /* ── Shared live search from API ── */
-  const fetchSearchResults = async (query) => {
-    const res = await fetch(`${API_URL}?page=1&limit=100`);
-    const data = await res.json();
-    const all = data.success
-      ? data.data || []
-      : Array.isArray(data)
-        ? data
-        : [];
-    const q = query.toLowerCase();
-    return all
-      .filter((p) => {
-        const name = (p.title || p.name || "").toLowerCase();
-        const cat = (p.category || "").toLowerCase();
-        return name.includes(q) || cat.includes(q);
-      })
-      .slice(0, 8);
-  };
-
-  /* ── Mobile search ── */
-  const handleMobileSearchChange = (e) => {
-    const val = e.target.value;
-    setMobileSearchQuery(val);
-    clearTimeout(searchTimerRef.current);
+  const run = (val) => {
+    setQ(val);
+    clearTimeout(timer.current);
     if (!val.trim()) {
-      setMobileResults([]);
-      setShowMobileResults(false);
+      setResults([]);
+      setShow(false);
       return;
     }
-    searchTimerRef.current = setTimeout(async () => {
-      setMobileSearching(true);
-      setShowMobileResults(true);
+    timer.current = setTimeout(async () => {
+      setLoading(true);
+      setShow(true);
       try {
-        setMobileResults(await fetchSearchResults(val));
+        const all = await loadAllProducts();
+        const s = val.toLowerCase();
+        setResults(
+          all
+            .filter((p) =>
+              `${p.title || p.name || ""} ${p.category || ""}`.toLowerCase().includes(s)
+            )
+            .slice(0, 8)
+        );
       } catch {
-        setMobileResults([]);
+        setResults([]);
       } finally {
-        setMobileSearching(false);
+        setLoading(false);
       }
-    }, 350);
+    }, 250);
   };
 
-  /* ── Desktop search ── */
-  const handleDesktopSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    clearTimeout(desktopTimerRef.current);
-    if (!val.trim()) {
-      setDesktopResults([]);
-      setShowDesktopResults(false);
-      return;
-    }
-    desktopTimerRef.current = setTimeout(async () => {
-      setDesktopSearching(true);
-      setShowDesktopResults(true);
-      try {
-        setDesktopResults(await fetchSearchResults(val));
-      } catch {
-        setDesktopResults([]);
-      } finally {
-        setDesktopSearching(false);
-      }
-    }, 350);
-  };
-
-  const handleResultClick = (product) => {
-    const id = product._id || product.id;
-    setMobileSearchQuery("");
-    setMobileResults([]);
-    setShowMobileResults(false);
-    setSearchQuery("");
-    setDesktopResults([]);
-    setShowDesktopResults(false);
-    setSearchOpen(false);
-    navigate(`/product/${id}`);
-  };
-
-  const getImage = (product) =>
-    product.image?.url ||
-    product.imageUrl ||
-    product.img ||
-    product.photo ||
-    "https://via.placeholder.com/300?text=No+Image";
-
-  /* ── Result row (shared UI) ── */
-  const ResultRow = ({ product }) => {
-    const name = product.title || product.name || "Product";
-    const inStock = product.stock > 0;
-    return (
-      <button
-        onClick={() => handleResultClick(product)}
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-50 last:border-0"
-      >
-        <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
-          <img
-            loading="lazy"
-            decoding="async"
-            src={getImage(product)}
-            alt={name}
-            className="w-full h-full object-contain p-1"
-            onError={(e) => {
-              e.target.src = "https://via.placeholder.com/300?text=No+Image";
-            }}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-body font-semibold text-gray-900 text-xs leading-snug truncate">
-            {name}
-          </p>
-          <p className="text-[0.6rem] text-gray-400 font-body mt-0.5">
-            {product.category}
-          </p>
-        </div>
-        <div className="flex-shrink-0 text-right">
-          <p
-            className="font-heading font-bold text-xs"
-            style={{ color: "var(--color-red)" }}
-          >
-            KSh {product.price?.toLocaleString()}
-          </p>
-          <p
-            className={`text-[0.55rem] font-bold mt-0.5 ${inStock ? "text-green-500" : "text-red-400"}`}
-          >
-            {inStock ? "In Stock" : "Out of Stock"}
-          </p>
-        </div>
-      </button>
-    );
+  const pick = (p) => {
+    setQ("");
+    setResults([]);
+    setShow(false);
+    onPick?.();
+    navigate(`/product/${p._id || p.id}`);
   };
 
   return (
+    <div ref={wrapRef} className={`relative ${className}`}>
+      <div className="flex items-center overflow-hidden rounded-xl border-2 border-gray-200 bg-white transition focus-within:border-blue focus-within:shadow-[0_0_0_4px_rgba(1,0,40,0.08)]">
+        <Search className="ml-3.5 h-4 w-4 shrink-0 text-gray-400" />
+        <input
+          type="text"
+          value={q}
+          onChange={(e) => run(e.target.value)}
+          onFocus={() => results.length > 0 && setShow(true)}
+          placeholder="Search for products..."
+          className="w-full bg-transparent px-3 py-2.5 font-body text-sm font-medium outline-none placeholder:text-gray-400"
+        />
+        {q && (
+          <button
+            type="button"
+            onClick={() => run("")}
+            aria-label="Clear search"
+            className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
+          >
+            <X className="h-3 w-3 text-gray-500" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => q.trim() && navigate(`/products?search=${encodeURIComponent(q.trim())}`)}
+          aria-label="Search"
+          className="hidden sm:flex h-full items-center bg-red px-5 py-3 text-white transition hover:bg-red-dark"
+        >
+          <Search className="h-4 w-4" />
+        </button>
+      </div>
+
+      {show && (
+        <div
+          className="absolute left-0 right-0 top-full mt-1.5 max-h-[360px] overflow-y-auto rounded-2xl border border-gray-100 bg-white shadow-2xl"
+          style={{ zIndex: 99999 }}
+        >
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-6">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue border-t-transparent" />
+              <span className="font-body text-xs text-gray-500">Searching...</span>
+            </div>
+          ) : results.length === 0 ? (
+            <div className="py-6 text-center font-body text-xs text-gray-400">No products found for "{q}"</div>
+          ) : (
+            results.map((p) => {
+              const name = p.title || p.name || "Product";
+              const inStock = p.stock > 0;
+              return (
+                <button
+                  key={p._id || p.id}
+                  onClick={() => pick(p)}
+                  className="flex w-full items-center gap-3 border-b border-gray-50 px-4 py-3 text-left transition-colors last:border-0 hover:bg-gray-50"
+                >
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                    <img
+                      loading="lazy"
+                      src={imgOf(p)}
+                      alt={name}
+                      className="h-full w-full object-contain p-1"
+                      onError={(e) => (e.target.src = "https://via.placeholder.com/300?text=No+Image")}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-body text-xs font-semibold text-gray-900">{name}</p>
+                    <p className="mt-0.5 font-body text-[0.6rem] text-gray-400">{p.category}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-heading text-xs font-bold text-red">KSh {p.price?.toLocaleString()}</p>
+                    <p className={`mt-0.5 text-[0.55rem] font-bold ${inStock ? "text-green-500" : "text-red-400"}`}>
+                      {inStock ? "In Stock" : "Out of Stock"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────────────────────── Navbar ───────────────────────── */
+export default function Navbar() {
+  const navigate = useNavigate();
+  const { totalItems } = useCart();
+  const { products = [] } = useProducts();
+
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [catOpen, setCatOpen] = useState(false);
+  const [mobileCats, setMobileCats] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [headerH, setHeaderH] = useState(150);
+  const [user, setUser] = useState(null);
+
+  const headerRef = useRef(null);
+  const catRef = useRef(null);
+  const userRef = useRef(null);
+
+  const isAuthenticated = !!user;
+
+  const categories = useMemo(
+    () => [...new Set(products.map((p) => p.category).filter(Boolean))].sort(),
+    [products]
+  );
+
+  /* auth */
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const data = localStorage.getItem("user");
+      setUser(token && data ? JSON.parse(data) : null);
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setUserOpen(false);
+    setMobileOpen(false);
+    navigate("/");
+  };
+
+  /* scroll → slide the top bar away */
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > TOP_H);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* spacer height = real header height (never changes on scroll) */
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => setHeaderH(headerRef.current.offsetHeight));
+    ro.observe(headerRef.current);
+    setHeaderH(headerRef.current.offsetHeight);
+    return () => ro.disconnect();
+  }, []);
+
+  /* click outside */
+  useEffect(() => {
+    const out = (e) => {
+      if (catRef.current && !catRef.current.contains(e.target)) setCatOpen(false);
+      if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false);
+    };
+    document.addEventListener("mousedown", out);
+    return () => document.removeEventListener("mousedown", out);
+  }, []);
+
+  const catHref = (c) => `/products?category=${encodeURIComponent(c)}`;
+
+  const CartButton = ({ compact }) => (
+    <button
+      onClick={() => navigate("/place-order")}
+      aria-label="Cart"
+      className={`relative inline-flex items-center gap-2 rounded-xl bg-blue text-white transition hover:bg-blue-dark active:scale-95 ${
+        compact ? "p-2.5" : "px-4 py-2.5"
+      }`}
+    >
+      <ShoppingCart className="h-5 w-5" />
+      {!compact && <span className="font-body text-xs font-bold">Cart</span>}
+      {totalItems > 0 && (
+        <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red px-1 text-[10px] font-black text-white ring-2 ring-white">
+          {totalItems > 9 ? "9+" : totalItems}
+        </span>
+      )}
+    </button>
+  );
+
+  return (
     <>
-      {/* ── z-index: 9999 ensures header always sits above the Hero ── */}
       <header
-        className={`fixed top-0 left-0 right-0 transition-all duration-500 ${
-          scrolled
-            ? "bg-white/70 backdrop-blur-2xl shadow-lg border-b border-gray-200/30"
-            : "bg-gradient-to-b from-white/90 via-white/80 to-transparent backdrop-blur-sm"
-        }`}
-        style={{ zIndex: 9999 }}
+        ref={headerRef}
+        className="fixed left-0 right-0 top-0 transition-transform duration-300 ease-out"
+        style={{ zIndex: 9999, transform: scrolled ? `translateY(-${TOP_H}px)` : "none" }}
       >
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-12">
-          {/* ── Main row ── */}
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
-            <Link to="/" className="group flex items-center gap-3 relative z-10">
-              <div className="relative">
-                <div className="absolute inset-0 blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-700 rounded-full scale-150 bg-red"></div>
-                <img
-                  loading="lazy"
-                  decoding="async"
-                  src={assets.logo}
-                  alt="Smart Global"
-                  className="h-10 lg:h-12 w-auto relative z-10 transition-all duration-500 group-hover:scale-105 group-hover:brightness-110"
-                />
-              </div>
-              <div className="hidden lg:block">
-                <div className="font-heading text-xl font-black text-gray-900 tracking-tighter transition-all duration-300 group-hover:text-red">
+        {/* ── Top promo bar ── */}
+        <div className="bg-blue text-white" style={{ height: TOP_H }}>
+          <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-4 px-4 lg:px-12">
+            <Link
+              to="/cook-with-kent"
+              className="flex min-w-0 items-center gap-2 font-body text-[0.68rem] font-semibold sm:text-xs"
+            >
+              <Gift className="h-3.5 w-3.5 shrink-0" style={{ color: "#FFD23F" }} />
+              <span className="truncate">
+                <span style={{ color: "#FFD23F" }} className="font-extrabold">
+                  Cook With Kent
+                </span>{" "}
+                giveaway is live. Win cash prizes &amp; hampers.{" "}
+                <span className="underline underline-offset-2">Join now</span>
+              </span>
+            </Link>
+            <div className="hidden items-center gap-5 font-body text-xs font-medium sm:flex">
+              <p
+                className="flex items-center gap-1.5 text-white/85 transition hover:text-white"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> 
+              </p>
+              {PHONE && (
+                <a href={`tel:${PHONE.replace(/\s/g, "")}`} className="flex items-center gap-1.5 text-white/85 transition hover:text-white">
+                  <Phone className="h-3.5 w-3.5" /> {PHONE}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Main row ── */}
+        <div className="border-b border-gray-200 bg-white">
+          <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-4 px-4 lg:h-[76px] lg:gap-8 lg:px-12">
+            <Link to="/" className="group flex shrink-0 items-center gap-3">
+              <img
+                src={assets.logo}
+                alt="Smart Global"
+                className="h-10 w-auto transition duration-500 group-hover:scale-105 lg:h-12"
+              />
+              <div className="hidden xl:block">
+                <div className="font-heading text-xl font-black leading-none tracking-tighter text-gray-900">
                   SMART GLOBAL
                 </div>
-                <div
-                  className="text-label text-gray-500 -mt-1"
-                  style={{ fontSize: "0.6rem", letterSpacing: "0.2em" }}
-                >
-                  PREMIUM & SPECIALTY FOOD PRODUCTS
+                <div className="mt-1 text-[0.58rem] font-semibold tracking-[0.2em] text-gray-500">
+                  PREMIUM &amp; SPECIALTY FOOD PRODUCTS
                 </div>
               </div>
             </Link>
 
-            {/* Desktop Nav */}
-            <nav
-              ref={navRef}
-              className="hidden lg:flex items-center relative"
-              onMouseLeave={() => setHoveredIndex(null)}
-            >
-              {hoveredIndex !== null && (
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 h-10 rounded-full bg-blue transition-all duration-300 ease-out"
-                  style={{
-                    left: `${hoverPosition.x}px`,
-                    width: `${hoverPosition.width}px`,
-                    boxShadow: "0 8px 32px rgba(1,0,40,0.3)",
-                  }}
-                />
-              )}
-              <div className="flex items-center gap-1">
-                {navLinks.map((link, index) => (
-                  <Link
-                    key={link.name}
-                    to={link.href}
-                    onMouseEnter={(e) => handleMouseEnter(e, index)}
-                    className={`relative px-5 py-2.5 font-body font-bold text-[13px] tracking-wide transition-all duration-300 rounded-full ${
-                      hoveredIndex === index
-                        ? "text-white scale-105"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                    style={{
-                      animationDelay: `${index * 50}ms`,
-                      animation: "slideDown 0.6s ease-out forwards",
-                      opacity: 0,
-                    }}
-                  >
-                    <span className="relative z-10 flex items-center gap-1">
-                      {link.name}
-                      {link.hasDropdown && (
-                        <ChevronDown
-                          className={`h-3.5 w-3.5 transition-transform duration-300 ${hoveredIndex === index ? "rotate-180" : ""}`}
-                        />
-                      )}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </nav>
+            {/* desktop search */}
+            <SearchBox className="hidden max-w-3xl flex-1 lg:block" />
 
-            {/* Desktop Right Actions */}
-            <div className="hidden lg:flex items-center gap-2">
-              <button
-                onClick={() => setSearchOpen((v) => !v)}
-                aria-label="Search"
-                className={`group relative p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 ${searchOpen ? "bg-blue" : "hover:bg-gray-100/80"}`}
-              >
-                <Search
-                  className={`h-5 w-5 transition-colors duration-300 ${searchOpen ? "text-white" : "text-gray-600 group-hover:text-blue"}`}
-                />
-              </button>
-
-              <button
-                onClick={() => navigate("/place-order")}
-                aria-label="Shopping Cart"
-                className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-              >
-                <ShoppingCart className="h-5 w-5 text-gray-600 group-hover:text-red transition-colors duration-300" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                    {totalItems > 9 ? "9+" : totalItems}
-                  </span>
-                )}
-              </button>
-
+            {/* desktop right */}
+            <div className="ml-auto hidden items-center gap-5 lg:flex">
               {isAuthenticated ? (
-                <>
+                <div className="relative" ref={userRef}>
                   <button
-                    onClick={() => navigate("/orders")}
-                    aria-label="Order History"
-                    className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
+                    onClick={() => setUserOpen((v) => !v)}
+                    className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition hover:bg-gray-50"
                   >
-                    <History className="h-5 w-5 text-gray-600 group-hover:text-blue transition-colors duration-300" />
+                    <div className="relative">
+                      <UserCircle className="h-8 w-8 text-gray-700" />
+                      <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-500" />
+                    </div>
+                    <div className="leading-tight">
+                      <p className="font-body text-[0.68rem] text-gray-500">Hello,</p>
+                      <p className="max-w-[110px] truncate font-body text-sm font-bold text-gray-900">
+                        {user?.name?.split(" ")[0] || "Account"}
+                      </p>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition ${userOpen ? "rotate-180" : ""}`} />
                   </button>
 
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      aria-label="User Profile"
-                      className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-                    >
-                      <UserCircle className="h-5 w-5 text-gray-600 group-hover:text-blue transition-colors duration-300" />
-                      <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
-                    </button>
-
-                    {userDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-                        <div
-                          className="bg-blue p-4 text-white"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, var(--color-blue) 0%, var(--color-blue-light) 100%)",
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                              <UserCircle className="w-7 h-7" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-body font-bold text-sm">
-                                {user?.name}
-                              </p>
-                              <p className="text-xs text-white/80">
-                                {user?.email}
-                              </p>
-                            </div>
-                          </div>
-                          {user?.role === "admin" && (
-                            <div className="mt-2 inline-block px-2 py-1 bg-yellow-400 text-gray-900 rounded-full text-xs font-bold">
-                              ADMIN
-                            </div>
-                          )}
-                        </div>
-                        <div className="py-2">
-                          <Link
-                            to="/orders"
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
-                            onClick={() => setUserDropdownOpen(false)}
-                          >
-                            <History className="w-5 h-5 text-gray-600" />
-                            <span className="font-body text-sm font-semibold text-gray-700">
-                              Order History
-                            </span>
-                          </Link>
-                          {user?.role === "admin" && (
-                            <Link
-                              to="/dashboard"
-                              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100"
-                              onClick={() => setUserDropdownOpen(false)}
-                            >
-                              <svg
-                                className="w-5 h-5 text-gray-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                />
-                              </svg>
-                              <span className="font-body text-sm font-semibold text-gray-700">
-                                Dashboard
-                              </span>
-                            </Link>
-                          )}
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors border-t border-gray-100 text-left"
-                          >
-                            <LogOut className="w-5 h-5 text-red" />
-                            <span className="font-body text-sm font-semibold text-red">
-                              Logout
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/auth"
-                    aria-label="User Account"
-                    className="group relative p-2.5 rounded-full hover:bg-gray-100/80 transition-all duration-300 hover:scale-110 active:scale-95"
-                  >
-                    <User className="h-5 w-5 text-gray-600 group-hover:text-blue transition-colors duration-300" />
-                  </Link>
-                  <Link to="/place-order" className="btn-primary ml-2">
-                    Place Order
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {/* ── Mobile right: Cart + Login + Hamburger ── */}
-            <div className="flex lg:hidden items-center gap-1">
-              <button
-                onClick={() => navigate("/place-order")}
-                aria-label="Cart"
-                className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-all"
-              >
-                <ShoppingCart className="h-5 w-5 text-gray-700" />
-                {totalItems > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-red text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                    {totalItems > 9 ? "9+" : totalItems}
-                  </span>
-                )}
-              </button>
-
-              {isAuthenticated ? (
-                <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  aria-label="User"
-                  className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-all"
-                >
-                  <UserCircle className="h-5 w-5 text-gray-700" />
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
-                </button>
-              ) : (
-                <Link
-                  to="/auth"
-                  aria-label="Login"
-                  className="p-2.5 rounded-xl hover:bg-gray-100 transition-all"
-                >
-                  <User className="h-5 w-5 text-gray-700" />
-                </Link>
-              )}
-
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                className="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-300"
-              >
-                {mobileOpen ? (
-                  <X className="h-5 w-5 text-gray-800" />
-                ) : (
-                  <Menu className="h-5 w-5 text-gray-800" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* ── Mobile Search Bar (always visible on mobile) ── */}
-          <div className="lg:hidden pb-3">
-            <div className="flex justify-center">
-              <div className="relative w-[90%]" ref={mobileSearchRef}>
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                <input
-                  type="text"
-                  value={mobileSearchQuery}
-                  onChange={handleMobileSearchChange}
-                  onFocus={() => {
-                    if (mobileResults.length > 0) setShowMobileResults(true);
-                  }}
-                  placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-body font-medium outline-none focus:border-blue focus:ring-2 focus:ring-blue/15 transition-all shadow-sm"
-                  style={{ fontSize: "0.8rem" }}
-                />
-                {mobileSearchQuery && (
-                  <button
-                    onClick={() => {
-                      setMobileSearchQuery("");
-                      setMobileResults([]);
-                      setShowMobileResults(false);
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center"
-                  >
-                    <X className="w-3 h-3 text-gray-500" />
-                  </button>
-                )}
-
-                {showMobileResults && (
-                  <div
-                    ref={mobileResultsRef}
-                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
-                    style={{
-                      maxHeight: "320px",
-                      overflowY: "auto",
-                      zIndex: 9999,
-                    }}
-                  >
-                    {mobileSearching ? (
-                      <div className="flex items-center justify-center py-6 gap-2">
-                        <div className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs font-body text-gray-500">
-                          Searching...
-                        </span>
-                      </div>
-                    ) : mobileResults.length === 0 ? (
-                      <div className="py-6 text-center text-xs font-body text-gray-400">
-                        No products found for "{mobileSearchQuery}"
-                      </div>
-                    ) : (
-                      mobileResults.map((product) => (
-                        <ResultRow
-                          key={product._id || product.id}
-                          product={product}
-                        />
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ── Desktop Search Bar (slides down, with live results) ── */}
-          {searchOpen && (
-            <div
-              className="overflow-visible pb-5 hidden lg:block"
-              style={{ animation: "expandDown 0.35s ease-out forwards" }}
-            >
-              <div className="relative max-w-2xl" ref={desktopSearchRef}>
-                <Search className="absolute left-5 top-[1.1rem] h-5 w-5 text-gray-400 pointer-events-none z-10" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleDesktopSearchChange}
-                  onFocus={() => {
-                    if (desktopResults.length > 0) setShowDesktopResults(true);
-                  }}
-                  placeholder="Search products by name or category..."
-                  className="w-full pl-14 pr-10 py-4 text-sm font-body font-semibold rounded-2xl bg-white border border-gray-200 focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20 transition-all duration-300 shadow-lg"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setDesktopResults([]);
-                      setShowDesktopResults(false);
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5 text-gray-500" />
-                  </button>
-                )}
-
-                {/* Live results dropdown — z-index beats the Hero */}
-                {showDesktopResults && (
-                  <div
-                    ref={desktopResultsRef}
-                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
-                    style={{
-                      maxHeight: "360px",
-                      overflowY: "auto",
-                      zIndex: 99999,
-                    }}
-                  >
-                    {desktopSearching ? (
-                      <div className="flex items-center justify-center py-6 gap-2">
-                        <div className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin" />
-                        <span className="text-sm font-body text-gray-500">
-                          Searching...
-                        </span>
-                      </div>
-                    ) : desktopResults.length === 0 ? (
-                      <div className="py-8 text-center text-sm font-body text-gray-400">
-                        No products found for "{searchQuery}"
-                      </div>
-                    ) : (
-                      desktopResults.map((product) => (
-                        <ResultRow
-                          key={product._id || product.id}
-                          product={product}
-                        />
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Quick chips */}
-              {!showDesktopResults && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {["Soups", "Pancake Mixes", "Syrups", "Baby Pouches"].map(
-                    (term) => (
-                      <button
-                        key={term}
-                        type="button"
-                        onClick={() => {
-                          setSearchQuery(term);
-                          handleDesktopSearchChange({
-                            target: { value: term },
-                          });
-                        }}
-                        className="px-3 py-1.5 bg-gray-100 hover:bg-blue hover:text-white rounded-full text-xs font-body font-bold transition-all duration-300"
+                  {userOpen && (
+                    <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+                      <div
+                        className="p-4 text-white"
+                        style={{ background: "linear-gradient(135deg, var(--color-blue) 0%, var(--color-blue-light) 100%)" }}
                       >
-                        {term}
-                      </button>
-                    ),
+                        <p className="font-body text-sm font-bold">{user?.name}</p>
+                        <p className="text-xs text-white/80">{user?.email}</p>
+                        {user?.role === "admin" && (
+                          <span className="mt-2 inline-block rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-gray-900">
+                            ADMIN
+                          </span>
+                        )}
+                      </div>
+                      <div className="py-1">
+                        <Link to="/orders" onClick={() => setUserOpen(false)} className="flex items-center gap-3 px-4 py-3 transition hover:bg-gray-50">
+                          <History className="h-4 w-4 text-gray-500" />
+                          <span className="font-body text-sm font-semibold text-gray-700">Order History</span>
+                        </Link>
+                        {user?.role === "admin" && (
+                          <Link to="/dashboard" onClick={() => setUserOpen(false)} className="flex items-center gap-3 border-t border-gray-100 px-4 py-3 transition hover:bg-gray-50">
+                            <LayoutDashboard className="h-4 w-4 text-gray-500" />
+                            <span className="font-body text-sm font-semibold text-gray-700">Dashboard</span>
+                          </Link>
+                        )}
+                        <button onClick={logout} className="flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-left transition hover:bg-red-50">
+                          <LogOut className="h-4 w-4 text-red" />
+                          <span className="font-body text-sm font-semibold text-red">Logout</span>
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
+              ) : (
+                <Link to="/auth" className="group flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition hover:bg-gray-50">
+                  <User className="h-7 w-7 text-gray-700 transition group-hover:text-red" />
+                  <div className="leading-tight">
+                    <p className="font-body text-sm font-bold text-gray-900">Sign in /</p>
+                    <p className="font-body text-sm font-medium text-gray-600">register</p>
+                  </div>
+                </Link>
               )}
+              <CartButton />
             </div>
-          )}
+
+            {/* mobile right */}
+            <div className="ml-auto flex items-center gap-1.5 lg:hidden">
+              <CartButton compact />
+              <Link
+                to={isAuthenticated ? "/orders" : "/auth"}
+                aria-label="Account"
+                className="rounded-xl p-2.5 transition hover:bg-gray-100"
+              >
+                {isAuthenticated ? <UserCircle className="h-5 w-5 text-gray-700" /> : <User className="h-5 w-5 text-gray-700" />}
+              </Link>
+              <button
+                onClick={() => setMobileOpen((v) => !v)}
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                className="rounded-xl p-2.5 transition hover:bg-gray-100"
+              >
+                {mobileOpen ? <X className="h-5 w-5 text-gray-800" /> : <Menu className="h-5 w-5 text-gray-800" />}
+              </button>
+            </div>
+          </div>
+
+          {/* mobile search */}
+          <div className="px-4 pb-3 lg:hidden">
+            <SearchBox onPick={() => setMobileOpen(false)} />
+          </div>
         </div>
 
-        {/* ── Mobile Nav Panel ── */}
-        {mobileOpen && (
-          <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl">
-            <nav className="max-w-[1600px] mx-auto px-6 py-6">
-              <div className="space-y-1">
-                {navLinks.map((link, index) => (
+        {/* ── Category row (desktop) ── */}
+        <nav className="hidden border-b border-gray-200 bg-white shadow-sm lg:block">
+          <div className="mx-auto flex h-12 max-w-[1600px] items-stretch gap-1 px-12">
+            <div className="relative" ref={catRef}>
+              <button
+                onClick={() => setCatOpen((v) => !v)}
+                aria-expanded={catOpen}
+                className="flex h-full items-center gap-2.5 bg-red px-5 font-body text-[0.72rem] font-bold uppercase tracking-wider text-white transition hover:bg-red-dark"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                All Categories
+                <ChevronDown className={`h-4 w-4 transition ${catOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {catOpen && (
+                <div className="absolute left-0 top-full w-[560px] rounded-b-2xl border border-gray-200 bg-white p-5 shadow-2xl">
+                  {categories.length === 0 ? (
+                    <p className="py-4 text-center font-body text-sm text-gray-400">Loading categories…</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-1">
+                      {categories.map((c) => (
+                        <Link
+                          key={c}
+                          to={catHref(c)}
+                          onClick={() => setCatOpen(false)}
+                          className="rounded-lg px-3 py-2.5 font-body text-sm font-semibold text-gray-700 transition hover:bg-blue-tint hover:text-blue"
+                        >
+                          {c}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                   <Link
-                    key={link.name}
-                    to={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-100 transition-all duration-300 font-body font-bold text-sm text-gray-800"
-                    style={{
-                      animation: "slideRight 0.4s ease-out forwards",
-                      animationDelay: `${index * 50}ms`,
-                      opacity: 0,
-                    }}
+                    to="/products"
+                    onClick={() => setCatOpen(false)}
+                    className="mt-3 block rounded-xl bg-blue py-2.5 text-center font-body text-xs font-bold uppercase tracking-wider text-white transition hover:bg-blue-dark"
                   >
-                    <span>{link.name}</span>
-                    {link.hasDropdown && (
-                      <ChevronDown className="h-4 w-4 text-gray-500" />
-                    )}
+                    View all products
                   </Link>
-                ))}
-              </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-1 items-center gap-1 pl-4">
+              {NAV_LINKS.map((l) => (
+                <Link
+                  key={l.name}
+                  to={l.href}
+                  className="group relative px-4 py-2 font-body text-[0.72rem] font-bold uppercase tracking-wider text-gray-700 transition hover:text-red"
+                >
+                  {l.name}
+                  <span className="absolute inset-x-4 -bottom-[7px] h-0.5 origin-left scale-x-0 bg-red transition-transform duration-300 group-hover:scale-x-100" />
+                </Link>
+              ))}
+                          <Link
+                to="/cook-with-kent"
+                className="btn-primary ml-2"
+                style={{ padding: "0.55rem 1.4rem", display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <Gift className="h-3.5 w-3.5" /> Cook With Kent
+              </Link>
+            </div>
+
+            <div className="flex items-center">
+              <Link to="/place-order" className="btn-primary" style={{ padding: "0.55rem 1.4rem" }}>
+                Place Order
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        {/* ── Mobile drawer ── */}
+        {mobileOpen && (
+          <div className="max-h-[70vh] overflow-y-auto border-t border-gray-200 bg-white shadow-2xl lg:hidden">
+            <div className="space-y-1 px-5 py-4">
+              <Link
+                to="/cook-with-kent"
+                onClick={() => setMobileOpen(false)}
+                className="mb-2 flex items-center justify-center gap-2 rounded-xl py-3 font-body text-sm font-extrabold text-white"
+                style={{ background: "linear-gradient(135deg, var(--color-red) 0%, var(--color-orange) 100%)" }}
+              >
+                <Gift className="h-4 w-4" /> Cook With Kent Giveaway
+              </Link>
+
+              <button
+                onClick={() => setMobileCats((v) => !v)}
+                className="flex w-full items-center justify-between rounded-xl px-4 py-3 font-body text-sm font-bold text-gray-800 hover:bg-gray-100"
+              >
+                <span className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4 text-red" /> All Categories
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-500 transition ${mobileCats ? "rotate-180" : ""}`} />
+              </button>
+              {mobileCats && (
+                <div className="ml-4 space-y-0.5 border-l-2 border-gray-100 pl-3">
+                  {categories.map((c) => (
+                    <Link
+                      key={c}
+                      to={catHref(c)}
+                      onClick={() => setMobileOpen(false)}
+                      className="block rounded-lg px-3 py-2 font-body text-sm font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      {c}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {NAV_LINKS.map((l) => (
+                <Link
+                  key={l.name}
+                  to={l.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-3 font-body text-sm font-bold text-gray-800 hover:bg-gray-100"
+                >
+                  {l.name}
+                </Link>
+              ))}
 
               {isAuthenticated && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
-                    <div className="w-10 h-10 bg-blue rounded-full flex items-center justify-center">
-                      <UserCircle className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-body font-bold text-sm text-gray-900">
-                        {user?.name}
-                      </p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
-                    </div>
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <div className="mb-2 rounded-xl bg-gray-50 px-4 py-3">
+                    <p className="font-body text-sm font-bold text-gray-900">{user?.name}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
-                  <div className="mt-3 space-y-1">
-                    <Link
-                      to="/orders"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <History className="w-4 h-4 text-gray-500" />
-                      <span className="font-body text-sm font-semibold text-gray-700">
-                        Order History
-                      </span>
+                  <Link to="/orders" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-gray-50">
+                    <History className="h-4 w-4 text-gray-500" />
+                    <span className="font-body text-sm font-semibold text-gray-700">Order History</span>
+                  </Link>
+                  {user?.role === "admin" && (
+                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-gray-50">
+                      <LayoutDashboard className="h-4 w-4 text-gray-500" />
+                      <span className="font-body text-sm font-semibold text-gray-700">Dashboard</span>
                     </Link>
-                    {user?.role === "admin" && (
-                      <Link
-                        to="/dashboard"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
-                      >
-                        <span className="font-body text-sm font-semibold text-gray-700">
-                          Dashboard
-                        </span>
-                      </Link>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="mt-3 w-full px-4 py-3 bg-red-50 rounded-xl text-center font-body font-bold text-sm text-red hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" /> Logout
+                  )}
+                  <button onClick={logout} className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 py-3 font-body text-sm font-bold text-red">
+                    <LogOut className="h-4 w-4" /> Logout
                   </button>
                 </div>
               )}
 
-              <Link
-                to="/place-order"
-                onClick={() => setMobileOpen(false)}
-                className="btn-primary mt-4 block w-full text-center"
-              >
+              <Link to="/place-order" onClick={() => setMobileOpen(false)} className="btn-primary mt-3 block w-full text-center">
                 Place Order
               </Link>
-            </nav>
+            </div>
           </div>
         )}
       </header>
 
-      <div className="h-[108px] lg:h-20" />
-
-      <style>{`
-        @keyframes slideDown  { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes slideRight { from { opacity:0; transform:translateX(-20px);} to { opacity:1; transform:translateX(0);} }
-        @keyframes expandDown { from { max-height:0; opacity:0; } to { max-height:500px; opacity:1; } }
-      `}</style>
+      {/* spacer = measured header height */}
+      <div style={{ height: headerH }} aria-hidden="true" />
     </>
   );
 }

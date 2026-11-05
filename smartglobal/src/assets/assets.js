@@ -54,7 +54,7 @@ import newjsts from "./newjsts.jpeg";
 import news from "./news.jpeg";
 import newsp from "./newsp.jpeg";
 import newwtr from "./newwtr.jpeg";
-import ent from "./ent.jpg"
+import ent from "./ent.jpeg"
 
 export const assets = {
   newcubs,

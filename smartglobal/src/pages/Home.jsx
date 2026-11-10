@@ -15,7 +15,7 @@ import FollowBanner from "../components/home/FollowBanner";
 const Home = () => {
   return (
     <div>
-      {/* <FollowBanner /> */}
+      <FollowBanner /> 
       <HeroBanner />
       <PromoStrip />
       <Sales />

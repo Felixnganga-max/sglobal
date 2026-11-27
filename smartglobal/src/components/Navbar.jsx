@@ -10,7 +10,6 @@ import {
   UserCircle,
   LogOut,
   LayoutGrid,
-  Gift,
   RotateCcw,
   Phone,
   LayoutDashboard,
@@ -290,25 +289,10 @@ export default function Navbar() {
       >
         {/* ── Top promo bar ── */}
         <div className="bg-blue text-white" style={{ height: TOP_H }}>
-          <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-4 px-4 lg:px-12">
-            <Link
-              to="/cook-with-kent"
-              className="flex min-w-0 items-center gap-2 font-body text-[0.68rem] font-semibold sm:text-xs"
-            >
-              <Gift className="h-3.5 w-3.5 shrink-0" style={{ color: "#FFD23F" }} />
-              <span className="truncate">
-                <span style={{ color: "#FFD23F" }} className="font-extrabold">
-                  Cook With Kent
-                </span>{" "}
-                giveaway is live. Win cash prizes &amp; hampers.{" "}
-                <span className="underline underline-offset-2">Join now</span>
-              </span>
-            </Link>
+          <div className="mx-auto flex h-full max-w-[1600px] items-center justify-end gap-4 px-4 lg:px-12">
             <div className="hidden items-center gap-5 font-body text-xs font-medium sm:flex">
-              <p
-                className="flex items-center gap-1.5 text-white/85 transition hover:text-white"
-              >
-                <RotateCcw className="h-3.5 w-3.5" /> 
+              <p className="flex items-center gap-1.5 text-white/85 transition hover:text-white">
+                <RotateCcw className="h-3.5 w-3.5" />
               </p>
               {PHONE && (
                 <a href={`tel:${PHONE.replace(/\s/g, "")}`} className="flex items-center gap-1.5 text-white/85 transition hover:text-white">
@@ -487,13 +471,6 @@ export default function Navbar() {
                   <span className="absolute inset-x-4 -bottom-[7px] h-0.5 origin-left scale-x-0 bg-red transition-transform duration-300 group-hover:scale-x-100" />
                 </Link>
               ))}
-                          <Link
-                to="/cook-with-kent"
-                className="btn-primary ml-2"
-                style={{ padding: "0.55rem 1.4rem", display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <Gift className="h-3.5 w-3.5" /> Cook With Kent
-              </Link>
             </div>
 
             <div className="flex items-center">
@@ -508,15 +485,6 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="max-h-[70vh] overflow-y-auto border-t border-gray-200 bg-white shadow-2xl lg:hidden">
             <div className="space-y-1 px-5 py-4">
-              <Link
-                to="/cook-with-kent"
-                onClick={() => setMobileOpen(false)}
-                className="mb-2 flex items-center justify-center gap-2 rounded-xl py-3 font-body text-sm font-extrabold text-white"
-                style={{ background: "linear-gradient(135deg, var(--color-red) 0%, var(--color-orange) 100%)" }}
-              >
-                <Gift className="h-4 w-4" /> Cook With Kent Giveaway
-              </Link>
-
               <button
                 onClick={() => setMobileCats((v) => !v)}
                 className="flex w-full items-center justify-between rounded-xl px-4 py-3 font-body text-sm font-bold text-gray-800 hover:bg-gray-100"
